@@ -39,7 +39,6 @@ pub enum DF {
         ///// bits 18-19
         //#[deku(bits = "2")]
         //unused2: u8,
-
         /// bits 20-32
         altitude: AC13Field,
     },
@@ -93,15 +92,13 @@ impl AC13Field {
             // TODO dump1090 doesn't decode this, weird.
             // This would decode in meters
             unreachable!("m_bit = 1");
+        } else if q_bit != 0 {
+            let n = ((num & 0x1f80) >> 2) | ((num & 0x0020) >> 1) | (num & 0x000f);
+            Ok((rest, (n as u32 * 25) - 1000))
         } else {
-            if q_bit != 0 {
-                let n = ((num & 0x1f80) >> 2) | ((num & 0x0020) >> 1) | (num & 0x000f);
-                return Ok((rest, (n as u32 * 25) - 1000));
-            } else {
-                // TODO 11 bit gillham coded altitude
-                let n = mode_ac::mode_a_to_mode_c(mode_ac::decode_id13_field(num)).unwrap();
-                return Ok((rest, (100 * n)));
-            }
+            // TODO 11 bit gillham coded altitude
+            let n = mode_ac::mode_a_to_mode_c(mode_ac::decode_id13_field(num)).unwrap();
+            Ok((rest, (100 * n)))
         }
     }
 }
@@ -118,7 +115,7 @@ pub enum Unit {
 
 impl Default for Unit {
     fn default() -> Self {
-        Unit::Meter
+        Self::Meter
     }
 }
 
@@ -181,7 +178,7 @@ impl Identification {
 
         let mut chars = vec![];
         for _ in 0..=6 {
-            let (for_rest, c) = <u8>::read(inside_rest, (deku::ctx::Size::Bits(6)))?;
+            let (for_rest, c) = <u8>::read(inside_rest, deku::ctx::Size::Bits(6))?;
             chars.push(c);
             inside_rest = for_rest;
         }
@@ -230,7 +227,7 @@ impl Altitude {
             // mode c?
             // TODO this is feet
             let n = ((num & 0x0fc0) << 1) | (num & 0x003f);
-            let altitude = mode_ac::mode_a_to_index(decode_id13_field(n));
+            let _altitude = mode_ac::mode_a_to_index(decode_id13_field(n));
             Ok((rest, ((n as u32) * 100)))
         }
     }
@@ -375,8 +372,8 @@ pub struct AirborneVelocity {
 impl AirborneVelocity {
     /// Return effective (heading, ground_speed, vertical_rate)
     pub fn calculate(&self) -> (f64, f64, i16) {
-        let v_ew = ((self.ew_vel as i16 - 1) * self.ew_sign.value()) as f64;
-        let v_ns = ((self.ns_vel as i16 - 1) * self.ns_sign.value()) as f64;
+        let v_ew = f64::from((self.ew_vel as i16 - 1) * self.ew_sign.value());
+        let v_ns = f64::from((self.ns_vel as i16 - 1) * self.ns_sign.value());
         let h = v_ew.atan2(v_ns) * (360.0 / (2.0 * std::f64::consts::PI));
         let heading = if h < 0.0 { h + 360.0 } else { h };
 
@@ -387,7 +384,7 @@ impl AirborneVelocity {
             .map(|v| (v as i16) * self.vrate_sign.value())
             .unwrap();
 
-        (heading, ((v_ew.powi(2) + v_ns.powi(2)).sqrt()), vrate)
+        (heading, v_ew.hypot(v_ns), vrate)
     }
 }
 
@@ -490,7 +487,7 @@ pub struct TargetStateAndStatusInformation {
     #[deku(
         bits = "9",
         endian = "big",
-        map = "|qnh: u32| -> Result<_, DekuError> {Ok(800.0 + ((qnh - 1) as f32) * 0.8)}"
+        map = ("|qnh: u32| -> Result<_, DekuError> {Ok(800.0 + ((qnh - 1) as f32) * 0.8)}").mul_add("|qnh: u32| -> Result<_, DekuError> {Ok(800.0 + ((qnh - 1) as f32) * 0.8)}", "|qnh: u32| -> Result<_, DekuError> {Ok(800.0 + ((qnh - 1) as f32) * 0.8)}")
     )]
     qnh: f32,
     #[deku(bits = "1")]
@@ -546,7 +543,7 @@ mod mode_ac {
         (index & 7) | ((index & 70) << 1) | ((index & 0700) << 2) | ((index & 07000) << 3)
     }
 
-    const INVALID_ALTITUDE: u32 = 4294957297;
+    const INVALID_ALTITUDE: u32 = 4_294_957_297;
 
     pub fn decode_id13_field(id13_field: u32) -> u32 {
         let mut hex_gillham: u32 = 0;
@@ -597,7 +594,7 @@ mod mode_ac {
         let mut one_hundreds: u32 = 0;
 
         // check zero bits are zero, D1 set is illegal; C1,,C4 cannot be Zero
-        if (mode_a & 0xFFFF8889) != 0 || (mode_a & 0x000000F0) == 0 {
+        if (mode_a & 0xFFFF_8889) != 0 || (mode_a & 0x0000_00F0) == 0 {
             return Err("Invalid altitude");
         }
 
@@ -661,7 +658,7 @@ mod mode_ac {
         let mut five_hundreds: u32 = 0;
         let mut one_hundreds: u32 = 0;
 
-        if (mode_a & 0xffff8888) != 0 || (mode_a & 0x000000f0) == 0 {
+        if (mode_a & 0xffff_8888) != 0 || (mode_a & 0x0000_00f0) == 0 {
             return INVALID_ALTITUDE;
         }
 
@@ -675,7 +672,7 @@ mod mode_ac {
         if (mode_a & 0x0040) == 1 {
             one_hundreds ^= 0x001; // C4
         }
-        if ((one_hundreds & 5) == 5) {
+        if (one_hundreds & 5) == 5 {
             one_hundreds ^= 2;
         }
         if one_hundreds > 5 {
@@ -707,7 +704,7 @@ mod mode_ac {
         if (mode_a & 0x0400) == 1 {
             five_hundreds ^= 0x001; // B4
         }
-        if ((five_hundreds & 1) == 1) {
+        if (five_hundreds & 1) == 1 {
             one_hundreds = 6 - one_hundreds;
         }
         println!("{}", one_hundreds);
@@ -715,8 +712,8 @@ mod mode_ac {
     }
 
     pub fn init() -> [u32; 4096] {
-        let mut table = [0u32; 4096];
-        for i in 0..4096usize {
+        let mut table = [0_u32; 4096];
+        for i in 0..4096_usize {
             let mode_a = index_to_mode_a(i as u32);
             let mode_c = internal_mode_a_to_mode_c(mode_a);
             println!("{} {} {}", i, mode_a, mode_c);
@@ -756,8 +753,8 @@ mod tests {
         if let DF::ADSB { me, .. } = frame.unwrap().1.df {
             if let ME::AirborneVelocity(me) = me {
                 let (heading, ground_speed, vertical_rate) = me.calculate();
-                assert_eq!(heading, 322.1972075490615);
-                assert_eq!(ground_speed, 417.6553603151766);
+                assert_eq!(heading, 322.197_207_549_061_5);
+                assert_eq!(ground_speed, 417.655_360_315_176_6);
                 assert_eq!(vertical_rate, 0);
                 assert_eq!(me.vrate_src, VerticalRateSource::GeometricAltitude);
                 return;
@@ -930,7 +927,7 @@ mod tests {
         let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
         println!("{:#?}", frame);
         if let DF::ADSB { me, .. } = frame.df {
-            if let ME::AirbornePositionBaroAltitude(ref me) = me {
+            if let ME::AirbornePositionBaroAltitude(_me) = me {
                 return;
             }
         }

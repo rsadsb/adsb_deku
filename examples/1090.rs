@@ -1,11 +1,11 @@
 use adsb_deku::Frame;
 use deku::DekuContainerRead;
-use hex::{decode, encode};
+
 use std::io::{BufRead, BufReader};
 use std::net::TcpStream;
 
 fn main() {
-    let mut stream = TcpStream::connect(("127.0.0.1", 30002)).unwrap();
+    let stream = TcpStream::connect(("127.0.0.1", 30002)).unwrap();
     let mut reader = BufReader::new(stream);
     let mut input = String::new();
     loop {
