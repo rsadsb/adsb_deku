@@ -123,18 +123,13 @@ impl Default for Unit {
 #[deku(type = "u8", bits = "3")]
 #[allow(non_camel_case_types)]
 pub enum Capability {
-    #[deku(id = "0x00")]
-    AG_UNCERTAIN,
+    AG_UNCERTAIN  = 0x00,
     #[deku(id_pat = "0x01..=0x03")]
     Reserved,
-    #[deku(id = "0x04")]
-    AG_GROUND,
-    #[deku(id = "0x05")]
-    AG_AIRBORNE,
-    #[deku(id = "0x06")]
-    AG_UNCERTAIN2,
-    #[deku(id = "0x07")]
-    AG_UNCERTAIN3,
+    AG_GROUND     = 0x04,
+    AG_AIRBORNE   = 0x05,
+    AG_UNCERTAIN2 = 0x06,
+    AG_UNCERTAIN3 = 0x07,
 }
 
 #[derive(Debug, PartialEq, DekuRead)]
@@ -294,50 +289,38 @@ pub struct SurfacePosition {
 #[derive(Debug, PartialEq, DekuRead)]
 #[deku(type = "u8", bits = "1")]
 pub enum StatusForGroundTrack {
-    #[deku(id = "0")]
-    Invalid,
-    #[deku(id = "1")]
-    Valid,
+    Invalid = 0,
+    Valid   = 1,
 }
 
 #[derive(Debug, PartialEq, DekuRead)]
 #[deku(type = "u8", bits = "2")]
 pub enum SurveillanceStatus {
-    #[deku(id = "0")]
-    NoCondition,
-    #[deku(id = "1")]
-    PermanentAlert,
-    #[deku(id = "2")]
-    TemporaryAlert,
-    #[deku(id = "3")]
-    SPICondition,
+    NoCondition    = 0,
+    PermanentAlert = 1,
+    TemporaryAlert = 2,
+    SPICondition   = 3,
 }
 
 #[derive(Debug, PartialEq, DekuRead)]
 #[deku(type = "u8", bits = "1")]
 pub enum CPRFormat {
-    #[deku(id = "0")]
-    Even,
-    #[deku(id = "1")]
-    Odd,
+    Even = 0,
+    Odd  = 1,
 }
 
 #[derive(Debug, PartialEq, DekuRead)]
 #[deku(type = "u8", bits = "1")]
 pub enum VerticalRateSource {
-    #[deku(id = "0")]
-    BarometricPressureAltitude,
-    #[deku(id = "1")]
-    GeometricAltitude,
+    BarometricPressureAltitude = 0,
+    GeometricAltitude          = 1,
 }
 
 #[derive(Debug, PartialEq, DekuRead)]
 #[deku(type = "u8", bits = "1")]
 pub enum Sign {
-    #[deku(id = "0")]
-    Positive,
-    #[deku(id = "1")]
-    Negative,
+    Positive = 0,
+    Negative = 1,
 }
 
 impl Sign {
@@ -429,46 +412,36 @@ impl AirborneVelocitySubFields {
 #[derive(Copy, Clone, Debug, PartialEq, DekuRead)]
 #[deku(type = "u8", bits = "1")]
 pub enum DirectionEW {
-    #[deku(id = "0")]
-    WestToEast,
-    #[deku(id = "1")]
-    EastToWest,
+    WestToEast = 0,
+    EastToWest = 1,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, DekuRead)]
 #[deku(type = "u8", bits = "1")]
 pub enum DirectionNS {
-    #[deku(id = "0")]
-    SouthToNorth,
-    #[deku(id = "1")]
-    NorthToSouth,
+    SouthToNorth = 0,
+    NorthToSouth = 1,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, DekuRead)]
 #[deku(type = "u8", bits = "1")]
 pub enum SourceBitVerticalRate {
-    #[deku(id = "0")]
-    GNSS,
-    #[deku(id = "1")]
-    Barometer,
+    GNSS      = 0,
+    Barometer = 1,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, DekuRead)]
 #[deku(type = "u8", bits = "1")]
 pub enum SignBitVerticalRate {
-    #[deku(id = "0")]
-    Up,
-    #[deku(id = "1")]
-    Down,
+    Up   = 0,
+    Down = 1,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, DekuRead)]
 #[deku(type = "u8", bits = "1")]
 pub enum SignBitGNSSBaroAltitudesDiff {
-    #[deku(id = "0")]
-    Above,
-    #[deku(id = "1")]
-    Below,
+    Above = 0,
+    Below = 1,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, DekuRead)]
