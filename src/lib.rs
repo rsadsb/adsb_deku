@@ -1,9 +1,74 @@
 use deku::prelude::*;
+pub use deku::DekuContainerRead;
+mod crc;
+
+use deku::bitvec::BitSlice;
+use deku::bitvec::Msb0;
+
+pub const MODES_LONG_MSG_BYTES: usize = 14;
+pub const MODES_SHORT_MSG_BYTES: usize = 7;
 
 #[derive(Debug, PartialEq, DekuRead)]
 pub struct Frame {
     /// 5 bits
     pub df: DF,
+    /// Calculated from all bits, used as ICAO for Response packets
+    #[deku(reader = "Self::read_crc(df, deku::input_bits)")]
+    pub crc: u32,
+}
+
+impl Frame {
+    /// Read and convert to String
+    fn read_crc<'a, 'b>(
+        df: &'a DF,
+        rest: &'b BitSlice<Msb0, u8>,
+    ) -> Result<(&'b BitSlice<Msb0, u8>, u32), DekuError> {
+        let bit_len = modes_message_len_by_type(df);
+        let crc = crc::modes_checksum(rest.as_raw_slice(), bit_len);
+        Ok((rest, crc))
+    }
+}
+
+pub fn modes_message_len_by_type(typ: &DF) -> usize {
+    if typ.deku_id().unwrap() & 0x10 != 0 {
+        MODES_LONG_MSG_BYTES * 8
+    } else {
+        MODES_SHORT_MSG_BYTES * 8
+    }
+}
+
+impl std::fmt::Display for Frame {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match &self.df {
+            DF::ShortAirAirSurveillance {
+                vs,
+                cc,
+                sl,
+                ri,
+                altitude,
+                ..
+            } => {
+                writeln!(
+                    f,
+                    "DF:{}, addr:{:06x}, VS:{}, CC:{}, SL:{}, RI:{}",
+                    self.df.deku_id().unwrap(),
+                    self.crc,
+                    vs,
+                    cc,
+                    sl,
+                    ri
+                )?;
+                writeln!(f, " Short Air-Air Surveillance")?;
+                // TODO the Mode S ADS-B shouldn't be static
+                writeln!(f, "  ICAO Address:  {:06x} (Mode S / ADS-B)", self.crc)?;
+                // TODO the airborne? should't be static
+                writeln!(f, "  Air/Ground:    airborne?")?;
+                writeln!(f, "  Altitude:      {} ft barometric", altitude.altitude)?;
+            }
+            _ => (),
+        }
+        Ok(())
+    }
 }
 
 #[derive(Debug, PartialEq, DekuRead)]
@@ -12,9 +77,8 @@ pub enum DF {
     #[deku(id = "0")]
     ShortAirAirSurveillance {
         /// bit 6
-        // TODO add VerticalStatus
         #[deku(bits = "1")]
-        vertical_status: u8,
+        vs: u8,
 
         /// bit 7
         #[deku(bits = "1")]
@@ -33,19 +97,19 @@ pub enum DF {
         unused1: u8,
 
         /// bits 14-17
-        #[deku(bits = "4")]
+        #[deku(bits = "2")]
         ri: u8,
 
         ///// bits 18-19
-        //#[deku(bits = "2")]
-        //unused2: u8,
+        #[deku(bits = "2")]
+        unused2: u8,
         /// bits 20-32
         altitude: AC13Field,
     },
     #[deku(id = "4")]
     SurveillanceAltitudeReply,
     #[deku(id = "11")]
-    ALL_CALL_REPLY {
+    AllCallReply {
         /// 3 bits
         capability: Capability,
         /// 3 bytes
@@ -62,7 +126,7 @@ pub enum DF {
         pi: u32,
     },
     #[deku(id = "18")]
-    TIS_B {
+    TisB {
         /// 3 bits
         #[deku(bits = "3")]
         cf: u8,
@@ -80,10 +144,8 @@ pub struct AC13Field {
 impl AC13Field {
     /// TODO Add unit
     fn read(rest: &BitSlice<Msb0, u8>) -> Result<(&BitSlice<Msb0, u8>, u32), DekuError> {
-        println!("{}", rest);
         let (rest, num) =
             u32::read(rest, (deku::ctx::Endian::Big, deku::ctx::Size::Bits(13))).unwrap();
-        println!("{}", num);
 
         let m_bit = num & 0x0040;
         let q_bit = num & 0x0010;
@@ -460,7 +522,7 @@ pub struct TargetStateAndStatusInformation {
     #[deku(
         bits = "9",
         endian = "big",
-        map = ("|qnh: u32| -> Result<_, DekuError> {Ok(800.0 + ((qnh - 1) as f32) * 0.8)}").mul_add("|qnh: u32| -> Result<_, DekuError> {Ok(800.0 + ((qnh - 1) as f32) * 0.8)}", "|qnh: u32| -> Result<_, DekuError> {Ok(800.0 + ((qnh - 1) as f32) * 0.8)}")
+        map = "|qnh: u32| -> Result<_, DekuError> {Ok(800.0 + ((qnh - 1) as f32) * 0.8)}"
     )]
     qnh: f32,
     #[deku(bits = "1")]
@@ -825,7 +887,7 @@ mod tests {
     fn testing05() {
         let bytes = hex!("5dab3d17d4ba29");
         let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-        if let DF::ALL_CALL_REPLY {
+        if let DF::AllCallReply {
             icao, capability, ..
         } = frame.df
         {
@@ -920,7 +982,7 @@ mod tests {
     fn testing08() {
         let bytes = hex!("5da039b46d7d81");
         let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-        if let DF::ALL_CALL_REPLY {
+        if let DF::AllCallReply {
             icao, capability, ..
         } = frame.df
         {
@@ -931,31 +993,86 @@ mod tests {
         unreachable!();
     }
 
-    // *02e19ab8a0d3fa;
-    // CRC: ac952b
-    // RSSI: -15.5 dBFS
-    // Score: 1000
-    // Time: 43944312.67us
-    // DF:0 addr:AC952B VS:0 CC:1 SL:7 RI:3 AC:6840
-    //  Short Air-Air Surveillance
-    //   ICAO Address:  AC952B (Mode S / ADS-B)
-    //   Air/Ground:    airborne?
-    //   Baro altitude: 42000 ft
+    //-----new-----
+    //---deku
+    //Frame {
+    //    df: ShortAirAirSurveillance {
+    //        vertical_status: 0,
+    //        cc: 1,
+    //        unused: 0,
+    //        sl: 7,
+    //        unused1: 0,
+    //        ri: 12,
+    //        altitude: AC13Field {
+    //            altitude: 45000,
+    //        },
+    //    },
+    //}
+    //---regular
+    //*02e19cb02512c3;
+    //CRC: 0d097e
+    //RSSI: -8.1 dBFS
+    //Score: 1000
+    //Time: 91219304.17us
+    //DF:0 addr:0D097E VS:0 CC:1 SL:7 RI:3 AC:7344
+    // Short Air-Air Surveillance
+    //  ICAO Address:  0D097E (Mode S / ADS-B)
+    //  Air/Ground:    airborne?
+    //  Altitude:      45000 ft barometric
     #[test]
-    fn testing_DF_0() {
-        let bytes = hex!("02e19ab8a0d3fa");
+    fn testing_df_shortairairsurveillance() {
+        let bytes = hex!("02e19cb02512c3");
         let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-        println!("{:#?}", frame);
+        let resulting_string = format!("{}", frame);
+        assert_eq!(
+            r#"DF:0, addr:0d097e, VS:0, CC:1, SL:7, RI:3
+ Short Air-Air Surveillance
+  ICAO Address:  0d097e (Mode S / ADS-B)
+  Air/Ground:    airborne?
+  Altitude:      45000 ft barometric
+"#,
+            resulting_string
+        );
     }
 
-    // *20001ab8a60bb0;
-    // CRC: ac952b
-    // RSSI: -15.9 dBFS
-    // Score: 1000
-    // Time: 44020405.75us
-    // DF:4 addr:AC952B FS:0 DR:0 UM:0 AC:6840
-    //  Survelliance, Altitude Reply
-    //   ICAO Address:  AC952B (Mode S / ADS-B)
-    //   Air/Ground:    airborne?
-    //   Baro altitude: 42000 ft
+    // -----new-----
+    // ---deku
+    // Frame {
+    //     df: ADSB {
+    //         capability: AG_AIRBORNE,
+    //         icao: [
+    //             13,
+    //             9,
+    //             126,
+    //         ],
+    //         me: AircraftOperationStatus,
+    //         pi: 24580,
+    //     },
+    // }
+    // ---regular
+    // *8d0d097ef8230007005ab8547268;
+    // CRC: 000000
+    // RSSI: -10.3 dBFS
+    // Score: 1800
+    // Time: 92723308.25us
+    // DF:17 AA:0D097E CA:5 ME:F8230007005AB8
+    //  Extended Squitter Aircraft operational status (airborne) (31/0)
+    //   ICAO Address:  0D097E (Mode S / ADS-B)
+    //   Air/Ground:    airborne
+    //   Aircraft Operational Status:
+    //     Version:            2
+    //     Capability classes: ACAS ARV TS
+    //     Operational modes:  SAF SDA=3
+    //     NIC-A:              1
+    //     NACp:               10
+    //     GVA:                2
+    //     SIL:                3 (per hour)
+    //     NICbaro:            1
+    //     Heading reference:  true north
+    #[test]
+    fn testing_09() {
+        let bytes = hex!("8d0d097ef8230007005ab8547268");
+        let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+        //println!("{}", frame);
+    }
 }
