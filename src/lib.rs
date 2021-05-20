@@ -48,23 +48,15 @@ impl std::fmt::Display for Frame {
                 altitude,
                 ..
             } => {
-                writeln!(
-                    f,
-                    "DF:{}, addr:{:06x}, VS:{}, CC:{}, SL:{}, RI:{}",
-                    self.df.deku_id().unwrap(),
-                    self.crc,
-                    vs,
-                    cc,
-                    sl,
-                    ri
-                )?;
                 writeln!(f, " Short Air-Air Surveillance")?;
                 // TODO the Mode S ADS-B shouldn't be static
                 writeln!(f, "  ICAO Address:  {:06x} (Mode S / ADS-B)", self.crc)?;
                 // TODO the airborne? should't be static
                 writeln!(f, "  Air/Ground:    airborne?")?;
                 writeln!(f, "  Altitude:      {} ft barometric", altitude.altitude)?;
-            }
+            },
+            //DF::ADSB {capability, icao, me, pi} => {
+            //},
             _ => (),
         }
         Ok(())
@@ -214,7 +206,107 @@ pub enum ME {
     #[deku(id = "29")]
     TargetStateAndStatusInformation(TargetStateAndStatusInformation),
     #[deku(id = "31")]
-    AircraftOperationStatus,
+    AircraftOperationStatus(OperationStatus),
+}
+
+#[derive(Debug, PartialEq, DekuRead)]
+#[deku(type = "u8", bits = "3")]
+pub enum OperationStatus {
+    #[deku(id = "0")]
+    Airborne(OperationStatusAirborne),
+    #[deku(id = "1")]
+    Surface(OperationStatusSurface),
+}
+
+#[derive(Debug, PartialEq, DekuRead)]
+pub struct OperationStatusAirborne {
+    pub capacity_class_codes: CapacityCodeAirborne,
+    pub operational_mode_codes: u16,
+    pub version_number: ADSBVersion,
+    #[deku(bits = "1")]
+    pub nic_supplement_a: u8,
+    #[deku(bits = "4")]
+    pub navigational_accuracy_category: u8,
+    #[deku(bits = "1")]
+    pub geometric_vertical_accuracy: u8,
+    #[deku(bits = "2")]
+    pub source_integrity_level: u8,
+    #[deku(bits = "1")]
+    pub barometric_altitude_integrity: u8,
+    #[deku(bits = "1")]
+    pub horizontal_reference_direction: u8,
+    #[deku(bits = "1")]
+    pub sil_supplement: u8,
+    #[deku(bits = "1")]
+    pub reserved: u8,
+}
+
+#[derive(Debug, PartialEq, DekuRead)]
+pub struct CapacityCodeAirborne {
+    #[deku(bits = "2")]
+    pub reserved0: u8,
+    #[deku(bits = "1")]
+    pub acas: u8,
+    #[deku(bits = "1")]
+    pub cdti: u8,
+    #[deku(bits = "2")]
+    pub reserved1: u8,
+    #[deku(bits = "1")]
+    pub arv: u8,
+    #[deku(bits = "1")]
+    pub ts: u8,
+    #[deku(bits = "2")]
+    pub tc: u8,
+    #[deku(bits = "6")]
+    pub reserved2: u16,
+}
+
+#[derive(Debug, PartialEq, DekuRead)]
+pub struct OperationStatusSurface {
+    pub capacity_codes: CapacityCodeAirborne,
+    #[deku(bits = "4")]
+    pub capacity_len_code: u8,
+    pub operational_mode_codes: u16,
+    pub version_number: ADSBVersion,
+    #[deku(bits = "1")]
+    pub nic_supplement_a: u8,
+    #[deku(bits = "4")]
+    pub navigational_accuracy_category: u8,
+    #[deku(bits = "1")]
+    pub reserved0: u8,
+    #[deku(bits = "2")]
+    pub source_integrity_level: u8,
+    #[deku(bits = "1")]
+    pub track_angle_or_heading: u8,
+    #[deku(bits = "1")]
+    pub horizontal_reference_direction: u8,
+    #[deku(bits = "1")]
+    pub sil_supplement: u8,
+    #[deku(bits = "1")]
+    pub reserved1: u8,
+}
+
+#[derive(Debug, PartialEq, DekuRead)]
+pub struct OperationCodeSurface {
+    #[deku(bits = "1")]
+    pub poe: u8,
+    #[deku(bits = "1")]
+    pub cdti: u8,
+    #[deku(bits = "1")]
+    pub b2_low: u8,
+    #[deku(bits = "3")]
+    pub lw: u8,
+    #[deku(bits = "6")]
+    pub reserved: u16,
+}
+
+#[derive(Debug, PartialEq, DekuRead)]
+#[deku(type = "u8", bits = "3")]
+pub enum ADSBVersion {
+    DOC9871AppendixA = 0b000,
+    DOC9871AppendixB = 0b001,
+    DOC9871AppendixC = 0b010,
+    Reserved,
 }
 
 #[derive(Debug, PartialEq, DekuRead)]
@@ -993,22 +1085,6 @@ mod tests {
         unreachable!();
     }
 
-    //-----new-----
-    //---deku
-    //Frame {
-    //    df: ShortAirAirSurveillance {
-    //        vertical_status: 0,
-    //        cc: 1,
-    //        unused: 0,
-    //        sl: 7,
-    //        unused1: 0,
-    //        ri: 12,
-    //        altitude: AC13Field {
-    //            altitude: 45000,
-    //        },
-    //    },
-    //}
-    //---regular
     //*02e19cb02512c3;
     //CRC: 0d097e
     //RSSI: -8.1 dBFS
@@ -1025,8 +1101,7 @@ mod tests {
         let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
         let resulting_string = format!("{}", frame);
         assert_eq!(
-            r#"DF:0, addr:0d097e, VS:0, CC:1, SL:7, RI:3
- Short Air-Air Surveillance
+            r#"Short Air-Air Surveillance
   ICAO Address:  0d097e (Mode S / ADS-B)
   Air/Ground:    airborne?
   Altitude:      45000 ft barometric
@@ -1038,17 +1113,34 @@ mod tests {
     // -----new-----
     // ---deku
     // Frame {
-    //     df: ADSB {
-    //         capability: AG_AIRBORNE,
-    //         icao: [
-    //             13,
-    //             9,
-    //             126,
-    //         ],
-    //         me: AircraftOperationStatus,
-    //         pi: 24580,
-    //     },
-    // }
+    //    df: ADSB {
+    //        capability: AG_AIRBORNE,
+    //        icao: [
+    //            13,
+    //            9,
+    //            126,
+    //        ],
+    //        me: AircraftOperationStatus(
+    //            Airborne(
+    //                OperationStatusAirborne {
+    //                    capacity_class_codes: 35,
+    //                    operational_mode_codes: 7,
+    //                    version_number: DOC9871AppendixC,
+    //                    nic_supplement_a: 1,
+    //                    navigational_accuracy_category: 10,
+    //                    geometric_vertical_accuracy: 1,
+    //                    source_integrity_level: 1,
+    //                    barometric_altitude_integrity: 1,
+    //                    horizontal_reference_direction: 1,
+    //                    sil_supplement: 0,
+    //                    reserved: 0,
+    //                },
+    //            ),
+    //        ),
+    //        pi: 3422506,
+    //    },
+    //    crc: 0,
+    //}
     // ---regular
     // *8d0d097ef8230007005ab8547268;
     // CRC: 000000
@@ -1070,9 +1162,9 @@ mod tests {
     //     NICbaro:            1
     //     Heading reference:  true north
     #[test]
-    fn testing_09() {
+    fn testing_df_extendedsquitteraircraftopstatus() {
         let bytes = hex!("8d0d097ef8230007005ab8547268");
         let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-        //println!("{}", frame);
+        println!("{:#?}", frame);
     }
 }
