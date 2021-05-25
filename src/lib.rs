@@ -54,9 +54,24 @@ impl std::fmt::Display for Frame {
                 // TODO the airborne? should't be static
                 writeln!(f, "  Air/Ground:    airborne?")?;
                 writeln!(f, "  Altitude:      {} ft barometric", altitude.altitude)?;
+            }
+            DF::ADSB {
+                capability,
+                icao,
+                me,
+                pi,
+            } => match me {
+                ME::AircraftOperationStatus(OperationStatus::Airborne(opstatus_airborne)) => {
+                    writeln!(
+                        f,
+                        " Extended Quitter Aircraft operational status (airborne) (31/0)"
+                    )?;
+                    writeln!(f, " ICAO Address:  {} (Mode S / ADS-B)", icao)?;
+                    writeln!(f, " Air/Ground:    airborne")?;
+                    write!(f, " Aircraft Operational Status:\n{}", opstatus_airborne)?;
+                }
+                _ => (),
             },
-            //DF::ADSB {capability, icao, me, pi} => {
-            //},
             _ => (),
         }
         Ok(())
@@ -105,14 +120,14 @@ pub enum DF {
         /// 3 bits
         capability: Capability,
         /// 3 bytes
-        icao: [u8; 3],
+        icao: ICAO,
     },
     #[deku(id = "17")]
     ADSB {
         /// 3 bits
         capability: Capability,
         /// 3 bytes
-        icao: [u8; 3],
+        icao: ICAO,
         me: ME,
         #[deku(bits = "24")]
         pi: u32,
@@ -123,8 +138,20 @@ pub enum DF {
         #[deku(bits = "3")]
         cf: u8,
         /// 3 bytes
-        icao: [u8; 3],
+        icao: ICAO,
     },
+}
+
+#[derive(Debug, PartialEq, DekuRead)]
+pub struct ICAO([u8; 3]);
+
+impl std::fmt::Display for ICAO {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:02x}", self.0[0])?;
+        write!(f, "{:02x}", self.0[1])?;
+        write!(f, "{:02x}", self.0[2])?;
+        Ok(())
+    }
 }
 
 #[derive(Debug, PartialEq, DekuRead)]
@@ -220,14 +247,15 @@ pub enum OperationStatus {
 
 #[derive(Debug, PartialEq, DekuRead)]
 pub struct OperationStatusAirborne {
-    pub capacity_class_codes: CapacityCodeAirborne,
+    // 16 bits
+    pub capability_codes: CapabilityCode,
     pub operational_mode_codes: u16,
     pub version_number: ADSBVersion,
     #[deku(bits = "1")]
     pub nic_supplement_a: u8,
     #[deku(bits = "4")]
     pub navigational_accuracy_category: u8,
-    #[deku(bits = "1")]
+    #[deku(bits = "2")]
     pub geometric_vertical_accuracy: u8,
     #[deku(bits = "2")]
     pub source_integrity_level: u8,
@@ -241,8 +269,43 @@ pub struct OperationStatusAirborne {
     pub reserved: u8,
 }
 
+impl std::fmt::Display for OperationStatusAirborne {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "   Version:            {}", self.version_number)?;
+        writeln!(f, "   Capability classes:{}", self.capability_codes)?;
+        writeln!(f, "   Operational modes:  {}", self.operational_mode_codes)?;
+        writeln!(f, "   NIC-A:              {}", self.nic_supplement_a);
+        writeln!(
+            f,
+            "   NACp:               {}",
+            self.navigational_accuracy_category
+        );
+        writeln!(
+            f,
+            "   GVA:                {}",
+            self.geometric_vertical_accuracy
+        );
+        writeln!(
+            f,
+            "   SIL:                {} (per hour)",
+            self.source_integrity_level
+        );
+        writeln!(
+            f,
+            "   NICbaro:            {}",
+            self.barometric_altitude_integrity
+        );
+        if self.horizontal_reference_direction != 1 {
+            writeln!(f, "   Heading reference:  true north")?;
+        } else {
+            writeln!(f, "   Heading reference:  magnetic north")?;
+        }
+        Ok(())
+    }
+}
+
 #[derive(Debug, PartialEq, DekuRead)]
-pub struct CapacityCodeAirborne {
+pub struct CapabilityCode {
     #[deku(bits = "2")]
     pub reserved0: u8,
     #[deku(bits = "1")]
@@ -258,12 +321,33 @@ pub struct CapacityCodeAirborne {
     #[deku(bits = "2")]
     pub tc: u8,
     #[deku(bits = "6")]
-    pub reserved2: u16,
+    pub reserved2: u8,
+}
+
+impl std::fmt::Display for CapabilityCode {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if self.acas == 1 {
+            write!(f, " ACAS")?;
+        }
+        if self.cdti == 1 {
+            write!(f, " CDTI")?;
+        }
+        if self.arv == 1 {
+            write!(f, " ARV")?;
+        }
+        if self.ts == 1 {
+            write!(f, " TS")?;
+        }
+        if self.tc == 1 {
+            write!(f, " TC")?;
+        }
+        Ok(())
+    }
 }
 
 #[derive(Debug, PartialEq, DekuRead)]
 pub struct OperationStatusSurface {
-    pub capacity_codes: CapacityCodeAirborne,
+    pub capacity_codes: CapabilityCode,
     #[deku(bits = "4")]
     pub capacity_len_code: u8,
     pub operational_mode_codes: u16,
@@ -306,7 +390,20 @@ pub enum ADSBVersion {
     DOC9871AppendixA = 0b000,
     DOC9871AppendixB = 0b001,
     DOC9871AppendixC = 0b010,
-    Reserved,
+}
+
+impl std::fmt::Display for ADSBVersion {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Self::DOC9871AppendixA => "0",
+                Self::DOC9871AppendixB => "1",
+                Self::DOC9871AppendixC => "2",
+            }
+        )
+    }
 }
 
 #[derive(Debug, PartialEq, DekuRead)]
@@ -960,7 +1057,7 @@ mod tests {
         } = frame.df
         {
             assert_eq!(capability, Capability::AG_AIRBORNE);
-            assert_eq!(icao, [0xac, 0xc0, 0x40]);
+            assert_eq!(icao.0, [0xac, 0xc0, 0x40]);
             return;
         }
         unreachable!();
@@ -983,7 +1080,7 @@ mod tests {
             icao, capability, ..
         } = frame.df
         {
-            assert_eq!(icao, hex!("ab3d17"));
+            assert_eq!(icao.0, hex!("ab3d17"));
             assert_eq!(capability, Capability::AG_AIRBORNE);
             return;
         }
@@ -1078,7 +1175,7 @@ mod tests {
             icao, capability, ..
         } = frame.df
         {
-            assert_eq!(icao, hex!("a039b4"));
+            assert_eq!(icao.0, hex!("a039b4"));
             assert_eq!(capability, Capability::AG_AIRBORNE);
             return;
         }
@@ -1165,6 +1262,24 @@ mod tests {
     fn testing_df_extendedsquitteraircraftopstatus() {
         let bytes = hex!("8d0d097ef8230007005ab8547268");
         let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-        println!("{:#?}", frame);
+        let resulting_string = format!("{}", frame);
+        //TODO: Operational modes:  SAF SDA=3
+        assert_eq!(
+            r#" Extended Quitter Aircraft operational status (airborne) (31/0)
+ ICAO Address:  0d097e (Mode S / ADS-B)
+ Air/Ground:    airborne
+ Aircraft Operational Status:
+   Version:            2
+   Capability classes: ACAS ARV TS
+   Operational modes:  7
+   NIC-A:              1
+   NACp:               10
+   GVA:                2
+   SIL:                3 (per hour)
+   NICbaro:            1
+   Heading reference:  true north
+"#,
+            resulting_string
+        );
     }
 }
