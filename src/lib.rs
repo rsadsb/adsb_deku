@@ -950,6 +950,7 @@ mod mode_ac {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use assert_hex::assert_eq_hex;
     use hexlit::hex;
 
     #[test]
@@ -1056,8 +1057,8 @@ mod tests {
             capability, icao, ..
         } = frame.df
         {
+            assert_eq_hex!(icao.0, [0xac, 0xc0, 0x40]);
             assert_eq!(capability, Capability::AG_AIRBORNE);
-            assert_eq!(icao.0, [0xac, 0xc0, 0x40]);
             return;
         }
         unreachable!();
@@ -1080,7 +1081,7 @@ mod tests {
             icao, capability, ..
         } = frame.df
         {
-            assert_eq!(icao.0, hex!("ab3d17"));
+            assert_eq_hex!(icao.0, hex!("ab3d17"));
             assert_eq!(capability, Capability::AG_AIRBORNE);
             return;
         }
@@ -1175,7 +1176,7 @@ mod tests {
             icao, capability, ..
         } = frame.df
         {
-            assert_eq!(icao.0, hex!("a039b4"));
+            assert_eq_hex!(icao.0, hex!("a039b4"));
             assert_eq!(capability, Capability::AG_AIRBORNE);
             return;
         }
@@ -1198,7 +1199,7 @@ mod tests {
         let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
         let resulting_string = format!("{}", frame);
         assert_eq!(
-            r#"Short Air-Air Surveillance
+            r#" Short Air-Air Surveillance
   ICAO Address:  0d097e (Mode S / ADS-B)
   Air/Ground:    airborne?
   Altitude:      45000 ft barometric
