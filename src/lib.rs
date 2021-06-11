@@ -55,6 +55,11 @@ impl std::fmt::Display for Frame {
                 writeln!(f, "  Air/Ground:    airborne?")?;
                 writeln!(f, "  Altitude:      {} ft barometric", altitude.altitude)?;
             }
+            DF::AllCallReply { capability, icao } => {
+                writeln!(f, " All Call Reply")?;
+                writeln!(f, "  ICAO Address:  {} (Mode S / ADS-B)", icao)?;
+                writeln!(f, "  Air/Ground:    {}", capability)?;
+            }
             DF::ADSB {
                 capability,
                 icao,
@@ -211,6 +216,23 @@ pub enum Capability {
     AG_AIRBORNE   = 0x05,
     AG_UNCERTAIN2 = 0x06,
     AG_UNCERTAIN3 = 0x07,
+}
+
+impl std::fmt::Display for Capability {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Capability::AG_UNCERTAIN => "uncertain1",
+                Capability::Reserved => "reserved",
+                Capability::AG_GROUND => "ground",
+                Capability::AG_AIRBORNE => "airborne",
+                Capability::AG_UNCERTAIN2 => "uncertain2",
+                Capability::AG_UNCERTAIN3 => "uncertain3",
+            }
+        )
+    }
 }
 
 #[derive(Debug, PartialEq, DekuRead)]
@@ -1279,6 +1301,20 @@ mod tests {
    SIL:                3 (per hour)
    NICbaro:            1
    Heading reference:  true north
+"#,
+            resulting_string
+        );
+    }
+
+    #[test]
+    fn testing_allcall_reply() {
+        let bytes = hex!("5da58fd4561b39");
+        let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+        let resulting_string = format!("{}", frame);
+        assert_eq!(
+            r#" All Call Reply
+  ICAO Address:  a58fd4 (Mode S / ADS-B)
+  Air/Ground:    airborne
 "#,
             resulting_string
         );
