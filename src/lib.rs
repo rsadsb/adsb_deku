@@ -66,6 +66,30 @@ impl std::fmt::Display for Frame {
                 me,
                 pi,
             } => match me {
+                ME::AirbornePositionBaroAltitude(Altitude {
+                    alt,
+                    odd_flag,
+                    lat_cpr,
+                    lon_cpr,
+                    ..
+                }) => {
+                    writeln!(
+                        f,
+                        " Extended Squitter Airborne position (barometric altitude) (11)"
+                    );
+                    writeln!(f, "  ICAO Address:  {} (Mode S / ADS-B)", icao);
+                    writeln!(f, "  Air/Ground:    {}", capability);
+                    writeln!(f, "  Altitude:      {} ft barometric", alt);
+                    // TODO: fix me
+                    writeln!(f, "  CPR type:      Airborne");
+                    writeln!(f, "  CPR odd flag:  {}", odd_flag);
+                    // TODO: fix me
+                    writeln!(f, "  CPR NUCp/NIC:  7");
+                    writeln!(f, "  CPR latitude:  ({})", lat_cpr);
+                    writeln!(f, "  CPR longitude: ({})", lon_cpr);
+                    // TODO: fix me
+                    writeln!(f, "  CPR decoding:  none");
+                }
                 ME::AircraftOperationStatus(OperationStatus::Airborne(opstatus_airborne)) => {
                     writeln!(
                         f,
@@ -472,7 +496,7 @@ pub struct Altitude {
     #[deku(bits = "1")]
     t: bool,
     /// Odd or even
-    f: CPRFormat,
+    odd_flag: CPRFormat,
     #[deku(bits = "17", endian = "big")]
     lat_cpr: u32,
     #[deku(bits = "17", endian = "big")]
@@ -580,6 +604,19 @@ pub enum SurveillanceStatus {
 pub enum CPRFormat {
     Even = 0,
     Odd  = 1,
+}
+
+impl std::fmt::Display for CPRFormat {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Self::Even => "even",
+                Self::Odd => "odd",
+            }
+        )
+    }
 }
 
 #[derive(Debug, PartialEq, DekuRead)]
@@ -985,7 +1022,7 @@ mod tests {
                 assert_eq!(me.alt, 38000);
                 assert_eq!(me.lat_cpr, 93000);
                 assert_eq!(me.lon_cpr, 51372);
-                assert_eq!(me.f, CPRFormat::Even);
+                assert_eq!(me.odd_flag, CPRFormat::Even);
                 return;
             }
         }
@@ -1315,6 +1352,27 @@ mod tests {
             r#" All Call Reply
   ICAO Address:  a58fd4 (Mode S / ADS-B)
   Air/Ground:    airborne
+"#,
+            resulting_string
+        );
+    }
+
+    #[test]
+    fn testing_airbornepositionbaroaltitude() {
+        let bytes = hex!("8dac537858af85d576faed51e731");
+        let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+        let resulting_string = format!("{}", frame);
+        assert_eq!(
+            r#" Extended Squitter Airborne position (barometric altitude) (11)
+  ICAO Address:  ac5378 (Mode S / ADS-B)
+  Air/Ground:    airborne
+  Altitude:      34000 ft barometric
+  CPR type:      Airborne
+  CPR odd flag:  odd
+  CPR NUCp/NIC:  7
+  CPR latitude:  (60091)
+  CPR longitude: (64237)
+  CPR decoding:  none
 "#,
             resulting_string
         );
