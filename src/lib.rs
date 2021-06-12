@@ -40,14 +40,7 @@ pub fn modes_message_len_by_type(typ: &DF) -> usize {
 impl std::fmt::Display for Frame {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match &self.df {
-            DF::ShortAirAirSurveillance {
-                vs,
-                cc,
-                sl,
-                ri,
-                altitude,
-                ..
-            } => {
+            DF::ShortAirAirSurveillance { altitude, .. } => {
                 writeln!(f, " Short Air-Air Surveillance")?;
                 // TODO the Mode S ADS-B shouldn't be static
                 writeln!(f, "  ICAO Address:  {:06x} (Mode S / ADS-B)", self.crc)?;
@@ -78,7 +71,7 @@ impl std::fmt::Display for Frame {
                 capability,
                 icao,
                 me,
-                pi,
+                ..
             } => match me {
                 ME::AirbornePositionBaroAltitude(Altitude {
                     alt,
