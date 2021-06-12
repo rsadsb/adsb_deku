@@ -46,21 +46,21 @@ impl std::fmt::Display for Frame {
                 writeln!(f, "  ICAO Address:  {:06x} (Mode S / ADS-B)", self.crc)?;
                 // TODO the airborne? should't be static
                 writeln!(f, "  Air/Ground:    airborne?")?;
-                writeln!(f, "  Altitude:      {} ft barometric", altitude.altitude)?;
+                writeln!(f, "  Altitude:      {} ft barometric", altitude.0)?;
             }
             DF::SurveillanceAltitudeReply { fs, ac, .. } => {
                 writeln!(f, " Surveillance, Altitude Reply")?;
                 // TODO: fix me
                 writeln!(f, "  ICAO Address:  a3ecce (Mode S / ADS-B)")?;
                 writeln!(f, "  Air/Ground:    {}", fs)?;
-                writeln!(f, "  Altitude:      {} ft barometric", ac.altitude)?;
+                writeln!(f, "  Altitude:      {} ft barometric", ac.0)?;
             }
             DF::SurveillanceIdentityReply { fs, id, .. } => {
                 writeln!(f, " Surveillance, Identity Reply")?;
                 // TODO: fix me
                 writeln!(f, "  ICAO Address:  ?????? (Mode S / ADS-B)")?;
                 writeln!(f, "  Air/Ground:    {}", fs)?;
-                writeln!(f, "  Identity:      {:04x}", id.identity)?;
+                writeln!(f, "  Identity:      {:04x}", id.0)?;
             }
             DF::AllCallReply { capability, icao } => {
                 writeln!(f, " All Call Reply")?;
@@ -265,10 +265,7 @@ impl std::fmt::Display for ICAO {
 }
 
 #[derive(Debug, PartialEq, DekuRead)]
-pub struct IdentityCode {
-    #[deku(reader = "Self::read(deku::rest)")]
-    identity: u16,
-}
+pub struct IdentityCode(#[deku(reader = "Self::read(deku::rest)")] u16);
 
 impl IdentityCode {
     fn read(rest: &BitSlice<Msb0, u8>) -> Result<(&BitSlice<Msb0, u8>, u16), DekuError> {
@@ -301,10 +298,7 @@ impl IdentityCode {
 }
 
 #[derive(Debug, PartialEq, DekuRead)]
-pub struct AC13Field {
-    #[deku(reader = "Self::read(deku::rest)")]
-    altitude: u32,
-}
+pub struct AC13Field(#[deku(reader = "Self::read(deku::rest)")] u32);
 
 impl AC13Field {
     /// TODO Add unit
@@ -799,10 +793,8 @@ impl AirborneVelocity {
 #[derive(Copy, Clone, Debug, PartialEq, DekuRead)]
 #[deku(type = "u8", bits = "3")]
 pub enum AirborneVelocityType {
-    #[deku(id = "1")]
-    Subsonic,
-    #[deku(id = "3")]
-    Supersonic,
+    Subsonic   = 1,
+    Supersonic = 3,
 }
 
 #[derive(Debug, PartialEq, DekuRead)]
