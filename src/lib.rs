@@ -55,6 +55,20 @@ impl std::fmt::Display for Frame {
                 writeln!(f, "  Air/Ground:    airborne?")?;
                 writeln!(f, "  Altitude:      {} ft barometric", altitude.altitude)?;
             }
+            DF::SurveillanceAltitudeReply { fs, ac, .. } => {
+                writeln!(f, " Surveillance, Altitude Reply")?;
+                // TODO: fix me
+                writeln!(f, "  ICAO Address:  a3ecce (Mode S / ADS-B)")?;
+                writeln!(f, "  Air/Ground:    {}", fs)?;
+                writeln!(f, "  Altitude:      {} ft barometric", ac.altitude)?;
+            }
+            DF::SurveillanceIdentityReply { fs, id, .. } => {
+                writeln!(f, " Surveillance, Identity Reply")?;
+                // TODO: fix me
+                writeln!(f, "  ICAO Address:  ?????? (Mode S / ADS-B)")?;
+                writeln!(f, "  Air/Ground:    {}", fs)?;
+                writeln!(f, "  Identity:      {:04x}", id.identity)?;
+            }
             DF::AllCallReply { capability, icao } => {
                 writeln!(f, " All Call Reply")?;
                 writeln!(f, "  ICAO Address:  {} (Mode S / ADS-B)", icao)?;
@@ -143,7 +157,25 @@ pub enum DF {
         altitude: AC13Field,
     },
     #[deku(id = "4")]
-    SurveillanceAltitudeReply,
+    SurveillanceAltitudeReply {
+        fs: FlightStatus,
+        #[deku(bits = "5")]
+        dr: u8,
+        um: UtilityMessage,
+        ac: AC13Field,
+        #[deku(bits = "24")]
+        ap: u32,
+    },
+    #[deku(id = "5")]
+    SurveillanceIdentityReply {
+        fs: FlightStatus,
+        #[deku(bits = "5")]
+        dr: u8,
+        um: UtilityMessage,
+        id: IdentityCode,
+        #[deku(bits = "24")]
+        ap: u32,
+    },
     #[deku(id = "11")]
     AllCallReply {
         /// 3 bits
@@ -172,6 +204,62 @@ pub enum DF {
 }
 
 #[derive(Debug, PartialEq, DekuRead)]
+pub struct UtilityMessage {
+    #[deku(bits = "4")]
+    pub iis: u8,
+    pub ids: UtilityMessageType,
+}
+
+#[derive(Debug, PartialEq, DekuRead)]
+#[deku(type = "u8", bits = "2")]
+pub enum UtilityMessageType {
+    NoInformation = 0b00,
+    CommB         = 0b01,
+    CommC         = 0b10,
+    CommD         = 0b11,
+}
+
+#[derive(Debug, PartialEq, DekuRead)]
+#[deku(type = "u8", bits = "3")]
+pub enum FlightStatus {
+    NoAlertNoSPIAirborne     = 0b000,
+    NoAlertNoSPIOnGround     = 0b001,
+    AlertNoSPIAirborne       = 0b010,
+    AlertNoSPIOnGround       = 0b011,
+    AlertSPIAirborneGround   = 0b100,
+    NoAlertSPIAirborneGround = 0b101,
+    Reserved                 = 0b110,
+    NotAssigned              = 0b111,
+}
+
+impl std::fmt::Display for FlightStatus {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Self::NoAlertNoSPIAirborne => "airborne?",
+                Self::NoAlertNoSPIOnGround => "ground?",
+                Self::AlertNoSPIAirborne => "airborne",
+                Self::AlertNoSPIOnGround => "ground",
+                Self::AlertSPIAirborneGround => "airborne?",
+                Self::NoAlertSPIAirborneGround => "airborne?",
+                _ => "reserved",
+            }
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, DekuRead)]
+#[deku(type = "u8", bits = "5")]
+pub enum DownlinkRequest {
+    None               = 0b00000,
+    RequestSendCommB   = 0b00001,
+    CommBBroadcastMsg1 = 0b00100,
+    CommBBroadcastMsg2 = 0b00101,
+}
+
+#[derive(Debug, PartialEq, DekuRead)]
 pub struct ICAO([u8; 3]);
 
 impl std::fmt::Display for ICAO {
@@ -180,6 +268,42 @@ impl std::fmt::Display for ICAO {
         write!(f, "{:02x}", self.0[1])?;
         write!(f, "{:02x}", self.0[2])?;
         Ok(())
+    }
+}
+
+#[derive(Debug, PartialEq, DekuRead)]
+pub struct IdentityCode {
+    #[deku(reader = "Self::read(deku::rest)")]
+    identity: u16,
+}
+
+impl IdentityCode {
+    fn read(rest: &BitSlice<Msb0, u8>) -> Result<(&BitSlice<Msb0, u8>, u16), DekuError> {
+        let (rest, num) =
+            u32::read(rest, (deku::ctx::Endian::Big, deku::ctx::Size::Bits(13))).unwrap();
+
+        let c1 = (num & 0b1_0000_0000_0000) >> 12;
+        let a1 = (num & 0b0_1000_0000_0000) >> 11;
+        let c2 = (num & 0b0_0100_0000_0000) >> 10;
+        let a2 = (num & 0b0_0010_0000_0000) >> 9;
+        let c4 = (num & 0b0_0001_0000_0000) >> 8;
+        let a4 = (num & 0b0_0000_1000_0000) >> 7;
+        let _ = (num & 0b0_0000_0100_0000) >> 6;
+        let b1 = (num & 0b0_0000_0010_0000) >> 5;
+        let d1 = (num & 0b0_0000_0001_0000) >> 4;
+        let b2 = (num & 0b0_0000_0000_1000) >> 3;
+        let d2 = (num & 0b0_0000_0000_0100) >> 2;
+        let b4 = (num & 0b0_0000_0000_0010) >> 1;
+        let d4 = (num & 0b0_0000_0000_0001) >> 0;
+
+        let a = a4 << 2 | a2 << 1 | a1;
+        let b = b4 << 2 | b2 << 1 | b1;
+        let c = c4 << 2 | c2 << 1 | c1;
+        let d = d4 << 2 | d2 << 1 | d1;
+        println!("{} {} {} {}", a, b, c, d);
+
+        let num: u16 = (a << 12 | b << 8 | c << 4 | d) as u16;
+        Ok((rest, num))
     }
 }
 
@@ -217,10 +341,8 @@ impl AC13Field {
 #[derive(Debug, PartialEq, DekuRead)]
 #[deku(type = "u8", bits = "1")]
 pub enum Unit {
-    #[deku(id = "0")]
-    Meter,
-    #[deku(id = "1")]
-    Feet,
+    Meter = 0,
+    Feet  = 1,
 }
 
 impl Default for Unit {
@@ -1373,6 +1495,38 @@ mod tests {
   CPR latitude:  (60091)
   CPR longitude: (64237)
   CPR decoding:  none
+"#,
+            resulting_string
+        );
+    }
+
+    #[test]
+    fn testing_surveillancealtitudereply() {
+        let bytes = hex!("200012b0d96e39");
+        let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+        let resulting_string = format!("{}", frame);
+        assert_eq!(
+            r#" Surveillance, Altitude Reply
+  ICAO Address:  a3ecce (Mode S / ADS-B)
+  Air/Ground:    airborne?
+  Altitude:      29000 ft barometric
+"#,
+            resulting_string
+        );
+    }
+
+    // TODO
+    // This test is from mode-s.org, check with the dump1090-rs
+    #[test]
+    fn testing_surveillanceidentityreply() {
+        let bytes = hex!("2A00516D492B80");
+        let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+        let resulting_string = format!("{}", frame);
+        assert_eq!(
+            r#" Surveillance, Identity Reply
+  ICAO Address:  ?????? (Mode S / ADS-B)
+  Air/Ground:    airborne
+  Identity:      0356
 "#,
             resulting_string
         );
