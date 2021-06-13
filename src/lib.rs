@@ -97,6 +97,32 @@ impl std::fmt::Display for Frame {
                     // TODO: fix me
                     writeln!(f, "  CPR decoding:  none");
                 }
+                ME::AirborneVelocity(airborne_velocity) => {
+                    if let AirborneVelocitySubType::GroundSpeedDecoding(_) =
+                        airborne_velocity.sub_type
+                    {
+                        let (heading, ground_speed, vertical_rate) = airborne_velocity.calculate();
+                        println!("{} {} {}", heading, ground_speed, vertical_rate);
+                        writeln!(
+                            f,
+                            " Extended Squitter Airborne velocity over ground, subsonic (19/1)"
+                        );
+                        writeln!(f, "  ICAO Address:  {} (Mode S / ADS-B)", icao);
+                        writeln!(f, "  Air/Ground:    {}", capability);
+                        writeln!(
+                            f,
+                            "  GNSS delta:    {} ft",
+                            airborne_velocity.gnss_baro_diff
+                        );
+                        writeln!(f, "  Heading:       {}", heading.ceil());
+                        writeln!(
+                            f,
+                            "  Speed:         {} kt groundspeed",
+                            ground_speed.floor()
+                        );
+                        writeln!(f, "  Vertical rate: {} ft/min GNSS", vertical_rate);
+                    }
+                }
                 ME::AircraftOperationStatus(OperationStatus::Airborne(opstatus_airborne)) => {
                     writeln!(
                         f,
@@ -757,37 +783,74 @@ pub struct AirborneVelocity {
     st: u8,
     #[deku(bits = "5")]
     extra: u8,
+    #[deku(ctx = "*st")]
+    sub_type: AirborneVelocitySubType,
+    vrate_src: VerticalRateSource,
+    vrate_sign: Sign,
+    #[deku(endian = "big", bits = "9")]
+    vrate_value: u16,
+    #[deku(bits = "2")]
+    reverved: u8,
+    gnss_sign: Sign,
+    #[deku(
+        bits = "7",
+        map = "|gnss_baro_diff: u16| -> Result<_, DekuError> {Ok((gnss_baro_diff - 1)* 25)}"
+    )]
+    gnss_baro_diff: u16,
+}
+
+impl AirborneVelocity {
+    /// Return effective (heading, ground_speed, vertical_rate)
+    pub fn calculate(&self) -> (f64, f64, i16) {
+        if let AirborneVelocitySubType::GroundSpeedDecoding(ground_speed) = &self.sub_type {
+            let v_ew = f64::from((ground_speed.ew_vel as i16 - 1) * ground_speed.ew_sign.value());
+            let v_ns = f64::from((ground_speed.ns_vel as i16 - 1) * ground_speed.ns_sign.value());
+            let h = v_ew.atan2(v_ns) * (360.0 / (2.0 * std::f64::consts::PI));
+            let heading = if h < 0.0 { h + 360.0 } else { h };
+
+            let vrate = self
+                .vrate_value
+                .checked_sub(1)
+                .and_then(|v| v.checked_mul(64))
+                .map(|v| (v as i16) * self.vrate_sign.value())
+                .unwrap();
+
+            (heading, v_ew.hypot(v_ns), vrate)
+        } else {
+            panic!();
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, DekuRead)]
+#[deku(ctx = "st: u8", id = "st")]
+pub enum AirborneVelocitySubType {
+    #[deku(id_pat = "1..=2")]
+    GroundSpeedDecoding(GroundSpeedDecoding),
+    #[deku(id_pat = "3..=4")]
+    AirspeedDecoding(AirspeedDecoding),
+}
+
+#[derive(Debug, PartialEq, DekuRead)]
+pub struct GroundSpeedDecoding {
     ew_sign: Sign,
     #[deku(endian = "big", bits = "10")]
     ew_vel: u16,
     ns_sign: Sign,
     #[deku(endian = "big", bits = "10")]
     ns_vel: u16,
-    vrate_src: VerticalRateSource,
-    vrate_sign: Sign,
-    #[deku(endian = "big", bits = "9")]
-    vrate_value: u16,
-    #[deku(bits = "10")]
-    extra1: u16,
 }
 
-impl AirborneVelocity {
-    /// Return effective (heading, ground_speed, vertical_rate)
-    pub fn calculate(&self) -> (f64, f64, i16) {
-        let v_ew = f64::from((self.ew_vel as i16 - 1) * self.ew_sign.value());
-        let v_ns = f64::from((self.ns_vel as i16 - 1) * self.ns_sign.value());
-        let h = v_ew.atan2(v_ns) * (360.0 / (2.0 * std::f64::consts::PI));
-        let heading = if h < 0.0 { h + 360.0 } else { h };
-
-        let vrate = self
-            .vrate_value
-            .checked_sub(1)
-            .and_then(|v| v.checked_mul(64))
-            .map(|v| (v as i16) * self.vrate_sign.value())
-            .unwrap();
-
-        (heading, v_ew.hypot(v_ns), vrate)
-    }
+#[derive(Debug, PartialEq, DekuRead)]
+pub struct AirspeedDecoding {
+    #[deku(bits = "1")]
+    status_heading: u8,
+    #[deku(endian = "big", bits = "10")]
+    mag_heading: u16,
+    #[deku(bits = "1")]
+    airspeed_type: u8,
+    #[deku(endian = "big", bits = "10")]
+    airspeed: u16,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, DekuRead)]
@@ -1512,6 +1575,24 @@ mod tests {
   ICAO Address:  ?????? (Mode S / ADS-B)
   Air/Ground:    airborne
   Identity:      0356
+"#,
+            resulting_string
+        );
+    }
+
+    #[test]
+    fn testing_airbornevelocity() {
+        let bytes = hex!("8dac8e1a9924263950043944cf32");
+        let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+        let resulting_string = format!("{}", frame);
+        assert_eq!(
+            r#" Extended Squitter Airborne velocity over ground, subsonic (19/1)
+  ICAO Address:  ac8e1a (Mode S / ADS-B)
+  Air/Ground:    airborne
+  GNSS delta:    1400 ft
+  Heading:       356
+  Speed:         458 kt groundspeed
+  Vertical rate: 0 ft/min GNSS
 "#,
             resulting_string
         );
