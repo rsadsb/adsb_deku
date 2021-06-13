@@ -62,7 +62,9 @@ impl std::fmt::Display for Frame {
                 writeln!(f, "  Air/Ground:    {}", fs)?;
                 writeln!(f, "  Identity:      {:04x}", id.0)?;
             }
-            DF::AllCallReply { capability, icao } => {
+            DF::AllCallReply {
+                capability, icao, ..
+            } => {
                 writeln!(f, " All Call Reply")?;
                 writeln!(f, "  ICAO Address:  {} (Mode S / ADS-B)", icao)?;
                 writeln!(f, "  Air/Ground:    {}", capability)?;
@@ -96,6 +98,22 @@ impl std::fmt::Display for Frame {
                     writeln!(f, "  CPR longitude: ({})", lon_cpr);
                     // TODO: fix me
                     writeln!(f, "  CPR decoding:  none");
+                }
+                ME::TargetStateAndStatusInformation(target_info) => {
+                    writeln!(f, " Extended Squitter Target state and status (V2) (29/1)");
+                    writeln!(f, "  ICAO Address:  {} (Mode S / ADS-B)", icao);
+                    writeln!(f, "  Air/Ground:    {}", capability);
+                    writeln!(f, "  Target State and Status:");
+                    writeln!(f, "    Target altitude:   MCP, {} ft", target_info.altitude);
+                    writeln!(f, "    Altimeter setting: {} millibars", target_info.qnh);
+                    if target_info.tcas {
+                        writeln!(f, "    ACAS:              operational");
+                    } else {
+                        writeln!(f, "    ACAS:              NOT operational");
+                    }
+                    writeln!(f, "    NACp:              {}", target_info.nacp);
+                    writeln!(f, "    NICbaro:           {}", target_info.nicbaro);
+                    writeln!(f, "    SIL:               {} (per sample)", target_info.sil);
                 }
                 ME::AirborneVelocity(airborne_velocity) => {
                     if let AirborneVelocitySubType::GroundSpeedDecoding(_) =
@@ -201,6 +219,8 @@ pub enum DF {
         capability: Capability,
         /// 3 bytes
         icao: ICAO,
+        /// 3 bytes
+        p_icao: ICAO,
     },
     #[deku(id = "17")]
     ADSB {
@@ -621,7 +641,7 @@ impl Identification {
 #[derive(Debug, PartialEq, DekuRead)]
 pub struct Altitude {
     #[deku(bits = "5")]
-    dumb: u8,
+    tc: u8,
     ss: SurveillanceStatus,
     #[deku(bits = "1")]
     saf: u8,
@@ -1593,6 +1613,27 @@ mod tests {
   Heading:       356
   Speed:         458 kt groundspeed
   Vertical rate: 0 ft/min GNSS
+"#,
+            resulting_string
+        );
+    }
+
+    #[test]
+    fn testing_targetstateandstatusinformation() {
+        let bytes = hex!("8da97753ea2d0858015c003ee5de");
+        let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+        let resulting_string = format!("{}", frame);
+        assert_eq!(
+            r#" Extended Squitter Target state and status (V2) (29/1)
+  ICAO Address:  a97753 (Mode S / ADS-B)
+  Air/Ground:    airborne
+  Target State and Status:
+    Target altitude:   MCP, 23008 ft
+    Altimeter setting: 1012.8 millibars
+    ACAS:              NOT operational
+    NACp:              10
+    NICbaro:           1
+    SIL:               3 (per sample)
 "#,
             resulting_string
         );
