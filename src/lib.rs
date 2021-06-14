@@ -152,6 +152,16 @@ impl std::fmt::Display for Frame {
                     writeln!(f, "  Air/Ground:    {}", capability);
                     writeln!(f, "  Squawk:        {}", squawk);
                 }
+                ME::AircraftIdentification(Identification { tc, ca, cn }) => {
+                    writeln!(
+                        f,
+                        " Extended Squitter Aircraft identification and category (4)"
+                    )?;
+                    writeln!(f, "  ICAO Address:  {} (Mode S / ADS-B)", icao)?;
+                    writeln!(f, "  Air/Ground:    {}", capability);
+                    writeln!(f, "  Ident:         {}", cn)?;
+                    writeln!(f, "  Category:      {}{}", tc, ca)?;
+                }
                 ME::AircraftOperationStatus(OperationStatus::Airborne(opstatus_airborne)) => {
                     writeln!(
                         f,
@@ -662,12 +672,35 @@ impl std::fmt::Display for ADSBVersion {
 
 #[derive(Debug, PartialEq, DekuRead)]
 pub struct Identification {
-    #[deku(bits = "5")]
-    pub tc: u8,
+    pub tc: TypeCoding,
     #[deku(bits = "3")]
     pub ca: u8,
     #[deku(reader = "Self::read(deku::rest)")]
     pub cn: String,
+}
+
+#[derive(Debug, PartialEq, DekuRead)]
+#[deku(type = "u8", bits = "5")]
+pub enum TypeCoding {
+    D = 1,
+    C = 2,
+    B = 3,
+    A = 4,
+}
+
+impl std::fmt::Display for TypeCoding {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Self::D => "D",
+                Self::C => "C",
+                Self::B => "B",
+                Self::A => "A",
+            }
+        )
+    }
 }
 
 const CHAR_LOOKUP: &[u8; 64] = b"#ABCDEFGHIJKLMNOPQRSTUVWXYZ##### ###############0123456789######";
@@ -679,7 +712,9 @@ impl Identification {
         let mut chars = vec![];
         for _ in 0..=6 {
             let (for_rest, c) = <u8>::read(inside_rest, deku::ctx::Size::Bits(6))?;
-            chars.push(c);
+            if c != 32 {
+                chars.push(c);
+            }
             inside_rest = for_rest;
         }
         let encoded = chars
@@ -1703,6 +1738,22 @@ mod tests {
   ICAO Address:  a1b070 (Mode S / ADS-B)
   Air/Ground:    airborne?
   Squawk:        0463
+"#,
+            resulting_string
+        );
+    }
+
+    #[test]
+    fn testing_aircraftidentificationandcategory() {
+        let bytes = hex!("8da3f9cb213b3d75c1582080f4d9");
+        let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+        let resulting_string = format!("{}", frame);
+        assert_eq!(
+            r#" Extended Squitter Aircraft identification and category (4)
+  ICAO Address:  a3f9cb (Mode S / ADS-B)
+  Air/Ground:    airborne
+  Ident:         N3550U
+  Category:      A1
 "#,
             resulting_string
         );
