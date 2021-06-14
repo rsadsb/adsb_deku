@@ -141,13 +141,24 @@ impl std::fmt::Display for Frame {
                         writeln!(f, "  Vertical rate: {} ft/min GNSS", vertical_rate);
                     }
                 }
+                ME::AircraftStatus(AircraftStatus {
+                    sub_type,
+                    emergency_state,
+                    squawk,
+                    ..
+                }) => {
+                    writeln!(f, " Extended Squitter Emergency/priority status (28/1)")?;
+                    writeln!(f, "  ICAO Address:  {} (Mode S / ADS-B)", icao)?;
+                    writeln!(f, "  Air/Ground:    {}", capability);
+                    writeln!(f, "  Squawk:        {}", squawk);
+                }
                 ME::AircraftOperationStatus(OperationStatus::Airborne(opstatus_airborne)) => {
                     writeln!(
                         f,
                         " Extended Quitter Aircraft operational status (airborne) (31/0)"
                     )?;
                     writeln!(f, " ICAO Address:  {} (Mode S / ADS-B)", icao)?;
-                    writeln!(f, " Air/Ground:    airborne")?;
+                    writeln!(f, " Air/Ground:    {}", capability);
                     write!(f, " Aircraft Operational Status:\n{}", opstatus_airborne)?;
                 }
                 _ => (),
@@ -408,7 +419,7 @@ impl std::fmt::Display for Capability {
                 Capability::AG_GROUND => "ground",
                 Capability::AG_AIRBORNE => "airborne",
                 Capability::AG_UNCERTAIN2 => "uncertain2",
-                Capability::AG_UNCERTAIN3 => "uncertain3",
+                Capability::AG_UNCERTAIN3 => "airborne?",
             }
         )
     }
@@ -430,11 +441,53 @@ pub enum ME {
     #[deku(id_pat = "23..=27")]
     Reserved,
     #[deku(id = "28")]
-    AircraftStatus,
+    AircraftStatus(AircraftStatus),
     #[deku(id = "29")]
     TargetStateAndStatusInformation(TargetStateAndStatusInformation),
     #[deku(id = "31")]
     AircraftOperationStatus(OperationStatus),
+}
+
+/// Table: A-2-97
+#[derive(Debug, PartialEq, DekuRead)]
+pub struct AircraftStatus {
+    pub sub_type: AircraftStatusType,
+    pub emergency_state: EmergencyState,
+    #[deku(
+        bits = "12",
+        map = "|squawk: u32| -> Result<_, DekuError> {Ok(mode_ac::decode_id13_field(squawk))}"
+    )]
+    pub squawk: u32,
+}
+
+#[derive(Debug, PartialEq, DekuRead)]
+#[deku(type = "u8", bits = "3")]
+pub enum AircraftStatusType {
+    #[deku(id = "0")]
+    NoInformation,
+    #[deku(id = "1")]
+    EmergencyPriorityStatus,
+    #[deku(id_pat = "_")]
+    Reserved,
+}
+
+#[derive(Debug, PartialEq, DekuRead)]
+#[deku(type = "u8", bits = "3")]
+pub enum EmergencyState {
+    #[deku(id = "0")]
+    None,
+    #[deku(id = "1")]
+    General,
+    #[deku(id = "2")]
+    Lifeguard,
+    #[deku(id = "4")]
+    MinimumFuel,
+    #[deku(id = "5")]
+    UnlawfulInterference,
+    #[deku(id = "6")]
+    Reserved1,
+    #[deku(id = "7")]
+    Reserved2,
 }
 
 #[derive(Debug, PartialEq, DekuRead)]
@@ -1634,6 +1687,22 @@ mod tests {
     NACp:              10
     NICbaro:           1
     SIL:               3 (per sample)
+"#,
+            resulting_string
+        );
+    }
+
+    // TODO: fix wrong squawk
+    #[test]
+    fn testing_extendedquitteremergencystatus() {
+        let bytes = hex!("8fa1b070e10516000000006caaa4");
+        let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+        let resulting_string = format!("{}", frame);
+        assert_eq!(
+            r#" Extended Squitter Emergency/priority status (28/1)
+  ICAO Address:  a1b070 (Mode S / ADS-B)
+  Air/Ground:    airborne?
+  Squawk:        0463
 "#,
             resulting_string
         );
