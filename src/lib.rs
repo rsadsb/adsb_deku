@@ -42,7 +42,6 @@ impl std::fmt::Display for Frame {
         match &self.df {
             DF::ShortAirAirSurveillance { altitude, .. } => {
                 writeln!(f, " Short Air-Air Surveillance")?;
-                // TODO the Mode S ADS-B shouldn't be static
                 writeln!(f, "  ICAO Address:  {:06x} (Mode S / ADS-B)", self.crc)?;
                 // TODO the airborne? should't be static
                 writeln!(f, "  Air/Ground:    airborne?")?;
@@ -50,15 +49,13 @@ impl std::fmt::Display for Frame {
             }
             DF::SurveillanceAltitudeReply { fs, ac, .. } => {
                 writeln!(f, " Surveillance, Altitude Reply")?;
-                // TODO: fix me
-                writeln!(f, "  ICAO Address:  a3ecce (Mode S / ADS-B)")?;
+                writeln!(f, "  ICAO Address:  {:06x} (Mode S / ADS-B)", self.crc)?;
                 writeln!(f, "  Air/Ground:    {}", fs)?;
                 writeln!(f, "  Altitude:      {} ft barometric", ac.0)?;
             }
             DF::SurveillanceIdentityReply { fs, id, .. } => {
                 writeln!(f, " Surveillance, Identity Reply")?;
-                // TODO: fix me
-                writeln!(f, "  ICAO Address:  ?????? (Mode S / ADS-B)")?;
+                writeln!(f, "  ICAO Address:  {:06x} (Mode S / ADS-B)", self.crc)?;
                 writeln!(f, "  Air/Ground:    {}", fs)?;
                 writeln!(f, "  Identity:      {:04x}", id.0)?;
             }
@@ -80,6 +77,7 @@ impl std::fmt::Display for Frame {
                     odd_flag,
                     lat_cpr,
                     lon_cpr,
+                    t,
                     ..
                 }) => {
                     writeln!(
@@ -97,6 +95,7 @@ impl std::fmt::Display for Frame {
                     writeln!(f, "  CPR latitude:  ({})", lat_cpr);
                     writeln!(f, "  CPR longitude: ({})", lon_cpr);
                     // TODO: fix me
+                    println!("{}", t);
                     writeln!(f, "  CPR decoding:  none");
                 }
                 ME::TargetStateAndStatusInformation(target_info) => {
@@ -108,6 +107,20 @@ impl std::fmt::Display for Frame {
                     writeln!(f, "    Altimeter setting: {} millibars", target_info.qnh);
                     if target_info.tcas {
                         writeln!(f, "    ACAS:              operational");
+                        writeln!(f, "    Active modes:      ");
+                        if target_info.autopilot {
+                            write!(f, " autopilot ");
+                        }
+                        if target_info.vnav {
+                            write!(f, " VNAC ");
+                        }
+                        if target_info.alt_hold {
+                            write!(f, "altitude-hold ");
+                        }
+                        if target_info.approach {
+                            write!(f, "approach");
+                        }
+                        writeln!(f, "");
                     } else {
                         writeln!(f, "    ACAS:              NOT operational");
                     }
@@ -129,8 +142,8 @@ impl std::fmt::Display for Frame {
                         writeln!(f, "  Air/Ground:    {}", capability);
                         writeln!(
                             f,
-                            "  GNSS delta:    {} ft",
-                            airborne_velocity.gnss_baro_diff
+                            "  GNSS delta:    {}{} ft",
+                            airborne_velocity.gnss_sign, airborne_velocity.gnss_baro_diff
                         );
                         writeln!(f, "  Heading:       {}", heading.ceil());
                         writeln!(
@@ -138,7 +151,11 @@ impl std::fmt::Display for Frame {
                             "  Speed:         {} kt groundspeed",
                             ground_speed.floor()
                         );
-                        writeln!(f, "  Vertical rate: {} ft/min GNSS", vertical_rate);
+                        writeln!(
+                            f,
+                            "  Vertical rate: {} ft/min {}",
+                            vertical_rate, airborne_velocity.vrate_src
+                        );
                     }
                 }
                 ME::AircraftStatus(AircraftStatus {
@@ -513,7 +530,13 @@ pub enum OperationStatus {
 pub struct OperationStatusAirborne {
     // 16 bits
     pub capability_codes: CapabilityCode,
-    pub operational_mode_codes: u16,
+    #[deku(bits = "5")]
+    pub operational_mode_unused1: u8,
+    #[deku(bits = "1")]
+    pub saf: bool,
+    #[deku(bits = "2")]
+    pub sda: u8,
+    pub operational_mode_unused2: u8,
     pub version_number: ADSBVersion,
     #[deku(bits = "1")]
     pub nic_supplement_a: u8,
@@ -537,8 +560,14 @@ impl std::fmt::Display for OperationStatusAirborne {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "   Version:            {}", self.version_number)?;
         writeln!(f, "   Capability classes:{}", self.capability_codes)?;
-        writeln!(f, "   Operational modes:  {}", self.operational_mode_codes)?;
-        writeln!(f, "   NIC-A:              {}", self.nic_supplement_a);
+        write!(f, "   Operational modes:  ")?;
+        if self.saf {
+            write!(f, "SAF ");
+        }
+        if self.sda != 0 {
+            write!(f, "SDA={}", self.sda)?;
+        }
+        writeln!(f, "")?;
         writeln!(
             f,
             "   NACp:               {}",
@@ -869,6 +898,19 @@ pub enum VerticalRateSource {
     GeometricAltitude          = 1,
 }
 
+impl std::fmt::Display for VerticalRateSource {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Self::BarometricPressureAltitude => "barometric",
+                Self::GeometricAltitude => "GNSS",
+            }
+        )
+    }
+}
+
 #[derive(Debug, PartialEq, DekuRead)]
 #[deku(type = "u8", bits = "1")]
 pub enum Sign {
@@ -882,6 +924,19 @@ impl Sign {
             Self::Positive => 1,
             Self::Negative => -1,
         }
+    }
+}
+
+impl std::fmt::Display for Sign {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Self::Positive => "",
+                Self::Negative => "-",
+            }
+        )
     }
 }
 
@@ -1462,40 +1517,6 @@ mod tests {
         unreachable!();
     }
 
-    // *8da46a7e58c7f5937af6fb63c3c2;
-    // CRC: 000000
-    // RSSI: -5.7 dBFS
-    // Score: 1800
-    // Time: 11202660.42us
-    // DF:17 AA:A46A7E CA:5 ME:58C7F5937AF6FB
-    //  Extended Squitter Airborne position (barometric altitude) (11) (reliable)
-    //   ICAO Address:  A46A7E (Mode S / ADS-B)
-    //   Air/Ground:    airborne
-    //   Baro altitude: 38975 ft
-    //   CPR type:      Airborne
-    //   CPR odd flag:  odd
-    //   CPR latitude:  39.01436 (51645)
-    //   CPR longitude: -84.14093 (63227)
-    //   CPR decoding:  global
-    //   NIC:           8
-    //   Rc:            0.186 km / 0.1 NM
-    //   NIC-B:         0
-    //   NACp:          8
-    //   SIL:           2 (p <= 0.001%, unknown type)
-    #[test]
-    fn testing07() {
-        // TODO
-        let bytes = hex!("8da46a7e58c7f5937af6fb63c3c2");
-        let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-        println!("{:#?}", frame);
-        if let DF::ADSB { me, .. } = frame.df {
-            if let ME::AirbornePositionBaroAltitude(_me) = me {
-                return;
-            }
-        }
-        unreachable!();
-    }
-
     // *5da039b46d7d81;
     // CRC: 000000
     // RSSI: -13.9 dBFS
@@ -1601,7 +1622,6 @@ mod tests {
         let bytes = hex!("8d0d097ef8230007005ab8547268");
         let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
         let resulting_string = format!("{}", frame);
-        //TODO: Operational modes:  SAF SDA=3
         assert_eq!(
             r#" Extended Quitter Aircraft operational status (airborne) (31/0)
  ICAO Address:  0d097e (Mode S / ADS-B)
@@ -1609,9 +1629,28 @@ mod tests {
  Aircraft Operational Status:
    Version:            2
    Capability classes: ACAS ARV TS
-   Operational modes:  7
-   NIC-A:              1
+   Operational modes:  SAF SDA=3
    NACp:               10
+   GVA:                2
+   SIL:                3 (per hour)
+   NICbaro:            1
+   Heading reference:  true north
+"#,
+            resulting_string
+        );
+
+        let bytes = hex!("8da1a8daf82300060049b870c88b");
+        let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+        let resulting_string = format!("{}", frame);
+        assert_eq!(
+            r#" Extended Quitter Aircraft operational status (airborne) (31/0)
+ ICAO Address:  a1a8da (Mode S / ADS-B)
+ Air/Ground:    airborne
+ Aircraft Operational Status:
+   Version:            2
+   Capability classes: ACAS ARV TS
+   Operational modes:  SAF SDA=2
+   NACp:               9
    GVA:                2
    SIL:                3 (per hour)
    NICbaro:            1
@@ -1654,6 +1693,24 @@ mod tests {
 "#,
             resulting_string
         );
+
+        let bytes = hex!("8da2c1bd587ba2adb31799cb802b");
+        let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+        let resulting_string = format!("{}", frame);
+        assert_eq!(
+            r#" Extended Squitter Airborne position (barometric altitude) (11)
+  ICAO Address:  A2C1BD (Mode S / ADS-B)
+  Air/Ground:    airborne
+  Altitude:      23650 ft barometric
+  CPR type:      Airborne
+  CPR odd flag:  even
+  CPR NUCp/NIC:  7
+  CPR latitude:  40.01775 (87769)
+  CPR longitude: -83.63129 (71577)
+  CPR decoding:  global
+"#,
+            resulting_string
+        );
     }
 
     #[test]
@@ -1680,7 +1737,7 @@ mod tests {
         let resulting_string = format!("{}", frame);
         assert_eq!(
             r#" Surveillance, Identity Reply
-  ICAO Address:  ?????? (Mode S / ADS-B)
+  ICAO Address:  510af9 (Mode S / ADS-B)
   Air/Ground:    airborne
   Identity:      0356
 "#,
@@ -1701,6 +1758,21 @@ mod tests {
   Heading:       356
   Speed:         458 kt groundspeed
   Vertical rate: 0 ft/min GNSS
+"#,
+            resulting_string
+        );
+
+        let bytes = hex!("8da3f9cb9910100da8148571db11");
+        let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+        let resulting_string = format!("{}", frame);
+        assert_eq!(
+            r#" Extended Squitter Airborne velocity over ground, subsonic (19/1)
+  ICAO Address:  a3f9cb (Mode S / ADS-B)
+  Air/Ground:    airborne
+  GNSS delta:    -100 ft
+  Heading:       8
+  Speed:         109 kt groundspeed
+  Vertical rate: -256 ft/min barometric
 "#,
             resulting_string
         );
@@ -1725,6 +1797,24 @@ mod tests {
 "#,
             resulting_string
         );
+        //        let bytes = hex!("8da2c1bd587ba2adb31799cb802b");
+        //        let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+        //        let resulting_string = format!("{}", frame);
+        //        assert_eq!(
+        //            r#" Extended Squitter Target state and status (V2) (29/1)
+        //  ICAO Address:  A230D6 (Mode S / ADS-B)
+        //  Air/Ground:    airborne
+        //  Target State and Status:
+        //    Target altitude:   MCP, 33024 ft
+        //    Altimeter setting: 1013.6 millibars
+        //    Active modes:      autopilot VNAV
+        //    ACAS:              operational
+        //    NACp:              10
+        //    NICbaro:           1
+        //    SIL:               3 (per sample)
+        //"#,
+        //            resulting_string
+        //        );
     }
 
     // TODO: fix wrong squawk
