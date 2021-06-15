@@ -502,20 +502,13 @@ pub enum AircraftStatusType {
 #[derive(Debug, PartialEq, DekuRead)]
 #[deku(type = "u8", bits = "3")]
 pub enum EmergencyState {
-    #[deku(id = "0")]
-    None,
-    #[deku(id = "1")]
-    General,
-    #[deku(id = "2")]
-    Lifeguard,
-    #[deku(id = "4")]
-    MinimumFuel,
-    #[deku(id = "5")]
-    UnlawfulInterference,
-    #[deku(id = "6")]
-    Reserved1,
-    #[deku(id = "7")]
-    Reserved2,
+    None                 = 0,
+    General              = 1,
+    Lifeguard            = 2,
+    MinimumFuel          = 4,
+    UnlawfulInterference = 5,
+    Reserved1            = 6,
+    Reserved2            = 7,
 }
 
 #[derive(Debug, PartialEq, DekuRead)]
