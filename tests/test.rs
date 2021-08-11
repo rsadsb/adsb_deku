@@ -1,4 +1,4 @@
-use adsb_deku::*;
+use mode_s_deku::{CPRFormat, Capability, DF, DekuContainerRead, Frame, ME, VerticalRateSource};
 
 use assert_hex::assert_eq_hex;
 use hexlit::hex;
@@ -334,42 +334,23 @@ fn testing_allcall_reply() {
 
 #[test]
 fn testing_airbornepositionbaroaltitude() {
-    let bytes = hex!("8dac537858af85d576faed51e731");
+    let bytes = hex!("8da2c1bd587ba2adb31799cb802b");
     let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
     let resulting_string = format!("{}", frame);
     assert_eq!(
         r#" Extended Squitter Airborne position (barometric altitude) (11)
-  ICAO Address:  ac5378 (Mode S / ADS-B)
+  ICAO Address:  a2c1bd (Mode S / ADS-B)
   Air/Ground:    airborne
-  Altitude:      34000 ft barometric
+  Altitude:      23650 ft barometric
   CPR type:      Airborne
-  CPR odd flag:  odd
+  CPR odd flag:  even
   CPR NUCp/NIC:  7
-  CPR latitude:  (60091)
-  CPR longitude: (64237)
-  CPR decoding:  none
+  CPR latitude:  40.01775 (87769)
+  CPR longitude: -83.63129 (71577)
+  CPR decoding:  global
 "#,
         resulting_string
     );
-
-    // TODO: Add lat/long
-    //        let bytes = hex!("8da2c1bd587ba2adb31799cb802b");
-    //        let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-    //        let resulting_string = format!("{}", frame);
-    //        assert_eq!(
-    //            r#" Extended Squitter Airborne position (barometric altitude) (11)
-    //  ICAO Address:  A2C1BD (Mode S / ADS-B)
-    //  Air/Ground:    airborne
-    //  Altitude:      23650 ft barometric
-    //  CPR type:      Airborne
-    //  CPR odd flag:  even
-    //  CPR NUCp/NIC:  7
-    //  CPR latitude:  40.01775 (87769)
-    //  CPR longitude: -83.63129 (71577)
-    //  CPR decoding:  global
-    //"#,
-    //            resulting_string
-    //        );
 }
 
 #[test]
