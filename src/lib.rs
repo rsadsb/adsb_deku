@@ -98,7 +98,7 @@ impl std::fmt::Display for Frame {
                     writeln!(f, "  CPR longitude: ({})", lon_cpr);
                     // TODO: fix me
                     println!("{}", t);
-                    writeln!(f, "  CPR decoding:  none");
+                    writeln!(f, "  CPR decoding:  global");
                 }
                 ME::TargetStateAndStatusInformation(target_info) => {
                     writeln!(f, " Extended Squitter Target state and status (V2) (29/1)");
@@ -107,9 +107,11 @@ impl std::fmt::Display for Frame {
                     writeln!(f, "  Target State and Status:");
                     writeln!(f, "    Target altitude:   MCP, {} ft", target_info.altitude);
                     writeln!(f, "    Altimeter setting: {} millibars", target_info.qnh);
+                    if target_info.is_heading {
+                        writeln!(f, "    Target heading:    {}", target_info.heading);
+                    }
                     if target_info.tcas {
-                        writeln!(f, "    ACAS:              operational");
-                        writeln!(f, "    Active modes:      ");
+                        write!(f, "    ACAS:              operational");
                         if target_info.autopilot {
                             write!(f, " autopilot ");
                         }

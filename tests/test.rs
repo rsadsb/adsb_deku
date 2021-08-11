@@ -1,4 +1,4 @@
-use mode_s_deku::{CPRFormat, Capability, DF, DekuContainerRead, Frame, ME, VerticalRateSource};
+use mode_s_deku::{CPRFormat, Capability, DekuContainerRead, Frame, VerticalRateSource, DF, ME};
 
 use assert_hex::assert_eq_hex;
 use hexlit::hex;
@@ -345,8 +345,8 @@ fn testing_airbornepositionbaroaltitude() {
   CPR type:      Airborne
   CPR odd flag:  even
   CPR NUCp/NIC:  7
-  CPR latitude:  40.01775 (87769)
-  CPR longitude: -83.63129 (71577)
+  CPR latitude:  (87769)
+  CPR longitude: (71577)
   CPR decoding:  global
 "#,
         resulting_string
@@ -484,6 +484,28 @@ fn testing_aircraftidentificationandcategory() {
   Air/Ground:    airborne
   Ident:         N3550U
   Category:      A1
+"#,
+        resulting_string
+    );
+}
+
+#[test]
+fn testing_issue_01() {
+    let bytes = hex!("8dad50a9ea466867811c08abbaa2");
+    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let resulting_string = format!("{}", frame);
+    assert_eq!(
+        r#" Extended Squitter Target state and status (V2) (29/1)
+  ICAO Address:  ad50a9 (Mode S / ADS-B)
+  Air/Ground:    airborne
+  Target State and Status:
+    Target altitude:   MCP, 36000 ft
+    Altimeter setting: 1013.6 millibars
+    Target heading:    315
+    ACAS:              operational
+    NACp:              8
+    NICbaro:           1
+    SIL:               3 (per sample)
 "#,
         resulting_string
     );
