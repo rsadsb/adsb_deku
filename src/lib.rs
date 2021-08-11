@@ -124,7 +124,7 @@ impl std::fmt::Display for Frame {
                         if target_info.approach {
                             write!(f, "approach");
                         }
-                        writeln!(f, "");
+                        writeln!(f);
                     } else {
                         writeln!(f, "    ACAS:              NOT operational");
                     }
@@ -565,7 +565,7 @@ impl std::fmt::Display for OperationStatusAirborne {
         if self.sda != 0 {
             write!(f, "SDA={}", self.sda)?;
         }
-        writeln!(f, "")?;
+        writeln!(f)?;
         writeln!(
             f,
             "   NACp:               {}",
