@@ -16,7 +16,7 @@ pub struct Airplains(HashMap<ICAO, AircraftDeku>);
 
 impl fmt::Display for Airplains {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        for (key, value) in &self.0 {
+        for (key, _) in &self.0 {
             let value = self.lat_long_altitude(*key);
             if let Some(value) = value {
                 writeln!(f, "{}: {:?}", key, value);
@@ -54,11 +54,7 @@ impl Airplains {
                         },
                         _ => panic!(),
                     };
-                    if let Some(position) = cpr::get_position((&first_altitude, &second_altitude)) {
-                        Some((position, first_altitude.alt))
-                    } else {
-                        None
-                    }
+                    cpr::get_position((&first_altitude, &second_altitude)).map(|position| (position, first_altitude.alt))
                 } else {
                     None
                 }
@@ -84,9 +80,9 @@ fn main() {
                 println!("{:#?}", frame);
                 println!("{}", frame);
                 println!("{}", airplains);
-                let first_altitude = match frame.df {
+                match frame.df {
                     DF::ADSB(ref adsb) => match adsb.me {
-                        ME::AirbornePositionBaroAltitude(altitude) => {
+                        ME::AirbornePositionBaroAltitude(_) => {
                             airplains.add_extended_quitter_ap(adsb.icao, frame);
                         }
                         _ => (),
