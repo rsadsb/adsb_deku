@@ -42,12 +42,16 @@ pub fn modes_message_len_by_type(typ: &DF) -> usize {
 impl std::fmt::Display for Frame {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match &self.df {
-            DF::ShortAirAirSurveillance { altitude, .. } => {
+            DF::ShortAirAirSurveillance(address_altitude) => {
                 writeln!(f, " Short Air-Air Surveillance")?;
                 writeln!(f, "  ICAO Address:  {:06x} (Mode S / ADS-B)", self.crc)?;
                 // TODO the airborne? should't be static
                 writeln!(f, "  Air/Ground:    airborne?")?;
-                writeln!(f, "  Altitude:      {} ft barometric", altitude.0)?;
+                writeln!(
+                    f,
+                    "  Altitude:      {} ft barometric",
+                    address_altitude.altitude.0
+                )?;
             }
             DF::SurveillanceAltitudeReply { fs, ac, .. } => {
                 writeln!(f, " Surveillance, Altitude Reply")?;
@@ -68,6 +72,13 @@ impl std::fmt::Display for Frame {
                 writeln!(f, "  ICAO Address:  {} (Mode S / ADS-B)", icao)?;
                 writeln!(f, "  Air/Ground:    {}", capability)?;
             }
+            DF::LongAirAir(address_altitude) => {
+                writeln!(f, " Long Air-Air ACAS")?;
+                writeln!(f, "  ICAO Address:  {:06x} (Mode S / ADS-B)", self.crc)?;
+                // TODO the airborne? should't be static
+                writeln!(f, "  Air/Ground:    airborne?")?;
+                writeln!(f, "  Baro altitude: {} ft", address_altitude.altitude.0)?;
+            }
             DF::ADSB(adsb) => {
                 write!(f, "{}", adsb.to_string(17).unwrap())?;
             }
@@ -84,38 +95,7 @@ impl std::fmt::Display for Frame {
 #[deku(type = "u8", bits = "5")]
 pub enum DF {
     #[deku(id = "0")]
-    ShortAirAirSurveillance {
-        /// bit 6
-        #[deku(bits = "1")]
-        vs: u8,
-
-        /// bit 7
-        #[deku(bits = "1")]
-        cc: u8,
-
-        /// bit 8
-        #[deku(bits = "1")]
-        unused: u8,
-
-        /// bits 9-11
-        #[deku(bits = "3")]
-        sl: u8,
-
-        /// bits 10-13
-        #[deku(bits = "4")]
-        unused1: u8,
-
-        /// bits 14-17
-        #[deku(bits = "2")]
-        ri: u8,
-
-        ///// bits 18-19
-        #[deku(bits = "2")]
-        unused2: u8,
-
-        /// bits 20-32
-        altitude: AC13Field,
-    },
+    ShortAirAirSurveillance(AddressAltitude),
     #[deku(id = "4")]
     SurveillanceAltitudeReply {
         fs: FlightStatus,
@@ -145,13 +125,47 @@ pub enum DF {
         /// 3 bytes
         p_icao: ICAO,
     },
-    // TODO
-    //#[deku(id = "16")]
+    #[deku(id = "16")]
+    LongAirAir(AddressAltitude),
     #[deku(id = "17")]
     ADSB(ADSB),
     /// Non-transponder-based ADS-B transmitting subsystems and TIS-B transmitting equipment
     #[deku(id = "18")]
     TisB(ADSB),
+}
+
+#[derive(Debug, PartialEq, DekuRead, Clone)]
+pub struct AddressAltitude {
+    /// bit 6
+    #[deku(bits = "1")]
+    vs: u8,
+
+    /// bit 7
+    #[deku(bits = "1")]
+    cc: u8,
+
+    /// bit 8
+    #[deku(bits = "1")]
+    unused: u8,
+
+    /// bits 9-11
+    #[deku(bits = "3")]
+    sl: u8,
+
+    /// bits 10-13
+    #[deku(bits = "4")]
+    unused1: u8,
+
+    /// bits 14-17
+    #[deku(bits = "2")]
+    ri: u8,
+
+    ///// bits 18-19
+    #[deku(bits = "2")]
+    unused2: u8,
+
+    /// bits 20-32
+    altitude: AC13Field,
 }
 
 #[derive(Debug, PartialEq, DekuRead, Clone)]

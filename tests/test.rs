@@ -507,3 +507,19 @@ fn testing_issue_01() {
         resulting_string
     );
 }
+
+#[test]
+fn testing_issue_03() {
+    let bytes = hex!("80e1969058b5025b9850641d2974");
+    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let resulting_string = format!("{}", frame);
+    assert_eq!(
+        r#" Long Air-Air ACAS
+  ICAO Address:  ac049e (Mode S / ADS-B)
+  Air/Ground:    airborne?
+  Baro altitude: 35000 ft
+"#,
+        resulting_string
+    );
+}
+
