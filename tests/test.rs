@@ -8,8 +8,8 @@ fn testing01() {
     // from adsb-rs
     let bytes = hex!("8D40621D58C382D690C8AC2863A7");
     let frame = Frame::from_bytes((&bytes, 0));
-    if let DF::ADSB { me, .. } = frame.unwrap().1.df {
-        if let ME::AirbornePositionBaroAltitude(me) = me {
+    if let DF::ADSB(adsb) = frame.unwrap().1.df {
+        if let ME::AirbornePositionBaroAltitude(me) = adsb.me {
             assert_eq!(me.alt, 38000);
             assert_eq!(me.lat_cpr, 93000);
             assert_eq!(me.lon_cpr, 51372);
@@ -25,8 +25,8 @@ fn testing02() {
     // from adsb-rs
     let bytes = hex!("8da3d42599250129780484712c50");
     let frame = Frame::from_bytes((&bytes, 0));
-    if let DF::ADSB { me, .. } = frame.unwrap().1.df {
-        if let ME::AirborneVelocity(me) = me {
+    if let DF::ADSB(adsb) = frame.unwrap().1.df {
+        if let ME::AirborneVelocity(me) = adsb.me {
             let (heading, ground_speed, vertical_rate) = me.calculate();
             assert_eq!(heading, 322.197_207_549_061_5);
             assert_eq!(ground_speed, 417.655_360_315_176_6);
@@ -58,8 +58,8 @@ fn testing03() {
     //   QNH:                     1012.8 millibars
     let bytes = hex!("8da08f94ea1b785e8f3c088ab467");
     let frame = Frame::from_bytes((&bytes, 0));
-    if let DF::ADSB { me, .. } = frame.unwrap().1.df {
-        if let ME::TargetStateAndStatusInformation(me) = me {
+    if let DF::ADSB(adsb) = frame.unwrap().1.df {
+        if let ME::TargetStateAndStatusInformation(me) = adsb.me {
             assert_eq!(me.subtype, 1);
             assert_eq!(me.is_fms, false);
             assert_eq!(me.altitude, 14016);
@@ -103,12 +103,9 @@ fn testing04() {
     // TODO
     let bytes = hex!("8dacc040f8210002004ab8569c35");
     let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-    if let DF::ADSB {
-        capability, icao, ..
-    } = frame.df
-    {
-        assert_eq_hex!(icao.0, [0xac, 0xc0, 0x40]);
-        assert_eq!(capability, Capability::AG_AIRBORNE);
+    if let DF::ADSB(adsb) = frame.df {
+        assert_eq_hex!(adsb.icao.0, [0xac, 0xc0, 0x40]);
+        assert_eq!(adsb.capability, Capability::AG_AIRBORNE);
         return;
     }
     unreachable!();
@@ -157,8 +154,8 @@ fn testing05() {
 fn testing06() {
     let bytes = hex!("8dab3d17ea486860015f4870b796");
     let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-    if let DF::ADSB { me, .. } = frame.df {
-        if let ME::TargetStateAndStatusInformation(me) = me {
+    if let DF::ADSB(adsb) = frame.df {
+        if let ME::TargetStateAndStatusInformation(me) = adsb.me {
             assert_eq!(me.subtype, 1);
             assert_eq!(me.is_fms, false);
             assert_eq!(me.altitude, 37024);
