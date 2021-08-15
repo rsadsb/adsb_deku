@@ -54,7 +54,8 @@ impl Airplains {
                         },
                         _ => panic!(),
                     };
-                    cpr::get_position((&first_altitude, &second_altitude)).map(|position| (position, first_altitude.alt))
+                    cpr::get_position((&first_altitude, &second_altitude))
+                        .map(|position| (position, first_altitude.alt))
                 } else {
                     None
                 }
