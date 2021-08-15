@@ -13,7 +13,9 @@ fn main() {
         let hex = &input.to_string()[1..len - 2];
         println!("{}", hex);
         let bytes = hex::decode(&hex).unwrap();
-        println!("{:#?}", Frame::from_bytes((&bytes, 0)).unwrap().1);
+        let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+        println!("{:#?}", frame);
+        println!("{}", frame);
         input.clear();
     }
 }
