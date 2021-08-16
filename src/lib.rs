@@ -45,13 +45,16 @@ impl std::fmt::Display for Frame {
             DF::ShortAirAirSurveillance(address_altitude) => {
                 writeln!(f, " Short Air-Air Surveillance")?;
                 writeln!(f, "  ICAO Address:  {:06x} (Mode S / ADS-B)", self.crc)?;
-                // TODO the airborne? should't be static
-                writeln!(f, "  Air/Ground:    airborne?")?;
-                writeln!(
-                    f,
-                    "  Altitude:      {} ft barometric",
-                    address_altitude.altitude.0
-                )?;
+                if address_altitude.altitude.0 > 0 {
+                    writeln!(f, "  Air/Ground:    airborne?")?;
+                    writeln!(
+                        f,
+                        "  Altitude:      {} ft barometric",
+                        address_altitude.altitude.0
+                    )?;
+                } else {
+                    writeln!(f, "  Air/Ground:    ground")?;
+                }
             }
             DF::SurveillanceAltitudeReply { fs, ac, .. } => {
                 writeln!(f, " Surveillance, Altitude Reply")?;
@@ -76,8 +79,12 @@ impl std::fmt::Display for Frame {
                 writeln!(f, " Long Air-Air ACAS")?;
                 writeln!(f, "  ICAO Address:  {:06x} (Mode S / ADS-B)", self.crc)?;
                 // TODO the airborne? should't be static
-                writeln!(f, "  Air/Ground:    airborne?")?;
-                writeln!(f, "  Baro altitude: {} ft", address_altitude.altitude.0)?;
+                if address_altitude.altitude.0 > 0 {
+                    writeln!(f, "  Air/Ground:    airborne?")?;
+                    writeln!(f, "  Baro altitude: {} ft", address_altitude.altitude.0)?;
+                } else {
+                    writeln!(f, "  Air/Ground:    ground")?;
+                }
             }
             DF::ADSB(adsb) => {
                 write!(f, "{}", adsb.to_string(17).unwrap())?;
@@ -462,9 +469,8 @@ impl AC13Field {
         let q_bit = num & 0x0010;
 
         if m_bit != 0 {
-            // TODO dump1090 doesn't decode this, weird.
-            // This would decode in meters
-            unreachable!("m_bit = 1");
+            // TODO: this might be wrong?
+            Ok((rest, 0))
         } else if q_bit != 0 {
             let n = ((num & 0x1f80) >> 2) | ((num & 0x0020) >> 1) | (num & 0x000f);
             Ok((rest, (n as u32 * 25) - 1000))

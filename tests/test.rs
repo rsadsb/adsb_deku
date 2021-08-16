@@ -523,3 +523,17 @@ fn testing_issue_03() {
     );
 }
 
+#[test]
+fn testing_issue_04() {
+    let bytes = hex!("0621776e99b6ad");
+    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let resulting_string = format!("{}", frame);
+    assert_eq!(
+        r#" Short Air-Air Surveillance
+  ICAO Address:  a33325 (Mode S / ADS-B)
+  Air/Ground:    ground
+"#,
+        resulting_string
+    );
+}
+
