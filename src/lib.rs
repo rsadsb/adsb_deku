@@ -132,6 +132,47 @@ pub enum DF {
     /// Non-transponder-based ADS-B transmitting subsystems and TIS-B transmitting equipment
     #[deku(id = "18")]
     TisB(ADSB),
+    #[deku(id = "20")]
+    CommBAltitudeReply {
+        flight_status: FlightStatus,
+        dr: DownlinkRequest,
+        um: UtilityMessage,
+        #[deku(reader = "Altitude::read(deku::rest)")]
+        alt_code: u32,
+        #[deku(reader = "read_comm_b(deku::rest)")]
+        message_comm_b: String,
+        #[deku(endian = "big", bits = "24")]
+        parity: u32,
+    },
+    #[deku(id = "21")]
+    CommBIdentityReply {
+        flight_status: FlightStatus,
+        dr: DownlinkRequest,
+        um: UtilityMessage,
+        #[deku(endian = "big", bits = "13")]
+        identitiy_code: u32,
+        #[deku(reader = "read_comm_b(deku::rest)")]
+        message_comm_b: String,
+        #[deku(endian = "big", bits = "24")]
+        parity: u32,
+    },
+}
+
+fn read_comm_b(rest: &BitSlice<Msb0, u8>) -> Result<(&BitSlice<Msb0, u8>, String), DekuError> {
+    pub const AIS_CHARSET: &str =
+        "@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_ !\"#$%&'()*+,-./0123456789:;<=>?";
+    let (rest, ident) = <u8>::read(rest, deku::ctx::Size::Bits(7))?;
+
+    let mut inside_rest = rest;
+    let mut callsign = String::new();
+    if ident == 0x20 {
+        for _ in 0..8 {
+            let (for_rest, c) = <u8>::read(inside_rest, deku::ctx::Size::Bits(5))?;
+            callsign.push(AIS_CHARSET.chars().nth(c as usize).unwrap());
+            inside_rest = for_rest;
+        }
+    }
+    Ok((inside_rest, callsign))
 }
 
 #[derive(Debug, PartialEq, DekuRead, Clone)]

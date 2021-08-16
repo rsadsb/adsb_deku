@@ -84,14 +84,17 @@ fn main() {
                 match frame.df {
                     DF::ADSB(ref adsb) => match adsb.me {
                         ME::AirbornePositionBaroAltitude(_) => {
-                            airplains.add_extended_quitter_ap(adsb.icao, frame);
+                            airplains.add_extended_quitter_ap(adsb.icao, frame.clone());
                         }
                         _ => (),
                     },
                     _ => (),
                 };
+                if frame.to_string() == "" {
+                    panic!("[E] fmt::Display not implemented");
+                }
             }
-            Err(e) => println!("{}", e),
+            Err(e) => panic!("[E] {}", e),
         }
         input.clear();
     }
