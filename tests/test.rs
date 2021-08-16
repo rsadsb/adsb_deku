@@ -365,6 +365,20 @@ fn testing_surveillancealtitudereply() {
     );
 }
 
+#[test]
+fn testing_surveillanceidentityreply_err() {
+    let bytes = hex!("245093892a1bfd");
+    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let resulting_string = format!("{}", frame);
+    assert_eq!(
+        r#" Surveillance, Altitude Reply
+  ICAO Address:  a168ad (Mode S / ADS-B)
+  Air/Ground:    airborne?
+"#,
+        resulting_string
+    );
+}
+
 // TODO
 // This test is from mode-s.org, check with the dump1090-rs
 #[test]

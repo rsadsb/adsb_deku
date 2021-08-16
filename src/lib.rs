@@ -60,7 +60,9 @@ impl std::fmt::Display for Frame {
                 writeln!(f, " Surveillance, Altitude Reply")?;
                 writeln!(f, "  ICAO Address:  {:06x} (Mode S / ADS-B)", self.crc)?;
                 writeln!(f, "  Air/Ground:    {}", fs)?;
-                writeln!(f, "  Altitude:      {} ft barometric", ac.0)?;
+                if ac.0 > 0 {
+                    writeln!(f, "  Altitude:      {} ft barometric", ac.0)?;
+                }
             }
             DF::SurveillanceIdentityReply { fs, id, .. } => {
                 writeln!(f, " Surveillance, Identity Reply")?;
@@ -476,8 +478,11 @@ impl AC13Field {
             Ok((rest, (n as u32 * 25) - 1000))
         } else {
             // TODO 11 bit gillham coded altitude
-            let n = mode_ac::mode_a_to_mode_c(mode_ac::decode_id13_field(num)).unwrap();
-            Ok((rest, (100 * n)))
+            if let Ok(n) = mode_ac::mode_a_to_mode_c(mode_ac::decode_id13_field(num)) {
+                Ok((rest, (100 * n)))
+            } else {
+                Ok((rest, 0))
+            }
         }
     }
 }
