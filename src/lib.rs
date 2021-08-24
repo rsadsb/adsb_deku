@@ -98,6 +98,18 @@ impl std::fmt::Display for Frame {
                 writeln!(f, " Comm-D Extended Length Message");
                 writeln!(f, "  ICAO Address:  {:x?} (Mode S / ADS-B)", self.crc);
             }
+            DF::CommBIdentityReply {
+                id, message_comm_b, ..
+            } => {
+                writeln!(f, " Comm-B, Identity Reply");
+                if message_comm_b == "" {
+                    writeln!(f, "    Comm-B format: unknown format");
+                } else {
+                    writeln!(f, "    Comm-B format: {}", message_comm_b);
+                }
+                writeln!(f, "    ICAO Address:  {:x?} (Mode S / ADS-B)", self.crc);
+                writeln!(f, "    Squawk:        {:x?}", id);
+            }
             _ => (),
         }
         Ok(())
@@ -159,11 +171,16 @@ pub enum DF {
     },
     #[deku(id = "21")]
     CommBIdentityReply {
-        flight_status: FlightStatus,
+        fs: FlightStatus,
         dr: DownlinkRequest,
         um: UtilityMessage,
-        #[deku(endian = "big", bits = "13")]
-        identitiy_code: u32,
+        #[deku(
+            bits = "13",
+            endian = "big",
+            map = "|squawk: u32| -> Result<_, DekuError> {Ok(decode_id13_field(squawk))}"
+        )]
+        id: u32,
+        //#TODO: this works?
         #[deku(reader = "read_comm_b(deku::rest)")]
         message_comm_b: String,
         #[deku(endian = "big", bits = "24")]
@@ -894,45 +911,48 @@ impl Altitude {
 }
 
 /// gillham code
-fn decode_id13_field(field: u32) -> u32 {
-    let mut gillham: u32 = 0;
-    if (field & 0x1000) == 1 {
-        gillham |= 0x0010;
-    }
-    if (field & 0x0800) == 1 {
-        gillham |= 0x1000;
-    }
-    if (field & 0x0400) == 1 {
-        gillham |= 0x0020;
-    }
-    if (field & 0x0200) == 1 {
-        gillham |= 0x2000;
-    }
-    if (field & 0x0100) == 1 {
-        gillham |= 0x0040;
-    }
-    if (field & 0x0080) == 1 {
-        gillham |= 0x4000;
-    }
-    if (field & 0x0020) == 1 {
-        gillham |= 0x0100;
-    }
-    if (field & 0x0010) == 1 {
-        gillham |= 0x0001;
-    }
-    if (field & 0x0008) == 1 {
-        gillham |= 0x0200;
-    }
-    if (field & 0x0004) == 1 {
-        gillham |= 0x0002;
-    }
-    if (field & 0x0002) == 1 {
-        gillham |= 0x0400;
-    }
-    if (field & 0x0001) == 1 {
-        gillham |= 0x0004;
-    }
-    gillham
+fn decode_id13_field(id13_field: u32) -> u32 {
+    let mut hex_gillham: u32 = 0;
+
+    if id13_field & 0x1000 != 0 {
+        hex_gillham |= 0x0010;
+    } // Bit 12 = C1
+    if id13_field & 0x0800 != 0 {
+        hex_gillham |= 0x1000;
+    } // Bit 11 = A1
+    if id13_field & 0x0400 != 0 {
+        hex_gillham |= 0x0020;
+    } // Bit 10 = C2
+    if id13_field & 0x0200 != 0 {
+        hex_gillham |= 0x2000;
+    } // Bit  9 = A2
+    if id13_field & 0x0100 != 0 {
+        hex_gillham |= 0x0040;
+    } // Bit  8 = C4
+    if id13_field & 0x0080 != 0 {
+        hex_gillham |= 0x4000;
+    } // Bit  7 = A4
+      //if id13_field & 0x0040 != 0 {hex_gillham |= 0x0800;} // Bit  6 = X  or M
+    if id13_field & 0x0020 != 0 {
+        hex_gillham |= 0x0100;
+    } // Bit  5 = B1
+    if id13_field & 0x0010 != 0 {
+        hex_gillham |= 0x0001;
+    } // Bit  4 = D1 or Q
+    if id13_field & 0x0008 != 0 {
+        hex_gillham |= 0x0200;
+    } // Bit  3 = B2
+    if id13_field & 0x0004 != 0 {
+        hex_gillham |= 0x0002;
+    } // Bit  2 = D2
+    if id13_field & 0x0002 != 0 {
+        hex_gillham |= 0x0400;
+    } // Bit  1 = B4
+    if id13_field & 0x0001 != 0 {
+        hex_gillham |= 0x0004;
+    } // Bit  0 = D4
+
+    hex_gillham
 }
 
 #[derive(Debug, PartialEq, DekuRead, Copy, Clone)]

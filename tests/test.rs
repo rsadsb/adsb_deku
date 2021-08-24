@@ -468,22 +468,6 @@ fn testing_targetstateandstatusinformation() {
     //        );
 }
 
-// TODO: fix wrong squawk
-//    #[test]
-//    fn testing_extendedquitteremergencystatus() {
-//        let bytes = hex!("8fa1b070e10516000000006caaa4");
-//        let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-//        let resulting_string = format!("{}", frame);
-//        assert_eq!(
-//            r#" Extended Squitter Emergency/priority status (28/1)
-//  ICAO Address:  a1b070 (Mode S / ADS-B)
-//  Air/Ground:    airborne?
-//  Squawk:        0463
-//"#,
-//            resulting_string
-//        );
-//    }
-
 #[test]
 fn testing_aircraftidentificationandcategory() {
     let bytes = hex!("8da3f9cb213b3d75c1582080f4d9");
@@ -563,3 +547,20 @@ fn testing_df_24() {
         resulting_string
     );
 }
+
+#[test]
+fn testing_df_21() {
+    let bytes = hex!("AE24238D15EE315463718B1AF755");
+    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    dbg!(&frame);
+    let resulting_string = format!("{}", frame);
+    assert_eq!(
+        r#" Comm-B, Identity Reply
+    Comm-B format: unknown format
+    ICAO Address:  a95fdc (Mode S / ADS-B)
+    Squawk:        6246
+"#,
+        resulting_string
+    );
+}
+
