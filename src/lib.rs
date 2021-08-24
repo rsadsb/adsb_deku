@@ -94,6 +94,10 @@ impl std::fmt::Display for Frame {
             DF::TisB(adsb) => {
                 write!(f, "{}", adsb.to_string(18).unwrap())?;
             }
+            DF::CommDExtendedLengthMessage => {
+                writeln!(f, " Comm-D Extended Length Message");
+                writeln!(f, "  ICAO Address:  {:x?} (Mode S / ADS-B)", self.crc);
+            }
             _ => (),
         }
         Ok(())
@@ -165,6 +169,9 @@ pub enum DF {
         #[deku(endian = "big", bits = "24")]
         parity: u32,
     },
+    //#TODO: Might be an actual field instead of just reading the crc like dump1090 does
+    #[deku(id = "24")]
+    CommDExtendedLengthMessage,
 }
 
 fn read_comm_b(rest: &BitSlice<Msb0, u8>) -> Result<(&BitSlice<Msb0, u8>, String), DekuError> {

@@ -551,3 +551,15 @@ fn testing_issue_04() {
     );
 }
 
+#[test]
+fn testing_df_24() {
+    let bytes = hex!("c57bda218578d32248b484169299");
+    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let resulting_string = format!("{}", frame);
+    assert_eq!(
+        r#" Comm-D Extended Length Message
+  ICAO Address:  c06800 (Mode S / ADS-B)
+"#,
+        resulting_string
+    );
+}
