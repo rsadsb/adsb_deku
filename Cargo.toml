@@ -13,3 +13,6 @@ deku = "0.12"
 hex = "0.4"
 hexlit = "0.5"
 assert_hex = "0.2"
+tui = {version = "0.16", default-features = false, features = ["crossterm"]}
+crossterm = "0.20"
+clap = "3.0.0-beta.4"
