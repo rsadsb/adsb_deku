@@ -64,6 +64,7 @@ fn main() {
             Err(_e) => (),
         }
         input.clear();
+        airplains.prune();
 
         terminal
             .draw(|f| {

@@ -42,5 +42,6 @@ fn main() {
             Err(e) => panic!("[E] {}", e),
         }
         input.clear();
+        airplains.prune();
     }
 }
