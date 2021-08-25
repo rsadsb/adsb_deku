@@ -8,6 +8,7 @@ use mode_s_deku::{cpr, DF, ICAO, ME};
 use std::collections::HashMap;
 use std::fmt;
 
+use clap::{AppSettings, Clap};
 use std::io;
 use tui::backend::Backend;
 use tui::backend::CrosstermBackend;
@@ -16,7 +17,6 @@ use tui::style::Color;
 use tui::widgets::canvas::{Canvas, Line, Points};
 use tui::widgets::{Block, Borders};
 use tui::Terminal;
-use clap::{AppSettings, Clap};
 
 #[derive(Debug)]
 pub struct AircraftDeku([Option<Frame>; 2]);
