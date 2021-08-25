@@ -552,7 +552,6 @@ fn testing_df_24() {
 fn testing_df_21() {
     let bytes = hex!("AE24238D15EE315463718B1AF755");
     let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-    dbg!(&frame);
     let resulting_string = format!("{}", frame);
     assert_eq!(
         r#" Comm-B, Identity Reply

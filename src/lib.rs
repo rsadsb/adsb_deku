@@ -320,7 +320,6 @@ impl ADSB {
                 if let AirborneVelocitySubType::GroundSpeedDecoding(_) = airborne_velocity.sub_type
                 {
                     let (heading, ground_speed, vertical_rate) = airborne_velocity.calculate();
-                    println!("{} {} {}", heading, ground_speed, vertical_rate);
                     writeln!(
                         f,
                         " Extended Squitter Airborne velocity over ground, subsonic (19/1)"
@@ -475,7 +474,6 @@ impl IdentityCode {
         let b = b4 << 2 | b2 << 1 | b1;
         let c = c4 << 2 | c2 << 1 | c1;
         let d = d4 << 2 | d2 << 1 | d1;
-        println!("{} {} {} {}", a, b, c, d);
 
         let num: u16 = (a << 12 | b << 8 | c << 4 | d) as u16;
         Ok((rest, num))
@@ -1446,7 +1444,6 @@ mod mode_ac {
         if (five_hundreds & 1) == 1 {
             one_hundreds = 6 - one_hundreds;
         }
-        println!("{}", one_hundreds);
         (five_hundreds * 5) + one_hundreds - 13
     }
 
