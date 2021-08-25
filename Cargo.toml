@@ -6,6 +6,12 @@ edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[workspace]
+members = [
+    "common-app"
+]
+
+
 [dependencies]
 deku = "0.12"
 
@@ -16,3 +22,4 @@ assert_hex = "0.2"
 tui = {version = "0.16", default-features = false, features = ["crossterm"]}
 crossterm = "0.20"
 clap = "3.0.0-beta.4"
+common_app = {path = "common-app", version = "0.1.0"}
