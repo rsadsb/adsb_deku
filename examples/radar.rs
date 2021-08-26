@@ -1,15 +1,14 @@
 use deku::DekuContainerRead;
 
-use std::collections::HashMap;
+use std::io;
 use std::io::{BufRead, BufReader};
 use std::net::TcpStream;
 use std::num::ParseFloatError;
 use std::str::FromStr;
-use std::{fmt, io};
 
-use mode_s_deku::{cpr, Altitude, CPRFormat, Frame, DF, ICAO, ME};
+use mode_s_deku::{Frame, DF, ME};
 
-use common_app::{AirplaneCoor, Airplanes};
+use common_app::Airplanes;
 
 use clap::{AppSettings, Clap};
 
@@ -39,7 +38,7 @@ impl FromStr for City {
         let lat_fromstr = coords[1].parse::<f64>()?;
         let long_fromstr = coords[2].parse::<f64>()?;
 
-        Ok(City {
+        Ok(Self {
             name: coords[0].to_string(),
             lat: lat_fromstr,
             long: long_fromstr,
@@ -124,7 +123,7 @@ fn main() {
 
                             // draw city coor
                             ctx.draw(&Points {
-                                coords: &[(long.into(), lat.into())],
+                                coords: &[(long, lat)],
                                 color: Color::Green,
                             });
 
@@ -132,7 +131,7 @@ fn main() {
                             ctx.print(
                                 long + 3.0,
                                 lat,
-                                Box::leak(format!("{}", city.name).into_boxed_str()),
+                                Box::leak(city.name.to_string().into_boxed_str()),
                                 Color::Green,
                             );
                         }
@@ -146,7 +145,7 @@ fn main() {
 
                                 // draw dot on location
                                 ctx.draw(&Points {
-                                    coords: &[(long.into(), lat.into())],
+                                    coords: &[(long, lat)],
                                     color: Color::White,
                                 });
 

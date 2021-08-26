@@ -4,11 +4,9 @@ use mode_s_deku::Frame;
 use std::io::{BufRead, BufReader};
 use std::net::TcpStream;
 
-use mode_s_deku::{cpr, DF, ICAO, ME};
-use std::collections::HashMap;
-use std::fmt;
+use mode_s_deku::{DF, ME};
 
-use common_app::{AirplaneCoor, Airplanes};
+use common_app::Airplanes;
 
 fn main() {
     let stream = TcpStream::connect(("127.0.0.1", 30002)).unwrap();
