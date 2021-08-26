@@ -3,6 +3,8 @@ use deku::DekuContainerRead;
 use std::collections::HashMap;
 use std::io::{BufRead, BufReader};
 use std::net::TcpStream;
+use std::num::ParseFloatError;
+use std::str::FromStr;
 use std::{fmt, io};
 
 use mode_s_deku::{cpr, Altitude, CPRFormat, Frame, DF, ICAO, ME};
@@ -19,6 +21,32 @@ use tui::widgets::canvas::{Canvas, Line, Points};
 use tui::widgets::{Block, Borders};
 use tui::Terminal;
 
+pub struct City {
+    name: String,
+    lat: f64,
+    long: f64,
+}
+
+impl FromStr for City {
+    type Err = ParseFloatError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let coords: Vec<&str> = s
+            .trim_matches(|p| p == '(' || p == ')')
+            .split(',')
+            .collect();
+
+        let lat_fromstr = coords[1].parse::<f64>()?;
+        let long_fromstr = coords[2].parse::<f64>()?;
+
+        Ok(City {
+            name: coords[0].to_string(),
+            lat: lat_fromstr,
+            long: long_fromstr,
+        })
+    }
+}
+
 #[derive(Clap)]
 #[clap(version = "1.0", author = "wcampbell <wcampbell1995@gmail.com>")]
 #[clap(setting = AppSettings::ColoredHelp)]
@@ -27,12 +55,18 @@ struct Opts {
     lat: f64,
     #[clap(long)]
     long: f64,
+    #[clap(long)]
+    cities: Vec<City>,
+    #[clap(long)]
+    disable_prune: bool,
 }
 
 fn main() {
     let opts = Opts::parse();
     let local_lat = opts.lat;
     let local_long = opts.long;
+    let cities = opts.cities;
+    let disable_prune = opts.disable_prune;
 
     let stream = TcpStream::connect(("127.0.0.1", 30002)).unwrap();
     let mut reader = BufReader::new(stream);
@@ -64,7 +98,9 @@ fn main() {
             Err(_e) => (),
         }
         input.clear();
-        airplains.prune();
+        if !disable_prune {
+            airplains.prune();
+        }
 
         terminal
             .draw(|f| {
@@ -80,18 +116,43 @@ fn main() {
                     .y_bounds([-180.0, 180.0])
                     .paint(|ctx| {
                         ctx.layer();
+
+                        // draw cities
+                        for city in &cities {
+                            let lat = (city.lat - local_lat) * 200.0;
+                            let long = (city.long - local_long) * 200.0;
+
+                            // draw city coor
+                            ctx.draw(&Points {
+                                coords: &[(long.into(), lat.into())],
+                                color: Color::Green,
+                            });
+
+                            // draw city name
+                            ctx.print(
+                                long + 3.0,
+                                lat,
+                                Box::leak(format!("{}", city.name).into_boxed_str()),
+                                Color::Green,
+                            );
+                        }
+
+                        // draw airplanes
                         for (key, _) in &airplains.0 {
                             let value = airplains.lat_long_altitude(*key);
                             if let Some((position, _altitude)) = value {
                                 let lat = (position.latitude - local_lat) * 200.0;
                                 let long = (position.longitude - local_long) * 200.0;
 
+                                // draw dot on location
                                 ctx.draw(&Points {
                                     coords: &[(long.into(), lat.into())],
                                     color: Color::White,
                                 });
+
+                                // draw plane ICAO name
                                 ctx.print(
-                                    long + 5.0,
+                                    long + 3.0,
                                     lat,
                                     Box::leak(
                                         format!(
@@ -104,6 +165,7 @@ fn main() {
                                 );
                             }
                         }
+
                         // Draw vertical and horizontal lines
                         ctx.draw(&Line {
                             x1: 180.0,

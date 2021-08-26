@@ -17,5 +17,5 @@ TODO: Add image
 ./dump1090 --net --quiet
 
 # Startup "radar" display in tui relative to your sdr position
-cargo r --example radar -- --lat="50.0" --long="50.0"
+cargo r --example radar -- --lat="50.0" --long="50.0" --cities "(name,lat,long)" "(name,lat,long)"
 ```
