@@ -1223,7 +1223,7 @@ pub struct TargetStateAndStatusInformation {
     #[deku(
         bits = "12",
         endian = "big",
-        map = "|altitude: u32| -> Result<_, DekuError> {Ok((altitude - 1) * 32) }"
+        map = "|altitude: u32| -> Result<_, DekuError> {Ok(if altitude > 1 {(altitude - 1) * 32} else {0} )}"
     )]
     pub altitude: u32,
     #[deku(
@@ -1384,7 +1384,7 @@ mod mode_ac {
         } // B4
 
         // Correct order of one_hundreds.
-        if five_hundreds & 1 != 0 {
+        if five_hundreds & 1 != 0 && one_hundreds <= 6 {
             one_hundreds = 6 - one_hundreds;
         }
 
