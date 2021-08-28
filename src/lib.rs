@@ -1083,7 +1083,7 @@ pub struct AirborneVelocity {
     pub gnss_sign: Sign,
     #[deku(
         bits = "7",
-        map = "|gnss_baro_diff: u16| -> Result<_, DekuError> {Ok((gnss_baro_diff - 1)* 25)}"
+        map = "|gnss_baro_diff: u16| -> Result<_, DekuError> {Ok(if gnss_baro_diff > 1 {(gnss_baro_diff - 1)* 25} else { 0 })}"
     )]
     pub gnss_baro_diff: u16,
 }
