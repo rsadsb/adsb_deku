@@ -497,7 +497,13 @@ impl AC13Field {
             Ok((rest, 0))
         } else if q_bit != 0 {
             let n = ((num & 0x1f80) >> 2) | ((num & 0x0020) >> 1) | (num & 0x000f);
-            Ok((rest, (n as u32 * 25) - 1000))
+            let n = n as u32 * 25;
+            if n > 1000 {
+                Ok((rest, n - 1000))
+            } else {
+                // TODO: add error
+                Ok((rest, 0))
+            }
         } else {
             // TODO 11 bit gillham coded altitude
             if let Ok(n) = mode_ac::mode_a_to_mode_c(mode_ac::decode_id13_field(num)) {
@@ -897,7 +903,13 @@ impl Altitude {
             // regular
             // TODO this is meters?
             let n = ((num & 0x0fe0) >> 1) | (num & 0x000f);
-            Ok((rest, ((n * 25) - 1000) as u32))
+            let n = n * 25;
+            if n > 1000 {
+                Ok((rest, (n - 1000) as u32))
+            } else {
+                // TODO add error
+                Ok((rest, 0))
+            }
         } else {
             // mode c?
             // TODO this is feet
