@@ -536,7 +536,6 @@ fn testing_issue_04() {
     );
 }
 
-
 #[test]
 fn testing_df_21() {
     let bytes = hex!("AE24238D15EE315463718B1AF755");
