@@ -350,11 +350,9 @@ pub enum ControlField {
     ///// Code 5, TIS-B Message for replay ADS-B Message
     //#[deku(id = "5")]
     //TISB_ADSB_RELAY(TISB_ADSB_RELAY),
-
     /// Code 6, TIS-B Message, Same as DF=17
     #[deku(id = "6")]
     TISB_DF17(ADSB),
-
     ///// Code 7, Reserved
     //#[deku(id = "7")]
     //Reserved,
