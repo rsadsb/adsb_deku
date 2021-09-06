@@ -53,7 +53,7 @@ cargo test
 ```
 
 ### fmt
-```
+```text
 cargo +nightly fmt
 ```
 
