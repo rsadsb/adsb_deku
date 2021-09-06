@@ -309,36 +309,36 @@ mod tests {
             odd_flag: CPRFormat::Odd,
             lat_cpr: 74158,
             lon_cpr: 50194,
-            ..Default::default()
+            ..Altitude::default()
         };
         let even = Altitude {
             odd_flag: CPRFormat::Even,
             lat_cpr: 93000,
             lon_cpr: 51372,
-            ..Default::default()
+            ..Altitude::default()
         };
 
         let position = get_position((&odd, &even)).unwrap();
-        assert_eq!(position.latitude, 52.2572021484375);
-        assert_eq!(position.longitude, 3.91937255859375);
+        assert!((position.latitude - 52.257_202_148_437_5).abs() < f64::EPSILON);
+        assert!((position.longitude - 3.919_372_558_593_75).abs() < f64::EPSILON);
     }
 
     #[test]
     fn cpr_calculate_position_high_lat() {
         let even = Altitude {
             odd_flag: CPRFormat::Even,
-            lat_cpr: 108011,
-            lon_cpr: 110088,
-            ..Default::default()
+            lat_cpr: 108_011,
+            lon_cpr: 110_088,
+            ..Altitude::default()
         };
         let odd = Altitude {
             odd_flag: CPRFormat::Odd,
-            lat_cpr: 75050,
-            lon_cpr: 36777,
-            ..Default::default()
+            lat_cpr: 75_050,
+            lon_cpr: 36_777,
+            ..Altitude::default()
         };
         let position = get_position((&even, &odd)).unwrap();
-        assert_eq!(position.latitude, 88.91747426178496);
-        assert_eq!(position.longitude, 101.01104736328125);
+        assert!((position.latitude - 88.917_474_261_784_96).abs() < f64::EPSILON);
+        assert!((position.longitude - 101.011_047_363_281_25).abs() < f64::EPSILON);
     }
 }

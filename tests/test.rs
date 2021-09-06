@@ -61,15 +61,15 @@ fn testing03() {
     if let DF::ADSB(adsb) = frame.unwrap().1.df {
         if let ME::TargetStateAndStatusInformation(me) = adsb.me {
             assert_eq!(me.subtype, 1);
-            assert_eq!(me.is_fms, false);
+            assert!(!me.is_fms);
             assert_eq!(me.altitude, 14016);
             assert_eq!(me.qnh, 1012.8);
-            assert_eq!(me.is_heading, true);
+            assert!(me.is_heading);
             assert_eq!(me.heading, 229.92188);
             assert_eq!(me.nacp, 9);
             assert_eq!(me.nicbaro, 1);
             assert_eq!(me.sil, 3);
-            assert_eq!(me.mode_validity, false);
+            assert!(!me.mode_validity);
             return;
         }
     }
@@ -157,15 +157,15 @@ fn testing06() {
     if let DF::ADSB(adsb) = frame.df {
         if let ME::TargetStateAndStatusInformation(me) = adsb.me {
             assert_eq!(me.subtype, 1);
-            assert_eq!(me.is_fms, false);
+            assert!(!me.is_fms);
             assert_eq!(me.altitude, 37024);
             assert_eq!(me.qnh, 1013.6);
-            assert_eq!(me.is_heading, false);
+            assert!(!me.is_heading);
             assert_eq!(me.heading, 0.0);
             assert_eq!(me.nacp, 10);
             assert_eq!(me.nicbaro, 1);
             assert_eq!(me.sil, 3);
-            assert_eq!(me.mode_validity, true);
+            assert!(me.mode_validity);
             return;
         }
     }
