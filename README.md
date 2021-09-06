@@ -74,6 +74,7 @@ cargo r --example 1090
 ## radar tui
 
 Display a radar like tui (terminal user interface) showing aircraft: ICAO address, lat, long.
+The terminal used is [cool-retro-terminal](https://github.com/Swordfish90/cool-retro-term).
 
 ![Radar Example](/media/2021-09-06-082636_1804x1062_scrot.png)
 ```text
