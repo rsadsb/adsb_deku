@@ -66,7 +66,7 @@ cargo r --example 1090
 
 Display a radar like tui (terminal user interface) showing aircraft: ICAO address, lat, long.
 
-TODO: Add image
+![Radar Example](/media/2021-09-06-082636_1804x1062_scrot.png)
 ```text
 # Startup dump1090-fa (https://github.com/flightaware/dump1090.git)
 ./dump1090 --net --quiet
