@@ -52,7 +52,7 @@ cargo test
 
 ## dump1090-fa
 
-Dump protocl bytes using this library in the same fashion as `dump1090-fa`.
+Dump protocol bytes using this library in the same fashion as `dump1090-fa`.
 
 ```text
 # Startup dump1090-fa (https://github.com/flightaware/dump1090.git)
@@ -64,7 +64,7 @@ cargo r --example 1090
 
 ## radar tui
 
-Display a radar like tui (terminal user interface) showing aircraft: ICAO addres, lat, long.
+Display a radar like tui (terminal user interface) showing aircraft: ICAO address, lat, long.
 
 TODO: Add image
 ```text
