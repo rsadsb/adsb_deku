@@ -1,3 +1,5 @@
+#![doc = include_str!("../README.md")]
+
 use deku::prelude::*;
 pub use deku::DekuContainerRead;
 
@@ -122,7 +124,7 @@ impl std::fmt::Display for Frame {
 #[derive(Debug, PartialEq, DekuRead, Clone)]
 #[deku(type = "u8", bits = "5")]
 pub enum DF {
-    /// Short Air-Air Surveillance, Downlink Format 10
+    /// Short Air-Air Surveillance, Downlink Format 0 (3.1.2.8.2)
     #[deku(id = "0")]
     ShortAirAirSurveillance {
         /// VS: Vertical Status
@@ -218,6 +220,8 @@ pub enum DF {
     },
 
     /// Extended Squitter, Downlink Format 17 (3.1.2.8.6)
+    ///
+    /// Used for Civil Aircraft
     #[deku(id = "17")]
     ADSB(ADSB),
 
@@ -285,7 +289,7 @@ pub enum DF {
         parity: ICAO,
     },
 
-    /// Comm-D, Downlink Format 24
+    /// Comm-D, Downlink Format 24 (3.1.2.7.3)
     ///
     /// TODO: test me
     #[deku(id = "24")]
@@ -574,6 +578,7 @@ pub enum KE {
     UplinkELMAck  = 1,
 }
 
+/// ICAO Address; Mode S transponder code
 #[derive(Debug, PartialEq, DekuRead, Hash, Eq, Copy, Clone)]
 pub struct ICAO(pub [u8; 3]);
 
@@ -600,7 +605,6 @@ impl IdentityCode {
         let a2 = (num & 0b0_0010_0000_0000) >> 9;
         let c4 = (num & 0b0_0001_0000_0000) >> 8;
         let a4 = (num & 0b0_0000_1000_0000) >> 7;
-        let _ = (num & 0b0_0000_0100_0000) >> 6;
         let b1 = (num & 0b0_0000_0010_0000) >> 5;
         let d1 = (num & 0b0_0000_0001_0000) >> 4;
         let b2 = (num & 0b0_0000_0000_1000) >> 3;
