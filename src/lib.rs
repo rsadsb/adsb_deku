@@ -8,9 +8,6 @@ mod crc;
 
 use deku::bitvec::{BitSlice, Msb0};
 
-pub const MODES_LONG_MSG_BYTES: usize = 14;
-pub const MODES_SHORT_MSG_BYTES: usize = 7;
-
 /// Downlink ADSB Packet
 #[derive(Debug, PartialEq, DekuRead, Clone)]
 pub struct Frame {
@@ -22,22 +19,22 @@ pub struct Frame {
 }
 
 impl Frame {
-    /// Read and convert to String
+    /// Read rest as CRC bits
     fn read_crc<'a, 'b>(
         df: &'a DF,
         rest: &'b BitSlice<Msb0, u8>,
     ) -> Result<(&'b BitSlice<Msb0, u8>, u32), DekuError> {
-        let bit_len = modes_message_len_by_type(df);
+        const MODES_LONG_MSG_BYTES: usize = 14;
+        const MODES_SHORT_MSG_BYTES: usize = 7;
+
+        let bit_len = if df.deku_id().unwrap() & 0x10 != 0 {
+            MODES_LONG_MSG_BYTES * 8
+        } else {
+            MODES_SHORT_MSG_BYTES * 8
+        };
+
         let crc = crc::modes_checksum(rest.as_raw_slice(), bit_len);
         Ok((rest, crc))
-    }
-}
-
-pub fn modes_message_len_by_type(typ: &DF) -> usize {
-    if typ.deku_id().unwrap() & 0x10 != 0 {
-        MODES_LONG_MSG_BYTES * 8
-    } else {
-        MODES_SHORT_MSG_BYTES * 8
     }
 }
 
