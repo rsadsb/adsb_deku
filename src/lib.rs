@@ -4,15 +4,15 @@ pub use deku::DekuContainerRead;
 pub mod cpr;
 mod crc;
 
-use deku::bitvec::BitSlice;
-use deku::bitvec::Msb0;
+use deku::bitvec::{BitSlice, Msb0};
 
 pub const MODES_LONG_MSG_BYTES: usize = 14;
 pub const MODES_SHORT_MSG_BYTES: usize = 7;
 
+/// Downlink ADSB Packet
 #[derive(Debug, PartialEq, DekuRead, Clone)]
 pub struct Frame {
-    /// 5 bits
+    /// 5 bit identifier, holds all other information inside packet
     pub df: DF,
     /// Calculated from all bits, used as ICAO for Response packets
     #[deku(reader = "Self::read_crc(df, deku::input_bits)")]
@@ -42,16 +42,12 @@ pub fn modes_message_len_by_type(typ: &DF) -> usize {
 impl std::fmt::Display for Frame {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match &self.df {
-            DF::ShortAirAirSurveillance(address_altitude) => {
+            DF::ShortAirAirSurveillance { altitude, .. } => {
                 writeln!(f, " Short Air-Air Surveillance")?;
                 writeln!(f, "  ICAO Address:  {:06x} (Mode S / ADS-B)", self.crc)?;
-                if address_altitude.altitude.0 > 0 {
+                if altitude.0 > 0 {
                     writeln!(f, "  Air/Ground:    airborne?")?;
-                    writeln!(
-                        f,
-                        "  Altitude:      {} ft barometric",
-                        address_altitude.altitude.0
-                    )?;
+                    writeln!(f, "  Altitude:      {} ft barometric", altitude.0)?;
                 } else {
                     writeln!(f, "  Air/Ground:    ground")?;
                 }
@@ -77,13 +73,13 @@ impl std::fmt::Display for Frame {
                 writeln!(f, "  ICAO Address:  {} (Mode S / ADS-B)", icao)?;
                 writeln!(f, "  Air/Ground:    {}", capability)?;
             }
-            DF::LongAirAir(address_altitude) => {
+            DF::LongAirAir { altitude, .. } => {
                 writeln!(f, " Long Air-Air ACAS")?;
                 writeln!(f, "  ICAO Address:  {:06x} (Mode S / ADS-B)", self.crc)?;
                 // TODO the airborne? should't be static
-                if address_altitude.altitude.0 > 0 {
+                if altitude.0 > 0 {
                     writeln!(f, "  Air/Ground:    airborne?")?;
-                    writeln!(f, "  Baro altitude: {} ft", address_altitude.altitude.0)?;
+                    writeln!(f, "  Baro altitude: {} ft", altitude.0)?;
                 } else {
                     writeln!(f, "  Air/Ground:    ground")?;
                 }
@@ -91,10 +87,16 @@ impl std::fmt::Display for Frame {
             DF::ADSB(adsb) => {
                 write!(f, "{}", adsb.to_string(17).unwrap())?;
             }
-            DF::TisB(adsb) => {
-                write!(f, "{}", adsb.to_string(18).unwrap())?;
+            // TODO
+            //DF::TisB{...} => {
+            //    write!(f, "{}", adsb.to_string(18).unwrap())?;
+            //}
+            DF::CommBAltitudeReply { mb, parity, .. } => {
+                writeln!(f, " Comm-B Altitude Reply");
+                writeln!(f, "  data: {:x?}", mb);
+                writeln!(f, "  ICAO Address: {} (Mode S / ADS-B)", parity);
             }
-            DF::CommDExtendedLengthMessage => {
+            DF::CommDExtendedLengthMessage { .. } => {
                 writeln!(f, " Comm-D Extended Length Message");
                 writeln!(f, "  ICAO Address:  {:x?} (Mode S / ADS-B)", self.crc);
             }
@@ -116,79 +118,192 @@ impl std::fmt::Display for Frame {
     }
 }
 
+/// Downlink Format (3.1.2.3.2.1.2)
 #[derive(Debug, PartialEq, DekuRead, Clone)]
 #[deku(type = "u8", bits = "5")]
 pub enum DF {
+    /// Short Air-Air Surveillance, Downlink Format 10
     #[deku(id = "0")]
-    ShortAirAirSurveillance(AddressAltitude),
+    ShortAirAirSurveillance {
+        /// VS: Vertical Status
+        #[deku(bits = "1")]
+        vs: u8,
+        /// CC:
+        #[deku(bits = "1")]
+        cc: u8,
+        /// Spare
+        #[deku(bits = "1")]
+        unused: u8,
+        /// SL: Sentitivity level, ACAS
+        #[deku(bits = "3")]
+        sl: u8,
+        /// Spare
+        #[deku(bits = "2")]
+        unused1: u8,
+        /// RI: Reply Information
+        #[deku(bits = "4")]
+        ri: u8,
+        /// Spare
+        #[deku(bits = "2")]
+        unused2: u8,
+        /// AC: altitude code
+        altitude: AC13Field,
+        /// AP: address, parity
+        parity: ICAO,
+    },
+
+    /// Surveillance Altitude Reply, Downlink Format 4 (3.1.2.6.5)
     #[deku(id = "4")]
     SurveillanceAltitudeReply {
+        /// FS: Flight Status
         fs: FlightStatus,
-        #[deku(bits = "5")]
-        dr: u8,
+        /// DR: DownlinkRequest
+        dr: DownlinkRequest,
+        /// UM: Utility Message
         um: UtilityMessage,
+        /// AC: AltitudeCode
         ac: AC13Field,
-        #[deku(bits = "24")]
-        ap: u32,
+        /// AP: Address/Parity
+        ap: ICAO,
     },
+
+    /// Surveillance Identity Reply (3.1.2.6.7)
     #[deku(id = "5")]
     SurveillanceIdentityReply {
+        /// FS: Flight Status
         fs: FlightStatus,
-        #[deku(bits = "5")]
-        dr: u8,
+        /// DR: Downlink Request
+        dr: DownlinkRequest,
+        /// UM: UtilityMessage
         um: UtilityMessage,
+        /// ID: Identity
         id: IdentityCode,
-        #[deku(bits = "24")]
-        ap: u32,
+        /// AP: Address/Parity
+        ap: ICAO,
     },
+
+    /// All-call reply, downlink format 11 (2.1.2.5.2.2)
     #[deku(id = "11")]
     AllCallReply {
-        /// 3 bits
+        /// CA: Capability
         capability: Capability,
-        /// 3 bytes
+        /// AA: Address Announced
         icao: ICAO,
-        /// 3 bytes
+        /// PI: Parity/Interrogator identifier
         p_icao: ICAO,
     },
+
+    /// Long Air-Air Surveillance Downlink Format 16 (3.1.2.8.3)
     #[deku(id = "16")]
-    LongAirAir(AddressAltitude),
+    LongAirAir {
+        #[deku(bits = "1")]
+        vs: u8,
+        #[deku(bits = "2")]
+        spare1: u8,
+        #[deku(bits = "3")]
+        sl: u8,
+        #[deku(bits = "2")]
+        spare2: u8,
+        #[deku(bits = "4")]
+        ri: u8,
+        #[deku(bits = "2")]
+        spare3: u8,
+        /// AC: altitude code
+        altitude: AC13Field,
+        /// MV: message, acas
+        #[deku(count = "7")]
+        mv: Vec<u8>,
+        /// AP: address, parity
+        parity: ICAO,
+    },
+
+    /// Extended Squitter, Downlink Format 17 (3.1.2.8.6)
     #[deku(id = "17")]
     ADSB(ADSB),
-    /// Non-transponder-based ADS-B transmitting subsystems and TIS-B transmitting equipment
+
+    /// Extended Squitter/Supplementary, Downlink Format 18 (3.1.2.8.7)
     #[deku(id = "18")]
-    TisB(ADSB),
+    TisB {
+        /// Enum containing message
+        cf: ControlField,
+        /// PI: parity/interrogator identifier
+        pi: ICAO,
+    },
+
+    /// Extended Squitter Military Application, Downlink Format 19 (3.1.2.8.8)
+    #[deku(id = "19")]
+    ExtendedQuitterMilitaryApplication {
+        /// Reserved
+        #[deku(bits = "3")]
+        af: u8,
+    },
+
+    /// COMM-B Altitude Reply (3.1.2.6.6)
+    ///
+    /// TODO: Test me
     #[deku(id = "20")]
     CommBAltitudeReply {
+        /// FS: Flight Status
         flight_status: FlightStatus,
+        /// DR: Downlink Request
         dr: DownlinkRequest,
+        /// UM: Utility Message
         um: UtilityMessage,
+        /// AC: Altitude Code
         #[deku(reader = "Altitude::read(deku::rest)")]
-        alt_code: u32,
-        #[deku(reader = "read_comm_b(deku::rest)")]
-        message_comm_b: String,
-        #[deku(endian = "big", bits = "24")]
-        parity: u32,
+        alt: u32,
+        /// MB Message, Comm-B
+        #[deku(count = "7")]
+        mb: Vec<u8>,
+        /// AP: address/parity
+        parity: ICAO,
     },
+
+    /// COMM-B Reply, Downlink Format 21 (3.1.2.6.8)
     #[deku(id = "21")]
     CommBIdentityReply {
+        /// FS: Flight Status
         fs: FlightStatus,
+        /// DR: Downlink Request
         dr: DownlinkRequest,
+        /// UM: Utility Message
         um: UtilityMessage,
+        /// ID: Identity
+        ///
+        /// TODO: does this work?
         #[deku(
             bits = "13",
             endian = "big",
             map = "|squawk: u32| -> Result<_, DekuError> {Ok(decode_id13_field(squawk))}"
         )]
         id: u32,
+        /// MB Message, COMM-B
         //#TODO: this works?
         #[deku(reader = "read_comm_b(deku::rest)")]
         message_comm_b: String,
-        #[deku(endian = "big", bits = "24")]
-        parity: u32,
+        /// AP address/parity
+        parity: ICAO,
     },
-    //#TODO: Might be an actual field instead of just reading the crc like dump1090 does
+
+    /// Comm-D, Downlink Format 24
+    ///
+    /// TODO: test me
     #[deku(id = "24")]
-    CommDExtendedLengthMessage,
+    CommDExtendedLengthMessage {
+        /// Spare - 1 bit
+        #[deku(bits = "1")]
+        spare: u8,
+        /// KE: control, ELM
+        ke: KE,
+        /// ND: number of D-segment
+        #[deku(bits = "4")]
+        nd: u8,
+        /// MD: message, Comm-D, 80 bits
+        #[deku(count = "10")]
+        md: Vec<u8>,
+        /// AP: address/parity
+        parity: ICAO,
+    },
 }
 
 fn read_comm_b(rest: &BitSlice<Msb0, u8>) -> Result<(&BitSlice<Msb0, u8>, String), DekuError> {
@@ -208,47 +323,64 @@ fn read_comm_b(rest: &BitSlice<Msb0, u8>) -> Result<(&BitSlice<Msb0, u8>, String
     Ok((inside_rest, callsign))
 }
 
+/// (3.1.2.8.7.2) Control Field
 #[derive(Debug, PartialEq, DekuRead, Clone)]
-pub struct AddressAltitude {
-    /// bit 6
-    #[deku(bits = "1")]
-    vs: u8,
+#[deku(type = "u8", bits = "3")]
+pub enum ControlField {
+    /// Code 0, ADS-B ES/NT devices
+    #[deku(id = "0")]
+    ADSB_ES_NT(ADSB_ES_NT),
+    // TODO:
+    ///// Code 1, Reserved for ADS-B for ES/NT devices for alternate address space
+    //#[deku(id = "1")]
+    //ADSB_ES_NT_ALT(ADSB_ES_NT_ALT),
 
-    /// bit 7
-    #[deku(bits = "1")]
-    cc: u8,
+    ///// Code 2, Fine Format TIS-B Message
+    //#[deku(id = "2")]
+    //TISB_FINE(TISB_FINE),
 
-    /// bit 8
-    #[deku(bits = "1")]
-    unused: u8,
+    ///// Code 3, Coarse Format TIS-B Message
+    //#[deku(id = "3")]
+    //TISB_COARSE(TISB_COARSE),
 
-    /// bits 9-11
-    #[deku(bits = "3")]
-    sl: u8,
+    ///// Code 4, Coarse Format TIS-B Message
+    //#[deku(id = "4")]
+    //TISB_MANAGE(TISB_MANAGE),
 
-    /// bits 10-13
-    #[deku(bits = "4")]
-    unused1: u8,
+    ///// Code 5, TIS-B Message for replay ADS-B Message
+    //#[deku(id = "5")]
+    //TISB_ADSB_RELAY(TISB_ADSB_RELAY),
 
-    /// bits 14-17
-    #[deku(bits = "2")]
-    ri: u8,
+    ///// Code 6, TIS-B Message, Same as DF=17
+    //#[deku(id = "6")]
+    //TISB_DF17(TISB_DF17),
 
-    ///// bits 18-19
-    #[deku(bits = "2")]
-    unused2: u8,
+    ///// Code 7, Reserved
+    //#[deku(id = "7")]
+    //Reserved,
+}
 
-    /// bits 20-32
-    altitude: AC13Field,
+/// (3.1.2.8.7.3)
+#[derive(Debug, PartialEq, DekuRead, Clone)]
+pub struct ADSB_ES_NT {
+    /// AA: Address, Announced
+    aa: ICAO,
+    /// ME: message, extended quitter
+    #[deku(count = "7")]
+    me: Vec<u8>,
+    /// PI: Parity/interrogator identifier
+    pi: ICAO,
 }
 
 #[derive(Debug, PartialEq, DekuRead, Clone)]
 pub struct ADSB {
-    /// 3 bits
+    /// CA: capability
     pub capability: Capability,
-    /// 3 bytes
+    /// AA: address, announced
     pub icao: ICAO,
+    /// ME: Message, Extended Squitter
     pub me: ME,
+    /// PI: Parity/Interrogator Identifier
     #[deku(bits = "24")]
     pub pi: u32,
 }
@@ -345,8 +477,8 @@ impl ADSB {
                 }
             }
             ME::AircraftStatus(AircraftStatus {
-                sub_type,
-                emergency_state,
+                sub_type: _,
+                emergency_state: _,
                 squawk,
                 ..
             }) => {
@@ -434,6 +566,15 @@ pub enum DownlinkRequest {
     RequestSendCommB   = 0b00001,
     CommBBroadcastMsg1 = 0b00100,
     CommBBroadcastMsg2 = 0b00101,
+    #[deku(id_pat = "_")]
+    Unknown,
+}
+
+#[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
+#[deku(type = "u8", bits = "1")]
+pub enum KE {
+    DownlinkELMTx = 0,
+    UplinkELMAck  = 1,
 }
 
 #[derive(Debug, PartialEq, DekuRead, Hash, Eq, Copy, Clone)]
@@ -529,16 +670,23 @@ impl Default for Unit {
     }
 }
 
+/// (3.1.2.5.2.2.1) Transponder level and additional information
 #[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
 #[deku(type = "u8", bits = "3")]
 #[allow(non_camel_case_types)]
 pub enum Capability {
+    /// Level 1 transponder (surveillance only), and either airborne or on the ground
     AG_UNCERTAIN  = 0x00,
     #[deku(id_pat = "0x01..=0x03")]
     Reserved,
+    /// Level 2 or above transponder, on ground
     AG_GROUND     = 0x04,
+    /// Level 2 or above transponder, airborne
     AG_AIRBORNE   = 0x05,
+    /// Level 2 or above transponder, either airborne or on ground
     AG_UNCERTAIN2 = 0x06,
+    /// DR field is not equal to 0, or fs field equal 2, 3, 4, or 5, and either airborne or on
+    /// ground
     AG_UNCERTAIN3 = 0x07,
 }
 
@@ -588,8 +736,9 @@ pub struct AircraftStatus {
     pub sub_type: AircraftStatusType,
     pub emergency_state: EmergencyState,
     #[deku(
-        bits = "12",
-        map = "|squawk: u32| -> Result<_, DekuError> {Ok(mode_ac::decode_id13_field(squawk))}"
+        bits = "13",
+        endian = "big",
+        map = "|squawk: u32| -> Result<_, DekuError> {Ok(decode_id13_field(squawk))}"
     )]
     pub squawk: u32,
 }

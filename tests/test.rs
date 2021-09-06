@@ -1,4 +1,4 @@
-use mode_s_deku::{CPRFormat, Capability, DekuContainerRead, Frame, VerticalRateSource, DF, ME};
+use adsb_deku::{CPRFormat, Capability, DekuContainerRead, Frame, VerticalRateSource, DF, ME};
 
 use assert_hex::assert_eq_hex;
 use hexlit::hex;
@@ -374,6 +374,7 @@ fn testing_surveillanceidentityreply_err() {
         r#" Surveillance, Altitude Reply
   ICAO Address:  a168ad (Mode S / ADS-B)
   Air/Ground:    airborne?
+  Altitude:      6500 ft barometric
 "#,
         resulting_string
     );
@@ -535,18 +536,6 @@ fn testing_issue_04() {
     );
 }
 
-#[test]
-fn testing_df_24() {
-    let bytes = hex!("c57bda218578d32248b484169299");
-    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-    let resulting_string = format!("{}", frame);
-    assert_eq!(
-        r#" Comm-D Extended Length Message
-  ICAO Address:  c06800 (Mode S / ADS-B)
-"#,
-        resulting_string
-    );
-}
 
 #[test]
 fn testing_df_21() {
