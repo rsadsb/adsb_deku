@@ -1,7 +1,9 @@
 # adsb_deku
 
+[![Actions Status](https://github.com/wcampbell0x2a/adsb_deku/workflows/CI/badge.svg)](https://github.com/wcampbell0x2a/adsb_deku/actions)
+
 Decoder for ADS-B(Automatic Dependent Surveillance-Broadcast)/Mode-S protocol Downlink Format packets from 1090mhz.
-Aeronautical Telecommunications Volume IV: Surveillance and Collision Avoidance Systems, Fifth Edition.
+Derived from Aeronautical Telecommunications Volume IV: Surveillance and Collision Avoidance Systems, Fifth Edition.
 
 ## support
 |  DF  |  Name                           |  Section    |
@@ -41,11 +43,18 @@ assert_eq!(
 );
 ```
 
-## testing
+## testing and development
+
+### testing
 
 Test data was generated using my rtl-sdr with `dump1090-fa`.
 ```text
 cargo test
+```
+
+### fmt
+```text
+cargo +nightly fmt
 ```
 
 ### applications
@@ -65,6 +74,7 @@ cargo r --example 1090
 ## radar tui
 
 Display a radar like tui (terminal user interface) showing aircraft: ICAO address, lat, long.
+The terminal used is [cool-retro-terminal](https://github.com/Swordfish90/cool-retro-term).
 
 ![Radar Example](/media/2021-09-06-082636_1804x1062_scrot.png)
 ```text

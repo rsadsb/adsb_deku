@@ -327,6 +327,7 @@ fn read_comm_b(rest: &BitSlice<Msb0, u8>) -> Result<(&BitSlice<Msb0, u8>, String
 /// (3.1.2.8.7.2) Control Field
 #[derive(Debug, PartialEq, DekuRead, Clone)]
 #[deku(type = "u8", bits = "3")]
+#[allow(non_camel_case_types)]
 pub enum ControlField {
     /// Code 0, ADS-B ES/NT devices
     #[deku(id = "0")]
@@ -361,6 +362,7 @@ pub enum ControlField {
 
 /// (3.1.2.8.7.3)
 #[derive(Debug, PartialEq, DekuRead, Clone)]
+#[allow(non_camel_case_types)]
 pub struct ADSB_ES_NT {
     /// AA: Address, Announced
     aa: ICAO,
@@ -607,7 +609,7 @@ impl IdentityCode {
         let b2 = (num & 0b0_0000_0000_1000) >> 3;
         let d2 = (num & 0b0_0000_0000_0100) >> 2;
         let b4 = (num & 0b0_0000_0000_0010) >> 1;
-        let d4 = (num & 0b0_0000_0000_0001) >> 0;
+        let d4 = num & 0b0_0000_0000_0001;
 
         let a = a4 << 2 | a2 << 1 | a1;
         let b = b4 << 2 | b2 << 1 | b1;
@@ -1433,13 +1435,6 @@ mod mode_ac {
             | ((mode_a & 0x0700) >> 2)
             | ((mode_a & 0x7000) >> 3)
     }
-
-    /// convert from mode A hex to 0-4095 index
-    pub fn index_to_mode_a(index: u32) -> u32 {
-        (index & 7) | ((index & 70) << 1) | ((index & 0700) << 2) | ((index & 07000) << 3)
-    }
-
-    const INVALID_ALTITUDE: u32 = 4_294_957_297;
 
     pub fn decode_id13_field(id13_field: u32) -> u32 {
         let mut hex_gillham: u32 = 0;
