@@ -74,7 +74,7 @@ fn main() {
 
     let stdout = io::stdout();
     let mut backend = CrosstermBackend::new(stdout);
-    backend.clear();
+    backend.clear().unwrap();
     let mut terminal = Terminal::new(backend).unwrap();
 
     //TODO: add cities as points

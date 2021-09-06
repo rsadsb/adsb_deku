@@ -28,7 +28,7 @@ impl fmt::Display for Airplanes {
         for (key, _) in &self.0 {
             let value = self.lat_long_altitude(*key);
             if let Some(value) = value {
-                writeln!(f, "{}: {:?}", key, value);
+                writeln!(f, "{}: {:?}", key, value)?;
             }
         }
         Ok(())
