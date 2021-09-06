@@ -136,7 +136,7 @@ pub enum DF {
         /// Spare
         #[deku(bits = "1")]
         unused: u8,
-        /// SL: Sentitivity level, ACAS
+        /// SL: Sensitivity level, ACAS
         #[deku(bits = "3")]
         sl: u8,
         /// Spare

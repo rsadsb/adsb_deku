@@ -7,7 +7,7 @@ use std::time::SystemTime;
 pub struct AirplaneCoor {
     /// [odd, even]
     pub altitudes: [Option<Altitude>; 2],
-    /// last time of frame rx
+    /// last time of frame Rx
     pub last_time: SystemTime,
 }
 
@@ -82,7 +82,7 @@ impl Airplanes {
         }
     }
 
-    /// Remove airplain after not active for a time
+    /// Remove airplane after not active for a time
     pub fn prune(&mut self) {
         self.0
             .retain(|_, v| v.last_time.elapsed().unwrap() < std::time::Duration::from_secs(60));
