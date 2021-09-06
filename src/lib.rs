@@ -103,7 +103,7 @@ impl std::fmt::Display for Frame {
                 id, message_comm_b, ..
             } => {
                 writeln!(f, " Comm-B, Identity Reply")?;
-                if message_comm_b == "" {
+                if message_comm_b.is_empty() {
                     writeln!(f, "    Comm-B format: unknown format")?;
                 } else {
                     writeln!(f, "    Comm-B format: {}", message_comm_b)?;
@@ -835,10 +835,10 @@ impl std::fmt::Display for OperationStatusAirborne {
             "   NICbaro:            {}",
             self.barometric_altitude_integrity
         )?;
-        if self.horizontal_reference_direction != 1 {
-            writeln!(f, "   Heading reference:  true north")?;
-        } else {
+        if self.horizontal_reference_direction == 1 {
             writeln!(f, "   Heading reference:  magnetic north")?;
+        } else {
+            writeln!(f, "   Heading reference:  true north")?;
         }
         Ok(())
     }
@@ -1548,71 +1548,5 @@ mod mode_ac {
         }
 
         Ok((five_hundreds * 5) + one_hundreds - 13)
-    }
-
-    pub fn internal_mode_a_to_mode_c(mode_a: u32) -> u32 {
-        let mut five_hundreds: u32 = 0;
-        let mut one_hundreds: u32 = 0;
-
-        if (mode_a & 0xffff_8888) != 0 || (mode_a & 0x0000_00f0) == 0 {
-            return INVALID_ALTITUDE;
-        }
-
-        // One Hundreds
-        if (mode_a & 0x0010) == 1 {
-            one_hundreds ^= 0x007; // C1
-        }
-        if (mode_a & 0x0020) == 1 {
-            one_hundreds ^= 0x003; // C1
-        }
-        if (mode_a & 0x0040) == 1 {
-            one_hundreds ^= 0x001; // C4
-        }
-        if (one_hundreds & 5) == 5 {
-            one_hundreds ^= 2;
-        }
-        if one_hundreds > 5 {
-            return INVALID_ALTITUDE;
-        }
-
-        // Five hundreds
-        if (mode_a & 0x0002) == 1 {
-            five_hundreds ^= 0x0ff; // D2
-        }
-        if (mode_a & 0x0004) == 1 {
-            five_hundreds ^= 0x07f; // D4
-        }
-        if (mode_a & 0x1000) == 1 {
-            five_hundreds ^= 0x03f; // A1
-        }
-        if (mode_a & 0x2000) == 1 {
-            five_hundreds ^= 0x01f; // A2
-        }
-        if (mode_a & 0x4000) == 1 {
-            five_hundreds ^= 0x00f; // A4
-        }
-        if (mode_a & 0x0100) == 1 {
-            five_hundreds ^= 0x007; // B1
-        }
-        if (mode_a & 0x0200) == 1 {
-            five_hundreds ^= 0x003; // B2
-        }
-        if (mode_a & 0x0400) == 1 {
-            five_hundreds ^= 0x001; // B4
-        }
-        if (five_hundreds & 1) == 1 {
-            one_hundreds = 6 - one_hundreds;
-        }
-        (five_hundreds * 5) + one_hundreds - 13
-    }
-
-    pub fn init() -> [u32; 4096] {
-        let mut table = [0_u32; 4096];
-        for i in 0..4096_usize {
-            let mode_a = index_to_mode_a(i as u32);
-            let mode_c = internal_mode_a_to_mode_c(mode_a);
-            table[i] = mode_c;
-        }
-        table
     }
 }

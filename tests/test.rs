@@ -28,8 +28,8 @@ fn testing02() {
     if let DF::ADSB(adsb) = frame.unwrap().1.df {
         if let ME::AirborneVelocity(me) = adsb.me {
             let (heading, ground_speed, vertical_rate) = me.calculate();
-            assert_eq!(heading, 322.197_207_549_061_5);
-            assert_eq!(ground_speed, 417.655_360_315_176_6);
+            assert!((heading - 322.197_207_549_061_5).abs() < f64::EPSILON);
+            assert!((ground_speed - 417.655_360_315_176_6).abs() < f64::EPSILON);
             assert_eq!(vertical_rate, 0);
             assert_eq!(me.vrate_src, VerticalRateSource::GeometricAltitude);
             return;
@@ -63,9 +63,9 @@ fn testing03() {
             assert_eq!(me.subtype, 1);
             assert!(!me.is_fms);
             assert_eq!(me.altitude, 14016);
-            assert_eq!(me.qnh, 1012.8);
+            assert!((me.qnh - 1012.8).abs() < f32::EPSILON);
             assert!(me.is_heading);
-            assert_eq!(me.heading, 229.92188);
+            assert!((me.heading - 229.92188).abs() < f32::EPSILON);
             assert_eq!(me.nacp, 9);
             assert_eq!(me.nicbaro, 1);
             assert_eq!(me.sil, 3);
@@ -159,9 +159,9 @@ fn testing06() {
             assert_eq!(me.subtype, 1);
             assert!(!me.is_fms);
             assert_eq!(me.altitude, 37024);
-            assert_eq!(me.qnh, 1013.6);
+            assert!((me.qnh - 1013.6).abs() < f32::EPSILON);
             assert!(!me.is_heading);
-            assert_eq!(me.heading, 0.0);
+            assert!((me.heading - 0.0).abs() < f32::EPSILON);
             assert_eq!(me.nacp, 10);
             assert_eq!(me.nicbaro, 1);
             assert_eq!(me.sil, 3);

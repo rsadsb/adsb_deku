@@ -24,15 +24,11 @@ fn main() {
                 println!("{:#?}", frame);
                 println!("{}", frame);
                 println!("{}", airplains);
-                match frame.df {
-                    DF::ADSB(ref adsb) => match adsb.me {
-                        ME::AirbornePositionBaroAltitude(_) => {
-                            airplains.add_extended_quitter_ap(adsb.icao, frame.clone());
-                        }
-                        _ => (),
-                    },
-                    _ => (),
-                };
+                if let DF::ADSB(ref adsb) = frame.df {
+                    if let ME::AirbornePositionBaroAltitude(_) = adsb.me {
+                        airplains.add_extended_quitter_ap(adsb.icao, frame.clone());
+                    }
+                }
                 if frame.to_string() == "" {
                     panic!("[E] fmt::Display not implemented");
                 }

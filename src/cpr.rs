@@ -238,10 +238,10 @@ pub fn get_position(cpr_frames: (&Altitude, &Altitude)) -> Option<Position> {
         _ => return None,
     };
 
-    let cpr_lat_even = even_frame.lat_cpr as f64 / CPR_MAX;
-    let cpr_lon_even = even_frame.lon_cpr as f64 / CPR_MAX;
-    let cpr_lat_odd = odd_frame.lat_cpr as f64 / CPR_MAX;
-    let cpr_lon_odd = odd_frame.lon_cpr as f64 / CPR_MAX;
+    let cpr_lat_even = f64::from(even_frame.lat_cpr) / CPR_MAX;
+    let cpr_lon_even = f64::from(even_frame.lon_cpr) / CPR_MAX;
+    let cpr_lat_odd = f64::from(odd_frame.lat_cpr) / CPR_MAX;
+    let cpr_lon_odd = f64::from(odd_frame.lon_cpr) / CPR_MAX;
 
     let j = (59.0 * cpr_lat_even - 60.0 * cpr_lat_odd + 0.5).floor();
 

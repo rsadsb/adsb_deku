@@ -84,15 +84,11 @@ fn main() {
         let bytes = hex::decode(&hex).unwrap();
         match Frame::from_bytes((&bytes, 0)) {
             Ok((_, frame)) => {
-                match frame.df {
-                    DF::ADSB(ref adsb) => match adsb.me {
-                        ME::AirbornePositionBaroAltitude(_) => {
-                            airplains.add_extended_quitter_ap(adsb.icao, frame.clone());
-                        }
-                        _ => (),
-                    },
-                    _ => (),
-                };
+                if let DF::ADSB(ref adsb) = frame.df {
+                    if let ME::AirbornePositionBaroAltitude(_) = adsb.me {
+                        airplains.add_extended_quitter_ap(adsb.icao, frame.clone());
+                    }
+                }
             }
             Err(_e) => (),
         }
@@ -137,7 +133,7 @@ fn main() {
                         }
 
                         // draw airplanes
-                        for (key, _) in &airplains.0 {
+                        for key in airplains.0.keys() {
                             let value = airplains.lat_long_altitude(*key);
                             if let Some((position, _altitude)) = value {
                                 let lat = (position.latitude - local_lat) * 200.0;
