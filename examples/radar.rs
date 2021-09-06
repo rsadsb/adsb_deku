@@ -6,7 +6,7 @@ use std::net::TcpStream;
 use std::num::ParseFloatError;
 use std::str::FromStr;
 
-use mode_s_deku::{Frame, DF, ME};
+use adsb_deku::{Frame, DF, ME};
 
 use common_app::Airplanes;
 

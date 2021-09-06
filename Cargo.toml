@@ -1,5 +1,5 @@
 [package]
-name = "mode_s_deku"
+name = "adsb_deku"
 version = "0.1.0"
 authors = ["wcampbell"]
 edition = "2018"

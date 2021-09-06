@@ -1,4 +1,4 @@
-use mode_s_deku::{cpr, Altitude, CPRFormat, Frame, DF, ICAO, ME};
+use adsb_deku::{cpr, Altitude, CPRFormat, Frame, DF, ICAO, ME};
 use std::collections::HashMap;
 use std::fmt;
 use std::time::SystemTime;

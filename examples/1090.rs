@@ -1,10 +1,10 @@
+use adsb_deku::Frame;
 use deku::DekuContainerRead;
-use mode_s_deku::Frame;
 
 use std::io::{BufRead, BufReader};
 use std::net::TcpStream;
 
-use mode_s_deku::{DF, ME};
+use adsb_deku::{DF, ME};
 
 use common_app::Airplanes;
 
