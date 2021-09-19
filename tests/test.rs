@@ -1,4 +1,5 @@
-use adsb_deku::{CPRFormat, Capability, DekuContainerRead, Frame, VerticalRateSource, DF, ME};
+use adsb_deku::deku::prelude::*;
+use adsb_deku::{CPRFormat, Capability, Frame, VerticalRateSource, DF, ME};
 
 use assert_hex::assert_eq_hex;
 use hexlit::hex;

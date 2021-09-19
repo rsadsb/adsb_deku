@@ -1,7 +1,7 @@
 #![doc = include_str!("../README.md")]
 
+pub use deku;
 use deku::prelude::*;
-pub use deku::DekuContainerRead;
 
 pub mod cpr;
 mod crc;
@@ -33,7 +33,7 @@ impl Frame {
             MODES_SHORT_MSG_BYTES * 8
         };
 
-        let crc = crc::modes_checksum(rest.as_raw_slice(), bit_len);
+        let crc = crc::modes_checksum(rest.as_raw_slice(), bit_len)?;
         Ok((rest, crc))
     }
 }
@@ -595,8 +595,7 @@ pub struct IdentityCode(#[deku(reader = "Self::read(deku::rest)")] u16);
 
 impl IdentityCode {
     fn read(rest: &BitSlice<Msb0, u8>) -> Result<(&BitSlice<Msb0, u8>, u16), DekuError> {
-        let (rest, num) =
-            u32::read(rest, (deku::ctx::Endian::Big, deku::ctx::Size::Bits(13))).unwrap();
+        let (rest, num) = u32::read(rest, (deku::ctx::Endian::Big, deku::ctx::Size::Bits(13)))?;
 
         let c1 = (num & 0b1_0000_0000_0000) >> 12;
         let a1 = (num & 0b0_1000_0000_0000) >> 11;
@@ -627,8 +626,7 @@ pub struct AC13Field(#[deku(reader = "Self::read(deku::rest)")] u32);
 impl AC13Field {
     /// TODO Add unit
     fn read(rest: &BitSlice<Msb0, u8>) -> Result<(&BitSlice<Msb0, u8>, u32), DekuError> {
-        let (rest, num) =
-            u32::read(rest, (deku::ctx::Endian::Big, deku::ctx::Size::Bits(13))).unwrap();
+        let (rest, num) = u32::read(rest, (deku::ctx::Endian::Big, deku::ctx::Size::Bits(13)))?;
 
         let m_bit = num & 0x0040;
         let q_bit = num & 0x0010;

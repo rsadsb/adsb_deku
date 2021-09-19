@@ -23,7 +23,8 @@ Derived from Aeronautical Telecommunications Volume IV: Surveillance and Collisi
 ## example usage
 ```rust
 use hexlit::hex;
-use adsb_deku::{Frame, DekuContainerRead};
+use adsb_deku::Frame;
+use adsb_deku::deku::DekuContainerRead;
 
 let bytes = hex!("8da2c1bd587ba2adb31799cb802b");
 let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;

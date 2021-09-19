@@ -1,4 +1,5 @@
 //This module includes functionality translated from mode_s.c
+use deku::prelude::*;
 
 pub const CRC_TABLE: [u32; 256] = [
     0x0000_0000,
@@ -268,12 +269,13 @@ struct ErrorInfo {
     bit: [i8; MODES_MAX_BITERRORS],
 }
 
-#[must_use]
-pub fn modes_checksum(message: &[u8], bits: usize) -> u32 {
+pub fn modes_checksum(message: &[u8], bits: usize) -> Result<u32, DekuError> {
     let mut rem: u32 = 0;
     let n = bits / 8;
 
-    assert!(n >= 3);
+    if (n < 3) || (message.len() < 3) {
+        return Err(DekuError::Incomplete(NeedSize::new(3)));
+    }
 
     for i in 0..(n - 3) {
         rem =
@@ -287,5 +289,5 @@ pub fn modes_checksum(message: &[u8], bits: usize) -> u32 {
 
     rem ^= xor_term;
 
-    rem
+    Ok(rem)
 }
