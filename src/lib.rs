@@ -1042,7 +1042,7 @@ impl std::fmt::Display for Altitude {
 impl Altitude {
     fn read(rest: &BitSlice<Msb0, u8>) -> Result<(&BitSlice<Msb0, u8>, u32), DekuError> {
         let (rest, num) =
-            u32::read(rest, (deku::ctx::Endian::Big, deku::ctx::Size::Bits(12))).unwrap();
+            u32::read(rest, (deku::ctx::Endian::Big, deku::ctx::Size::Bits(12)))?;
 
         let q = num & 0x10;
 
@@ -1538,6 +1538,11 @@ mod mode_ac {
         // Correct order of one_hundreds.
         if five_hundreds & 1 != 0 && one_hundreds <= 6 {
             one_hundreds = 6 - one_hundreds;
+        }
+
+        // Check for invalid one_hundres
+        if one_hundreds < 13 {
+            return Err("Invalid one_hundred");
         }
 
         Ok((five_hundreds * 5) + one_hundreds - 13)

@@ -273,8 +273,8 @@ pub fn modes_checksum(message: &[u8], bits: usize) -> Result<u32, DekuError> {
     let mut rem: u32 = 0;
     let n = bits / 8;
 
-    if (n < 3) || (message.len() < 3) {
-        return Err(DekuError::Incomplete(NeedSize::new(3)));
+    if (n < 3) || (message.len() < n) {
+        return Err(DekuError::Incomplete(NeedSize::new(4)));
     }
 
     for i in 0..(n - 3) {
