@@ -1041,8 +1041,7 @@ impl std::fmt::Display for Altitude {
 
 impl Altitude {
     fn read(rest: &BitSlice<Msb0, u8>) -> Result<(&BitSlice<Msb0, u8>, u32), DekuError> {
-        let (rest, num) =
-            u32::read(rest, (deku::ctx::Endian::Big, deku::ctx::Size::Bits(12)))?;
+        let (rest, num) = u32::read(rest, (deku::ctx::Endian::Big, deku::ctx::Size::Bits(12)))?;
 
         let q = num & 0x10;
 
