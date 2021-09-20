@@ -451,7 +451,6 @@ impl ADSB {
             ME::AirborneVelocity(airborne_velocity) => {
                 if let AirborneVelocitySubType::GroundSpeedDecoding(_) = airborne_velocity.sub_type
                 {
-                    let (heading, ground_speed, vertical_rate) = airborne_velocity.calculate();
                     writeln!(
                         f,
                         " Extended Squitter Airborne velocity over ground, subsonic (19/1)"
@@ -463,17 +462,23 @@ impl ADSB {
                         "  GNSS delta:    {}{} ft",
                         airborne_velocity.gnss_sign, airborne_velocity.gnss_baro_diff
                     )?;
-                    writeln!(f, "  Heading:       {}", heading.ceil())?;
-                    writeln!(
-                        f,
-                        "  Speed:         {} kt groundspeed",
-                        ground_speed.floor()
-                    )?;
-                    writeln!(
-                        f,
-                        "  Vertical rate: {} ft/min {}",
-                        vertical_rate, airborne_velocity.vrate_src
-                    )?;
+                    if let Some((heading, ground_speed, vertical_rate)) =
+                        airborne_velocity.calculate()
+                    {
+                        writeln!(f, "  Heading:       {}", heading.ceil())?;
+                        writeln!(
+                            f,
+                            "  Speed:         {} kt groundspeed",
+                            ground_speed.floor()
+                        )?;
+                        writeln!(
+                            f,
+                            "  Vertical rate: {} ft/min {}",
+                            vertical_rate, airborne_velocity.vrate_src
+                        )?;
+                    } else {
+                        writeln!(f, "  Invalid packet")?;
+                    }
                 }
             }
             ME::AircraftStatus(AircraftStatus {
@@ -1248,7 +1253,7 @@ pub struct AirborneVelocity {
 
 impl AirborneVelocity {
     /// Return effective (heading, ground_speed, vertical_rate)
-    pub fn calculate(&self) -> (f64, f64, i16) {
+    pub fn calculate(&self) -> Option<(f64, f64, i16)> {
         if let AirborneVelocitySubType::GroundSpeedDecoding(ground_speed) = &self.sub_type {
             let v_ew = f64::from((ground_speed.ew_vel as i16 - 1) * ground_speed.ew_sign.value());
             let v_ns = f64::from((ground_speed.ns_vel as i16 - 1) * ground_speed.ns_sign.value());
@@ -1259,13 +1264,13 @@ impl AirborneVelocity {
                 .vrate_value
                 .checked_sub(1)
                 .and_then(|v| v.checked_mul(64))
-                .map(|v| (v as i16) * self.vrate_sign.value())
-                .unwrap();
+                .map(|v| (v as i16) * self.vrate_sign.value());
 
-            (heading, v_ew.hypot(v_ns), vrate)
-        } else {
-            panic!();
+            if let Some(vrate) = vrate {
+                return Some((heading, v_ew.hypot(v_ns), vrate));
+            }
         }
+        None
     }
 }
 
