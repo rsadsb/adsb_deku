@@ -28,7 +28,7 @@ fn testing02() {
     let frame = Frame::from_bytes((&bytes, 0));
     if let DF::ADSB(adsb) = frame.unwrap().1.df {
         if let ME::AirborneVelocity(me) = adsb.me {
-            let (heading, ground_speed, vertical_rate) = me.calculate();
+            let (heading, ground_speed, vertical_rate) = me.calculate().unwrap();
             assert!((heading - 322.197_207_549_061_5).abs() < f64::EPSILON);
             assert!((ground_speed - 417.655_360_315_176_6).abs() < f64::EPSILON);
             assert_eq!(vertical_rate, 0);
