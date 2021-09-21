@@ -7,6 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ## [v0.1.0] 2021-09-21
-[adbs_deku] Initial Release
-[apps/radar] Initial Release
-[apps/1090] Initial Release
+- [adbs_deku] Initial Release
+- [apps/radar] Initial Release
+- [apps/1090] Initial Release
