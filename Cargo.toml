@@ -4,6 +4,9 @@ version = "0.1.0"
 authors = ["wcampbell"]
 edition = "2018"
 license = "MIT"
+description = "Decoder for ADS-B(Automatic Depedent Surveillance-Broadcast) - written with deku"
+repository = "https://github.com/wcampbel0x2a/adsb_deku"
+keywords = ["deku", "serialization", "deserialization", "adsb", "aerorust", "dsp", "airplane", "radar"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
