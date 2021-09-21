@@ -197,6 +197,11 @@ pub(crate) fn cpr_nl(lat: f64) -> u64 {
     1
 }
 
+const NZ: f64 = 15.0;
+const D_LAT_EVEN: f64 = 360.0 / (4.0 * NZ);
+const D_LAT_ODD: f64 = 360.0 / (4.0 * NZ - 1.0);
+const CPR_MAX: f64 = 131_072.0;
+
 /// Calculates a globally unambiguous position based on a pair of frames containing position information
 /// encoded in CPR format. A position is returned when passed a tuple containing two frames of opposite parity
 /// (even and odd). The frames in the tuple should be ordered according to when they were received: the first
@@ -232,11 +237,6 @@ pub fn get_position(cpr_frames: (&Altitude, &Altitude)) -> Option<Position> {
         ) => (even, odd),
         _ => return None,
     };
-
-    const NZ: f64 = 15.0;
-    const D_LAT_EVEN: f64 = 360.0 / (4.0 * NZ);
-    const D_LAT_ODD: f64 = 360.0 / (4.0 * NZ - 1.0);
-    const CPR_MAX: f64 = 131_072.0;
 
     let cpr_lat_even = f64::from(even_frame.lat_cpr) / CPR_MAX;
     let cpr_lon_even = f64::from(even_frame.lon_cpr) / CPR_MAX;

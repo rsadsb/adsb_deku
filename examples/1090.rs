@@ -2,7 +2,7 @@ use adsb_deku::Frame;
 use deku::DekuContainerRead;
 
 use std::io::Read;
-use std::io::{BufRead, BufReader};
+
 use std::net::TcpStream;
 
 use adsb_deku::{DF, ME};
