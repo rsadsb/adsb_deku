@@ -1,5 +1,7 @@
 # adsb_deku
 
+[![Latest Version](https://img.shields.io/crates/v/adsb_deku.svg)](https://crates.io/crates/adsb_deku)
+[![Rust Documentation](https://docs.rs/adsb_deku/badge.svg)](https://docs.rs/adsb_deku)
 [![Actions Status](https://github.com/wcampbell0x2a/adsb_deku/workflows/CI/badge.svg)](https://github.com/wcampbell0x2a/adsb_deku/actions)
 
 Decoder for ADS-B(Automatic Dependent Surveillance-Broadcast)/Mode-S protocol Downlink Format packets from 1090mhz.
