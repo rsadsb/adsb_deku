@@ -62,7 +62,7 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: fmt
-          args: --workspace -- --check
+          args: --all -- --check
 
   clippy:
     name: Clippy
