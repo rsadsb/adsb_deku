@@ -74,10 +74,10 @@ and data forwarding functions.
 ./cargo r --release
 ```
 
-## (Client Application) dump1090-fa
+## (Client Application) dump1090
 
 Dump protocol bytes using this library in the same fashion as `dump1090-fa`.
-This is mostly used to bugs with my implementation compared to other parsers, as it will panic on
+This is mostly used to find bugs with my implementation compared to other parsers, as it will panic on
 unimplemented parsing.
 
 ```text
