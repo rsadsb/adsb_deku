@@ -1,14 +1,10 @@
-use adsb_deku::Frame;
-use deku::DekuContainerRead;
-
-use std::io::Read;
+use adsb_deku::deku::DekuContainerRead;
+use adsb_deku::{Frame, DF, ME};
 
 use std::io::{BufRead, BufReader};
 use std::net::TcpStream;
 
-use adsb_deku::{DF, ME};
-
-use common_app::Airplanes;
+use apps::Airplanes;
 
 fn main() {
     let stream = TcpStream::connect(("127.0.0.1", 30002)).unwrap();

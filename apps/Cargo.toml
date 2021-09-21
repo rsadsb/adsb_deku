@@ -1,0 +1,20 @@
+[package]
+name = "apps"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[[bin]]
+name = "radar"
+path = "src/radar.rs"
+
+[[bin]]
+name = "1090"
+path = "src/1090.rs"
+
+[dependencies]
+adsb_deku = { path = "../", version = "0.1.0" }
+hex = "0.4"
+tui = {version = "0.16", default-features = false, features = ["crossterm"]}
+clap = "3.0.0-beta.4"

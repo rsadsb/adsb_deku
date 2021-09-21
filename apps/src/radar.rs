@@ -1,4 +1,5 @@
-use deku::DekuContainerRead;
+use adsb_deku::deku::DekuContainerRead;
+use adsb_deku::{Frame, DF, ME};
 
 use std::io;
 use std::io::{BufRead, BufReader};
@@ -6,14 +7,11 @@ use std::net::TcpStream;
 use std::num::ParseFloatError;
 use std::str::FromStr;
 
-use adsb_deku::{Frame, DF, ME};
-
-use common_app::Airplanes;
+use apps::Airplanes;
 
 use clap::{AppSettings, Clap};
 
-use tui::backend::Backend;
-use tui::backend::CrosstermBackend;
+use tui::backend::{Backend, CrosstermBackend};
 use tui::layout::{Constraint, Direction, Layout};
 use tui::style::Color;
 use tui::widgets::canvas::{Canvas, Line, Points};

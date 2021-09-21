@@ -16,7 +16,7 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --all
+          args: --workspace
 
   check-examples:
     name: Build Examples
@@ -46,7 +46,7 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: test
-          args: --all
+          args: --workspace
 
   fmt:
     name: Rustfmt
@@ -62,7 +62,7 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: fmt
-          args: --all -- --check
+          args: --workspace -- --check
 
   clippy:
     name: Clippy

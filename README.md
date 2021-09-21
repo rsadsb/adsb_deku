@@ -82,7 +82,8 @@ unimplemented parsing.
 
 ```text
 # Startup 1090 decode chain using this library
-cargo r --example 1090
+cd apps
+cargo r --bin 1090
 ```
 
 ## (Client Application) radar tui
@@ -93,5 +94,6 @@ The terminal used is [cool-retro-terminal](https://github.com/Swordfish90/cool-r
 ![Radar Example](/media/2021-09-06-082636_1804x1062_scrot.png)
 ```text
 # Startup "radar" display in tui relative to your sdr position
-cargo r --example radar -- --lat="50.0" --long="50.0" --cities "(name,lat,long)" "(name,lat,long)"
+cd apps
+cargo r --bin radar -- --lat="50.0" --long="50.0" --cities "(name,lat,long)" "(name,lat,long)"
 ```

@@ -9,18 +9,12 @@ license = "MIT"
 
 [workspace]
 members = [
-    "common-app"
+    "apps"
 ]
-
 
 [dependencies]
 deku = "0.12"
 
 [dev-dependencies]
-hex = "0.4"
 hexlit = "0.5"
 assert_hex = "0.2"
-tui = {version = "0.16", default-features = false, features = ["crossterm"]}
-crossterm = "0.20"
-clap = "3.0.0-beta.4"
-common_app = {path = "common-app", version = "0.1.0"}
