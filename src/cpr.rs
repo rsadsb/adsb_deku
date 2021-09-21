@@ -3,6 +3,11 @@
 use crate::{Altitude, CPRFormat};
 use std::cmp;
 
+const NZ: f64 = 15.0;
+const D_LAT_EVEN: f64 = 360.0 / (4.0 * NZ);
+const D_LAT_ODD: f64 = 360.0 / (4.0 * NZ - 1.0);
+const CPR_MAX: f64 = 131_072.0;
+
 #[derive(Debug, PartialEq, Clone)]
 pub struct Position {
     pub latitude: f64,
@@ -196,11 +201,6 @@ pub(crate) fn cpr_nl(lat: f64) -> u64 {
     }
     1
 }
-
-const NZ: f64 = 15.0;
-const D_LAT_EVEN: f64 = 360.0 / (4.0 * NZ);
-const D_LAT_ODD: f64 = 360.0 / (4.0 * NZ - 1.0);
-const CPR_MAX: f64 = 131_072.0;
 
 /// Calculates a globally unambiguous position based on a pair of frames containing position information
 /// encoded in CPR format. A position is returned when passed a tuple containing two frames of opposite parity
