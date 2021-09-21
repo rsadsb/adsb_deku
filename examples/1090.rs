@@ -1,6 +1,7 @@
 use adsb_deku::Frame;
 use deku::DekuContainerRead;
 
+use std::io::Read;
 use std::io::{BufRead, BufReader};
 use std::net::TcpStream;
 
@@ -9,17 +10,14 @@ use adsb_deku::{DF, ME};
 use common_app::Airplanes;
 
 fn main() {
-    let stream = TcpStream::connect(("127.0.0.1", 30002)).unwrap();
-    let mut reader = BufReader::new(stream);
-    let mut input = String::new();
+    let mut stream = TcpStream::connect(("127.0.0.1", 30002)).expect("ADS-B server not running");
     let mut airplains = Airplanes::new();
 
     loop {
-        let len = reader.read_line(&mut input).unwrap();
-        let hex = &input.to_string()[1..len - 2];
-        println!("{}", hex);
-        let bytes = hex::decode(&hex).unwrap();
-        match Frame::from_bytes((&bytes, 0)) {
+        let mut bytes = [0_u8; u8::MAX as usize];
+        let len = stream.read(&mut bytes).unwrap();
+        println!("{:02x?}", &bytes[..len]);
+        match Frame::from_bytes((&bytes[..len], 0)) {
             Ok((_, frame)) => {
                 println!("{:#?}", frame);
                 println!("{}", frame);
@@ -35,7 +33,6 @@ fn main() {
             }
             Err(e) => panic!("[E] {}", e),
         }
-        input.clear();
         airplains.prune();
     }
 }

@@ -1,7 +1,7 @@
 use deku::DekuContainerRead;
 
 use std::io;
-use std::io::{BufRead, BufReader};
+use std::io::Read;
 use std::net::TcpStream;
 use std::num::ParseFloatError;
 use std::str::FromStr;
@@ -67,8 +67,7 @@ fn main() {
     let cities = opts.cities;
     let disable_prune = opts.disable_prune;
 
-    let stream = TcpStream::connect(("127.0.0.1", 30002)).unwrap();
-    let mut reader = BufReader::new(stream);
+    let mut stream = TcpStream::connect(("127.0.0.1", 30002)).expect("ADS-B server not running");
     let mut input = String::new();
     let mut airplains = Airplanes::new();
 
@@ -77,12 +76,10 @@ fn main() {
     backend.clear().unwrap();
     let mut terminal = Terminal::new(backend).unwrap();
 
-    //TODO: add cities as points
     loop {
-        let len = reader.read_line(&mut input).unwrap();
-        let hex = &input.to_string()[1..len - 2];
-        let bytes = hex::decode(&hex).unwrap();
-        match Frame::from_bytes((&bytes, 0)) {
+        let mut bytes = [0_u8; u8::MAX as usize];
+        let len = stream.read(&mut bytes).unwrap();
+        match Frame::from_bytes((&bytes[..len], 0)) {
             Ok((_, frame)) => {
                 if let DF::ADSB(ref adsb) = frame.df {
                     if let ME::AirbornePositionBaroAltitude(_) = adsb.me {

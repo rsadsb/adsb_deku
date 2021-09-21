@@ -58,30 +58,40 @@ cargo test
 cargo +nightly fmt
 ```
 
-### applications
+# applications
 
-## dump1090-fa
-
-Dump protocol bytes using this library in the same fashion as `dump1090-fa`.
+## (Server Application) (C) [dump1090_fa]((https://github.com/flightaware/dump1090.git))
+This is the most tested application/implementation of 2400 sample rate demodulation used by flightaware.
 
 ```text
-# Startup dump1090-fa (https://github.com/flightaware/dump1090.git)
 ./dump1090 --net --quiet
+```
 
+## (Server Application) (Rust) [dump1090_rs]((https://github.com/wcampbell0x2a/dump1090_rs.git))
+This is a fork of [dump1090_rs](https://github.com/johnwstanford/dump1090_rs) with only demodulation
+and data forwarding functions.
+```text
+./cargo r --release
+```
+
+## (Client Application) dump1090-fa
+
+Dump protocol bytes using this library in the same fashion as `dump1090-fa`.
+This is mostly used to bugs with my implementation compared to other parsers, as it will panic on
+unimplemented parsing.
+
+```text
 # Startup 1090 decode chain using this library
 cargo r --example 1090
 ```
 
-## radar tui
+## (Client Application) radar tui
 
 Display a radar like tui (terminal user interface) showing aircraft: ICAO address, lat, long.
 The terminal used is [cool-retro-terminal](https://github.com/Swordfish90/cool-retro-term).
 
 ![Radar Example](/media/2021-09-06-082636_1804x1062_scrot.png)
 ```text
-# Startup dump1090-fa (https://github.com/flightaware/dump1090.git)
-./dump1090 --net --quiet
-
 # Startup "radar" display in tui relative to your sdr position
 cargo r --example radar -- --lat="50.0" --long="50.0" --cities "(name,lat,long)" "(name,lat,long)"
 ```
