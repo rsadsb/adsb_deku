@@ -260,15 +260,6 @@ pub const CRC_TABLE: [u32; 256] = [
     0x00FA_0480,
 ];
 
-pub const MODES_MAX_BITERRORS: usize = 2;
-
-#[derive(Debug)]
-struct ErrorInfo {
-    syndrome: u32,
-    errors: usize,
-    bit: [i8; MODES_MAX_BITERRORS],
-}
-
 pub fn modes_checksum(message: &[u8], bits: usize) -> Result<u32, DekuError> {
     let mut rem: u32 = 0;
     let n = bits / 8;
@@ -283,9 +274,10 @@ pub fn modes_checksum(message: &[u8], bits: usize) -> Result<u32, DekuError> {
         rem &= 0x00ff_ffff;
     }
 
-    let xor_term: u32 = u32::from(message[n - 3]) << 16
-        ^ u32::from(message[n - 2]) << 8
-        ^ u32::from(message[n - 1]);
+    let msg_1 = u32::from(message[n - 3]) << 16;
+    let msg_2 = u32::from(message[n - 2]) << 8;
+    let msg_3 = u32::from(message[n - 1]);
+    let xor_term: u32 = msg_1 ^ msg_2 ^ msg_3;
 
     rem ^= xor_term;
 
