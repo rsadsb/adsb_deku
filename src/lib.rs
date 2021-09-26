@@ -7,6 +7,7 @@ pub mod cpr;
 mod crc;
 
 use deku::bitvec::{BitSlice, Msb0};
+use std::fmt::Write;
 
 /// Downlink ADSB Packet
 #[derive(Debug, PartialEq, DekuRead, Clone)]
@@ -87,17 +88,13 @@ impl std::fmt::Display for Frame {
                 write!(f, "{}", adsb.to_string(17).unwrap())?;
             }
             // TODO
-            //DF::TisB{...} => {
-            //    write!(f, "{}", adsb.to_string(18).unwrap())?;
-            //}
+            DF::TisB { .. } => {}
+            // TODO
+            DF::ExtendedQuitterMilitaryApplication { .. } => {}
             DF::CommBAltitudeReply { mb, parity, .. } => {
                 writeln!(f, " Comm-B Altitude Reply")?;
                 writeln!(f, "  data: {:x?}", mb)?;
                 writeln!(f, "  ICAO Address: {} (Mode S / ADS-B)", parity)?;
-            }
-            DF::CommDExtendedLengthMessage { .. } => {
-                writeln!(f, " Comm-D Extended Length Message")?;
-                writeln!(f, "  ICAO Address:  {:x?} (Mode S / ADS-B)", self.crc)?;
             }
             DF::CommBIdentityReply {
                 id, message_comm_b, ..
@@ -111,7 +108,10 @@ impl std::fmt::Display for Frame {
                 writeln!(f, "    ICAO Address:  {:x?} (Mode S / ADS-B)", self.crc)?;
                 writeln!(f, "    Squawk:        {:x?}", id)?;
             }
-            _ => (),
+            DF::CommDExtendedLengthMessage { .. } => {
+                writeln!(f, " Comm-D Extended Length Message")?;
+                writeln!(f, "  ICAO Address:  {:x?} (Mode S / ADS-B)", self.crc)?;
+            }
         }
         Ok(())
     }
@@ -388,7 +388,6 @@ pub struct ADSB {
 
 impl ADSB {
     fn to_string(&self, df: u8) -> Result<String, Box<dyn std::error::Error>> {
-        use std::fmt::Write;
         let address_type = if df == 17 {
             "(Mode S / ADS-B)"
         } else if df == 18 {
@@ -399,6 +398,18 @@ impl ADSB {
 
         let mut f = String::new();
         match &self.me {
+            ME::AircraftIdentification(Identification { tc, ca, cn }) => {
+                writeln!(
+                    f,
+                    " Extended Squitter Aircraft identification and category (4)"
+                )?;
+                writeln!(f, "  ICAO Address:  {} {}", self.icao, address_type)?;
+                writeln!(f, "  Air/Ground:    {}", self.capability)?;
+                writeln!(f, "  Ident:         {}", cn)?;
+                writeln!(f, "  Category:      {}{}", tc, ca)?;
+            }
+            // TODO:
+            ME::SurfacePosition(..) => (),
             ME::AirbornePositionBaroAltitude(altitude) => {
                 writeln!(
                     f,
@@ -407,46 +418,6 @@ impl ADSB {
                 writeln!(f, "  ICAO Address:  {} {}", self.icao, address_type)?;
                 writeln!(f, "  Air/Ground:    {}", self.capability)?;
                 write!(f, "{}", altitude)?;
-            }
-            ME::AirbornePositionGNSSAltitude(altitude) => {
-                writeln!(
-                    f,
-                    " Extended Squitter (Non-Transponder) Airborne position (GNSS altitude) (20)"
-                )?;
-                writeln!(f, "  ICAO Address:  {} {}", self.icao, address_type)?;
-                write!(f, "{}", altitude)?;
-            }
-            ME::TargetStateAndStatusInformation(target_info) => {
-                writeln!(f, " Extended Squitter Target state and status (V2) (29/1)")?;
-                writeln!(f, "  ICAO Address:  {} {}", self.icao, address_type)?;
-                writeln!(f, "  Air/Ground:    {}", self.capability)?;
-                writeln!(f, "  Target State and Status:")?;
-                writeln!(f, "    Target altitude:   MCP, {} ft", target_info.altitude)?;
-                writeln!(f, "    Altimeter setting: {} millibars", target_info.qnh)?;
-                if target_info.is_heading {
-                    writeln!(f, "    Target heading:    {}", target_info.heading)?;
-                }
-                if target_info.tcas {
-                    write!(f, "    ACAS:              operational")?;
-                    if target_info.autopilot {
-                        write!(f, " autopilot ")?;
-                    }
-                    if target_info.vnav {
-                        write!(f, " VNAC ")?;
-                    }
-                    if target_info.alt_hold {
-                        write!(f, "altitude-hold ")?;
-                    }
-                    if target_info.approach {
-                        write!(f, "approach")?;
-                    }
-                    writeln!(f)?;
-                } else {
-                    writeln!(f, "    ACAS:              NOT operational")?;
-                }
-                writeln!(f, "    NACp:              {}", target_info.nacp)?;
-                writeln!(f, "    NICbaro:           {}", target_info.nicbaro)?;
-                writeln!(f, "    SIL:               {} (per sample)", target_info.sil)?;
             }
             ME::AirborneVelocity(airborne_velocity) => {
                 if let AirborneVelocitySubType::GroundSpeedDecoding(_) = airborne_velocity.sub_type
@@ -481,6 +452,15 @@ impl ADSB {
                     }
                 }
             }
+            ME::AirbornePositionGNSSAltitude(altitude) => {
+                writeln!(
+                    f,
+                    " Extended Squitter (Non-Transponder) Airborne position (GNSS altitude) (20)"
+                )?;
+                writeln!(f, "  ICAO Address:  {} {}", self.icao, address_type)?;
+                write!(f, "{}", altitude)?;
+            }
+            ME::Reserved => (),
             ME::AircraftStatus(AircraftStatus {
                 sub_type: _,
                 emergency_state: _,
@@ -492,15 +472,37 @@ impl ADSB {
                 writeln!(f, "  Air/Ground:    {}", self.capability)?;
                 writeln!(f, "  Squawk:        {}", squawk)?;
             }
-            ME::AircraftIdentification(Identification { tc, ca, cn }) => {
-                writeln!(
-                    f,
-                    " Extended Squitter Aircraft identification and category (4)"
-                )?;
+            ME::TargetStateAndStatusInformation(target_info) => {
+                writeln!(f, " Extended Squitter Target state and status (V2) (29/1)")?;
                 writeln!(f, "  ICAO Address:  {} {}", self.icao, address_type)?;
                 writeln!(f, "  Air/Ground:    {}", self.capability)?;
-                writeln!(f, "  Ident:         {}", cn)?;
-                writeln!(f, "  Category:      {}{}", tc, ca)?;
+                writeln!(f, "  Target State and Status:")?;
+                writeln!(f, "    Target altitude:   MCP, {} ft", target_info.altitude)?;
+                writeln!(f, "    Altimeter setting: {} millibars", target_info.qnh)?;
+                if target_info.is_heading {
+                    writeln!(f, "    Target heading:    {}", target_info.heading)?;
+                }
+                if target_info.tcas {
+                    write!(f, "    ACAS:              operational")?;
+                    if target_info.autopilot {
+                        write!(f, " autopilot ")?;
+                    }
+                    if target_info.vnav {
+                        write!(f, " VNAC ")?;
+                    }
+                    if target_info.alt_hold {
+                        write!(f, "altitude-hold ")?;
+                    }
+                    if target_info.approach {
+                        write!(f, "approach")?;
+                    }
+                    writeln!(f)?;
+                } else {
+                    writeln!(f, "    ACAS:              NOT operational")?;
+                }
+                writeln!(f, "    NACp:              {}", target_info.nacp)?;
+                writeln!(f, "    NICbaro:           {}", target_info.nicbaro)?;
+                writeln!(f, "    SIL:               {} (per sample)", target_info.sil)?;
             }
             ME::AircraftOperationStatus(OperationStatus::Airborne(opstatus_airborne)) => {
                 writeln!(
@@ -511,7 +513,15 @@ impl ADSB {
                 writeln!(f, " Air/Ground:    {}", self.capability)?;
                 write!(f, " Aircraft Operational Status:\n{}", opstatus_airborne)?;
             }
-            _ => (),
+            ME::AircraftOperationStatus(OperationStatus::Surface(..)) => {
+                writeln!(
+                    f,
+                    " Extended Quitter Aircraft operational status (surface) (31/0)"
+                )?;
+                writeln!(f, " ICAO Address:  {} {}", self.icao, address_type)?;
+                writeln!(f, " Air/Ground:    {}", self.capability)?;
+                write!(f, " Aircraft Operational Status:\nTODO")?;
+            }
         }
         Ok(f)
     }
