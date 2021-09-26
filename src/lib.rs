@@ -942,22 +942,17 @@ pub struct OperationCodeSurface {
 #[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
 #[deku(type = "u8", bits = "3")]
 pub enum ADSBVersion {
-    DOC9871AppendixA = 0b000,
-    DOC9871AppendixB = 0b001,
-    DOC9871AppendixC = 0b010,
+    #[deku(id = "0b000")]
+    DOC9871AppendixA,
+    #[deku(id = "0b001")]
+    DOC9871AppendixB,
+    #[deku(id = "0b010")]
+    DOC9871AppendixC,
 }
 
 impl std::fmt::Display for ADSBVersion {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "{}",
-            match self {
-                Self::DOC9871AppendixA => "0",
-                Self::DOC9871AppendixB => "1",
-                Self::DOC9871AppendixC => "2",
-            }
-        )
+        write!(f, "{}", self.deku_id().unwrap())
     }
 }
 
@@ -1440,6 +1435,7 @@ pub struct TargetStateAndStatusInformation {
 }
 
 mod mode_ac {
+    // TODO test this module
     /// convert from mode A hex to 0-4095 index
     pub fn mode_a_to_index(mode_a: u32) -> u32 {
         (mode_a & 0x0007)
