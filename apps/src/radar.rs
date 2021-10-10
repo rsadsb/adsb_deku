@@ -1,8 +1,7 @@
 use adsb_deku::deku::DekuContainerRead;
 use adsb_deku::{Frame, DF, ME};
 
-use std::io;
-use std::io::{BufRead, BufReader};
+use std::io::{self, BufRead, BufReader};
 use std::net::TcpStream;
 use std::num::ParseFloatError;
 use std::str::FromStr;
@@ -48,14 +47,16 @@ impl FromStr for City {
 #[clap(version = "1.0", author = "wcampbell <wcampbell1995@gmail.com>")]
 #[clap(setting = AppSettings::ColoredHelp)]
 struct Opts {
+    /// Antenna location latitude
     #[clap(long)]
     lat: f64,
+    /// Antenna location longitude
     #[clap(long)]
     long: f64,
+    /// Vector of cities [(name, lat, long),..]
     #[clap(long)]
     cities: Vec<City>,
-    #[clap(long)]
-    disable_prune: bool,
+    /// Disable output of latitude and longitude on display
     #[clap(long)]
     disable_lat_long: bool,
 }
@@ -65,7 +66,6 @@ fn main() {
     let local_lat = opts.lat;
     let local_long = opts.long;
     let cities = opts.cities;
-    let disable_prune = opts.disable_prune;
     let disable_lat_long = opts.disable_lat_long;
 
     let stream = TcpStream::connect(("127.0.0.1", 30002)).unwrap();
@@ -93,9 +93,7 @@ fn main() {
             Err(_e) => (),
         }
         input.clear();
-        if !disable_prune {
-            airplains.prune();
-        }
+        airplains.prune();
 
         terminal
             .draw(|f| {
