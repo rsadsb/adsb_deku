@@ -56,6 +56,8 @@ struct Opts {
     cities: Vec<City>,
     #[clap(long)]
     disable_prune: bool,
+    #[clap(long)]
+    disable_lat_long: bool,
 }
 
 fn main() {
@@ -64,6 +66,7 @@ fn main() {
     let local_long = opts.long;
     let cities = opts.cities;
     let disable_prune = opts.disable_prune;
+    let disable_lat_long = opts.disable_lat_long;
 
     let stream = TcpStream::connect(("127.0.0.1", 30002)).unwrap();
     let mut reader = BufReader::new(stream);
@@ -142,19 +145,18 @@ fn main() {
                                     color: Color::White,
                                 });
 
+                                let name = if !disable_lat_long {
+                                    format!(
+                                        "{} ({}, {})",
+                                        key, position.latitude, position.longitude
+                                    )
+                                    .into_boxed_str()
+                                } else {
+                                    format!("{}", key).into_boxed_str()
+                                };
+
                                 // draw plane ICAO name
-                                ctx.print(
-                                    long + 3.0,
-                                    lat,
-                                    Box::leak(
-                                        format!(
-                                            "{} ({}, {})",
-                                            key, position.latitude, position.longitude
-                                        )
-                                        .into_boxed_str(),
-                                    ),
-                                    Color::White,
-                                );
+                                ctx.print(long + 3.0, lat, Box::leak(name), Color::White);
                             }
                         }
 
