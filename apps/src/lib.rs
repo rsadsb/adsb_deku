@@ -48,13 +48,13 @@ impl Airplanes {
                 ME::AirbornePositionBaroAltitude(altitude) => match altitude.odd_flag {
                     CPRFormat::Odd => {
                         *airplane_coor = AirplaneCoor {
-                            altitudes: [airplane_coor.altitudes[0].clone(), Some(altitude)],
+                            altitudes: [airplane_coor.altitudes[0], Some(altitude)],
                             last_time: SystemTime::now(),
                         };
                     }
                     CPRFormat::Even => {
                         *airplane_coor = AirplaneCoor {
-                            altitudes: [Some(altitude), airplane_coor.altitudes[1].clone()],
+                            altitudes: [Some(altitude), airplane_coor.altitudes[1]],
                             last_time: SystemTime::now(),
                         };
                     }
@@ -80,6 +80,24 @@ impl Airplanes {
             }
             None => None,
         }
+    }
+
+    /// Calculate all latitude/longitude from Hashmap of current "seen" aircrafts
+    pub fn all_lat_long_altitude(&self) -> Vec<cpr::Position> {
+        let mut all_lat_long = vec![];
+        for (_, altitudes) in &self.0 {
+            if let (Some(first_altitude), Some(second_altitude)) =
+                (altitudes.altitudes[0], altitudes.altitudes[1])
+            {
+                if let Some(position) = cpr::get_position((&first_altitude, &second_altitude))
+                    .map(|position| (position, first_altitude.alt))
+                {
+                    all_lat_long.push(position.0);
+                }
+            }
+        }
+
+        all_lat_long
     }
 
     /// Remove airplane after not active for a time

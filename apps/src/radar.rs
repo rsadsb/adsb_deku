@@ -1,3 +1,21 @@
+//! This tui program displays the current ADS-B detected airplanes on a plot with your current
+//! position as (0,0) and has the ability to show different information about aircraft locations
+//! and testing your coverage.
+//!
+//! # Tabs
+//!
+//! ## ADSB
+//!
+//! Regular display of recently observed aircraft on a lat/long plot
+//!
+//! ## Coverage
+//!
+//! Instead of only showing current airplanes, only plot dots for a seen airplane location
+//!
+//! Instead of using a HashMap for only storing an aircraft position for each aircraft, store
+//! all aircrafts and only display a dot where detection at the lat/long position. This is for
+//! testing the reach of your antenna.
+
 use adsb_deku::deku::DekuContainerRead;
 use adsb_deku::{Frame, DF, ME};
 
@@ -5,16 +23,22 @@ use std::io::{self, BufRead, BufReader};
 use std::net::TcpStream;
 use std::num::ParseFloatError;
 use std::str::FromStr;
+use std::time::Duration;
 
 use apps::Airplanes;
 
 use clap::{AppSettings, Clap};
 
+use crossterm::event::{poll, read, Event, KeyCode, KeyEvent};
+use crossterm::terminal::enable_raw_mode;
+
 use tui::backend::{Backend, CrosstermBackend};
 use tui::layout::{Constraint, Direction, Layout};
-use tui::style::Color;
+use tui::style::{Color, Style};
+use tui::symbols::DOT;
+use tui::text::Spans;
 use tui::widgets::canvas::{Canvas, Line, Points};
-use tui::widgets::{Block, Borders};
+use tui::widgets::{Block, Borders, Tabs};
 use tui::Terminal;
 
 pub struct City {
@@ -61,6 +85,12 @@ struct Opts {
     disable_lat_long: bool,
 }
 
+#[derive(Copy, Clone)]
+enum Tab {
+    ADSB     = 0,
+    Coverage = 1,
+}
+
 fn main() {
     let opts = Opts::parse();
     let local_lat = opts.lat;
@@ -71,12 +101,17 @@ fn main() {
     let stream = TcpStream::connect(("127.0.0.1", 30002)).unwrap();
     let mut reader = BufReader::new(stream);
     let mut input = String::new();
-    let mut airplains = Airplanes::new();
+    let mut coverage_airplanes = vec![];
+    let mut adsb_airplanes = Airplanes::new();
 
     let stdout = io::stdout();
     let mut backend = CrosstermBackend::new(stdout);
     backend.clear().unwrap();
     let mut terminal = Terminal::new(backend).unwrap();
+    enable_raw_mode().unwrap();
+
+    let mut tab_selection = Tab::ADSB;
+    let mut quit = false;
 
     loop {
         let len = reader.read_line(&mut input).unwrap();
@@ -86,97 +121,193 @@ fn main() {
             Ok((_, frame)) => {
                 if let DF::ADSB(ref adsb) = frame.df {
                     if let ME::AirbornePositionBaroAltitude(_) = adsb.me {
-                        airplains.add_extended_quitter_ap(adsb.icao, frame.clone());
+                        adsb_airplanes.add_extended_quitter_ap(adsb.icao, frame.clone());
                     }
                 }
             }
             Err(_e) => (),
         }
+
+        // add lat_long to coverage vector
+        let all_lat_long = adsb_airplanes.all_lat_long_altitude();
+        coverage_airplanes.extend(all_lat_long);
+
         input.clear();
-        airplains.prune();
+        // remove airplanes that timed-out
+        adsb_airplanes.prune();
 
         terminal
             .draw(|f| {
                 let chunks = Layout::default()
                     .direction(Direction::Vertical)
                     .margin(1)
-                    .constraints([Constraint::Percentage(100)].as_ref())
+                    .constraints([Constraint::Percentage(5), Constraint::Percentage(95)].as_ref())
                     .split(f.size());
 
-                let canvas = Canvas::default()
-                    .block(Block::default().title("ADSB").borders(Borders::ALL))
-                    .x_bounds([-180.0, 180.0])
-                    .y_bounds([-180.0, 180.0])
-                    .paint(|ctx| {
-                        ctx.layer();
+                let titles = ["ADSB", "Coverage"]
+                    .iter()
+                    .copied()
+                    .map(Spans::from)
+                    .collect();
+                let tab = Tabs::new(titles)
+                    .block(Block::default().title("Tabs").borders(Borders::ALL))
+                    .style(Style::default().fg(Color::White))
+                    .highlight_style(Style::default().fg(Color::Yellow))
+                    .select(tab_selection as usize)
+                    .divider(DOT);
 
-                        // draw cities
-                        for city in &cities {
-                            let lat = (city.lat - local_lat) * 200.0;
-                            let long = (city.long - local_long) * 200.0;
+                f.render_widget(tab, chunks[0]);
 
-                            // draw city coor
-                            ctx.draw(&Points {
-                                coords: &[(long, lat)],
-                                color: Color::Green,
-                            });
+                match tab_selection {
+                    Tab::ADSB => {
+                        let canvas = Canvas::default()
+                            .block(Block::default().title("ADSB").borders(Borders::ALL))
+                            .x_bounds([-180.0, 180.0])
+                            .y_bounds([-180.0, 180.0])
+                            .paint(|ctx| {
+                                ctx.layer();
 
-                            // draw city name
-                            ctx.print(
-                                long + 3.0,
-                                lat,
-                                Box::leak(city.name.to_string().into_boxed_str()),
-                                Color::Green,
-                            );
-                        }
+                                // draw cities
+                                for city in &cities {
+                                    let lat = (city.lat - local_lat) * 200.0;
+                                    let long = (city.long - local_long) * 200.0;
 
-                        // draw airplanes
-                        for key in airplains.0.keys() {
-                            let value = airplains.lat_long_altitude(*key);
-                            if let Some((position, _altitude)) = value {
-                                let lat = (position.latitude - local_lat) * 200.0;
-                                let long = (position.longitude - local_long) * 200.0;
+                                    // draw city coor
+                                    ctx.draw(&Points {
+                                        coords: &[(long, lat)],
+                                        color: Color::Green,
+                                    });
 
-                                // draw dot on location
-                                ctx.draw(&Points {
-                                    coords: &[(long, lat)],
+                                    // draw city name
+                                    ctx.print(
+                                        long + 3.0,
+                                        lat,
+                                        Box::leak(city.name.to_string().into_boxed_str()),
+                                        Color::Green,
+                                    );
+                                }
+
+                                // draw ADSB tab airplanes
+                                for key in adsb_airplanes.0.keys() {
+                                    let value = adsb_airplanes.lat_long_altitude(*key);
+                                    if let Some((position, _altitude)) = value {
+                                        let lat = (position.latitude - local_lat) * 200.0;
+                                        let long = (position.longitude - local_long) * 200.0;
+
+                                        // draw dot on location
+                                        ctx.draw(&Points {
+                                            coords: &[(long, lat)],
+                                            color: Color::White,
+                                        });
+
+                                        let name = if !disable_lat_long {
+                                            format!(
+                                                "{} ({}, {})",
+                                                key, position.latitude, position.longitude
+                                            )
+                                            .into_boxed_str()
+                                        } else {
+                                            format!("{}", key).into_boxed_str()
+                                        };
+
+                                        // draw plane ICAO name
+                                        ctx.print(long + 3.0, lat, Box::leak(name), Color::White);
+                                    }
+                                }
+
+                                // Draw vertical and horizontal lines
+                                ctx.draw(&Line {
+                                    x1: 180.0,
+                                    y1: 0.0,
+                                    x2: -180.0,
+                                    y2: 0.0,
                                     color: Color::White,
                                 });
+                                ctx.draw(&Line {
+                                    x1: 0.0,
+                                    y1: 180.0,
+                                    x2: 0.0,
+                                    y2: -180.0,
+                                    color: Color::White,
+                                });
+                            });
+                        f.render_widget(canvas, chunks[1]);
+                    }
+                    Tab::Coverage => {
+                        let canvas = Canvas::default()
+                            .block(Block::default().title("Coverage").borders(Borders::ALL))
+                            .x_bounds([-180.0, 180.0])
+                            .y_bounds([-180.0, 180.0])
+                            .paint(|ctx| {
+                                ctx.layer();
 
-                                let name = if !disable_lat_long {
-                                    format!(
-                                        "{} ({}, {})",
-                                        key, position.latitude, position.longitude
-                                    )
-                                    .into_boxed_str()
-                                } else {
-                                    format!("{}", key).into_boxed_str()
-                                };
+                                // draw cities
+                                for city in &cities {
+                                    let lat = (city.lat - local_lat) * 200.0;
+                                    let long = (city.long - local_long) * 200.0;
 
-                                // draw plane ICAO name
-                                ctx.print(long + 3.0, lat, Box::leak(name), Color::White);
-                            }
-                        }
+                                    // draw city coor
+                                    ctx.draw(&Points {
+                                        coords: &[(long, lat)],
+                                        color: Color::Green,
+                                    });
 
-                        // Draw vertical and horizontal lines
-                        ctx.draw(&Line {
-                            x1: 180.0,
-                            y1: 0.0,
-                            x2: -180.0,
-                            y2: 0.0,
-                            color: Color::White,
-                        });
-                        ctx.draw(&Line {
-                            x1: 0.0,
-                            y1: 180.0,
-                            x2: 0.0,
-                            y2: -180.0,
-                            color: Color::White,
-                        });
-                    });
+                                    // draw city name
+                                    ctx.print(
+                                        long + 3.0,
+                                        lat,
+                                        Box::leak(city.name.to_string().into_boxed_str()),
+                                        Color::Green,
+                                    );
+                                }
 
-                f.render_widget(canvas, chunks[0]);
+                                // draw ADSB tab airplanes
+                                for position in &coverage_airplanes {
+                                    let lat = (position.latitude - local_lat) * 200.0;
+                                    let long = (position.longitude - local_long) * 200.0;
+
+                                    // draw dot on location
+                                    ctx.draw(&Points {
+                                        coords: &[(long, lat)],
+                                        color: Color::White,
+                                    });
+                                }
+
+                                // Draw vertical and horizontal lines
+                                ctx.draw(&Line {
+                                    x1: 180.0,
+                                    y1: 0.0,
+                                    x2: -180.0,
+                                    y2: 0.0,
+                                    color: Color::White,
+                                });
+                                ctx.draw(&Line {
+                                    x1: 0.0,
+                                    y1: 180.0,
+                                    x2: 0.0,
+                                    y2: -180.0,
+                                    color: Color::White,
+                                });
+                            });
+                        f.render_widget(canvas, chunks[1]);
+                    }
+                }
             })
             .unwrap();
+
+        if poll(Duration::from_millis(100)).unwrap() {
+            match read().unwrap() {
+                Event::Key(KeyEvent { code, modifiers: _ }) => match code {
+                    KeyCode::F(1) => tab_selection = Tab::ADSB,
+                    KeyCode::F(2) => tab_selection = Tab::Coverage,
+                    KeyCode::Char('q') => quit = true,
+                    _ => (),
+                },
+                _ => (),
+            }
+        }
+        if quit {
+            break;
+        }
     }
 }
