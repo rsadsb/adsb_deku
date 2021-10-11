@@ -41,6 +41,10 @@ use tui::widgets::canvas::{Canvas, Line, Points};
 use tui::widgets::{Block, Borders, Tabs};
 use tui::Terminal;
 
+const MAX_PLOT_HIGH: f64 = 400.0;
+const MAX_PLOT_LOW: f64 = MAX_PLOT_HIGH * -1.0;
+const DIFF: f64 = 1.3;
+
 pub struct City {
     name: String,
     lat: f64,
@@ -125,7 +129,7 @@ fn main() {
                     }
                 }
             }
-            Err(_e) => (),
+            Err(_) => (),
         }
 
         // add lat_long to coverage vector
@@ -152,7 +156,7 @@ fn main() {
                 let tab = Tabs::new(titles)
                     .block(Block::default().title("Tabs").borders(Borders::ALL))
                     .style(Style::default().fg(Color::White))
-                    .highlight_style(Style::default().fg(Color::Yellow))
+                    .highlight_style(Style::default().fg(Color::Green))
                     .select(tab_selection as usize)
                     .divider(DOT);
 
@@ -162,15 +166,15 @@ fn main() {
                     Tab::ADSB => {
                         let canvas = Canvas::default()
                             .block(Block::default().title("ADSB").borders(Borders::ALL))
-                            .x_bounds([-180.0, 180.0])
-                            .y_bounds([-180.0, 180.0])
+                            .x_bounds([MAX_PLOT_LOW, MAX_PLOT_HIGH])
+                            .y_bounds([MAX_PLOT_LOW, MAX_PLOT_HIGH])
                             .paint(|ctx| {
                                 ctx.layer();
 
                                 // draw cities
                                 for city in &cities {
-                                    let lat = (city.lat - local_lat) * 200.0;
-                                    let long = (city.long - local_long) * 200.0;
+                                    let lat = ((city.lat - local_lat) / DIFF) * MAX_PLOT_HIGH;
+                                    let long = ((city.long - local_long) / DIFF) * MAX_PLOT_HIGH;
 
                                     // draw city coor
                                     ctx.draw(&Points {
@@ -191,8 +195,10 @@ fn main() {
                                 for key in adsb_airplanes.0.keys() {
                                     let value = adsb_airplanes.lat_long_altitude(*key);
                                     if let Some((position, _altitude)) = value {
-                                        let lat = (position.latitude - local_lat) * 200.0;
-                                        let long = (position.longitude - local_long) * 200.0;
+                                        let lat = ((position.latitude - local_lat) / DIFF)
+                                            * MAX_PLOT_HIGH;
+                                        let long = ((position.longitude - local_long) / DIFF)
+                                            * MAX_PLOT_HIGH;
 
                                         // draw dot on location
                                         ctx.draw(&Points {
@@ -217,17 +223,17 @@ fn main() {
 
                                 // Draw vertical and horizontal lines
                                 ctx.draw(&Line {
-                                    x1: 180.0,
+                                    x1: MAX_PLOT_HIGH,
                                     y1: 0.0,
-                                    x2: -180.0,
+                                    x2: MAX_PLOT_LOW,
                                     y2: 0.0,
                                     color: Color::White,
                                 });
                                 ctx.draw(&Line {
                                     x1: 0.0,
-                                    y1: 180.0,
+                                    y1: MAX_PLOT_HIGH,
                                     x2: 0.0,
-                                    y2: -180.0,
+                                    y2: MAX_PLOT_LOW,
                                     color: Color::White,
                                 });
                             });
@@ -236,15 +242,15 @@ fn main() {
                     Tab::Coverage => {
                         let canvas = Canvas::default()
                             .block(Block::default().title("Coverage").borders(Borders::ALL))
-                            .x_bounds([-180.0, 180.0])
-                            .y_bounds([-180.0, 180.0])
+                            .x_bounds([MAX_PLOT_LOW, MAX_PLOT_HIGH])
+                            .y_bounds([MAX_PLOT_LOW, MAX_PLOT_HIGH])
                             .paint(|ctx| {
                                 ctx.layer();
 
                                 // draw cities
                                 for city in &cities {
-                                    let lat = (city.lat - local_lat) * 200.0;
-                                    let long = (city.long - local_long) * 200.0;
+                                    let lat = ((city.lat - local_lat) / DIFF) * MAX_PLOT_HIGH;
+                                    let long = ((city.long - local_long) / DIFF) * MAX_PLOT_HIGH;
 
                                     // draw city coor
                                     ctx.draw(&Points {
@@ -263,8 +269,10 @@ fn main() {
 
                                 // draw ADSB tab airplanes
                                 for position in &coverage_airplanes {
-                                    let lat = (position.latitude - local_lat) * 200.0;
-                                    let long = (position.longitude - local_long) * 200.0;
+                                    let lat =
+                                        ((position.latitude - local_lat) / DIFF) * MAX_PLOT_HIGH;
+                                    let long =
+                                        ((position.longitude - local_long) / DIFF) * MAX_PLOT_HIGH;
 
                                     // draw dot on location
                                     ctx.draw(&Points {
@@ -275,17 +283,17 @@ fn main() {
 
                                 // Draw vertical and horizontal lines
                                 ctx.draw(&Line {
-                                    x1: 180.0,
+                                    x1: MAX_PLOT_HIGH,
                                     y1: 0.0,
-                                    x2: -180.0,
+                                    x2: MAX_PLOT_LOW,
                                     y2: 0.0,
                                     color: Color::White,
                                 });
                                 ctx.draw(&Line {
                                     x1: 0.0,
-                                    y1: 180.0,
+                                    y1: MAX_PLOT_HIGH,
                                     x2: 0.0,
-                                    y2: -180.0,
+                                    y2: MAX_PLOT_LOW,
                                     color: Color::White,
                                 });
                             });
