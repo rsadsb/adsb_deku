@@ -95,9 +95,12 @@ cargo r --bin 1090 --release
 Display a radar like tui (terminal user interface) showing aircraft: ICAO address, lat, long.
 The terminal used is [cool-retro-terminal](https://github.com/Swordfish90/cool-retro-term).
 
-![Radar Example](/media/2021-09-06-082636_1804x1062_scrot.png)
 ```text
 # Startup "radar" display in tui relative to your sdr position
 cd apps
 cargo r --bin radar --release -- --lat="50.0" --long="50.0" --cities "(name,lat,long)" "(name,lat,long)"
 ```
+
+![Radar Example](/media/2021-09-06-082636_1804x1062_scrot.png)
+
+![Coverage Example](/media/2021-10-12-194028_1077x998_scrot.png)
