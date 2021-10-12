@@ -101,6 +101,8 @@ cd apps
 cargo r --bin radar --release -- --lat="50.0" --long="50.0" --cities "(name,lat,long)" "(name,lat,long)"
 ```
 
+#### Radar Mode
 ![Radar Example](/media/2021-09-06-082636_1804x1062_scrot.png)
 
+#### Coverage Mode
 ![Coverage Example](/media/2021-10-12-194028_1077x998_scrot.png)
