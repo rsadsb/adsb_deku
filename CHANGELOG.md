@@ -8,9 +8,11 @@ adsb_deku follows semvar when versioning, but apps are not required to follow th
 
 ## [Unreleased]
 
+## [v0.1.1] 2021-10-12
 ### Apps
-- [apps/radar] Add `--disable-lat-long. This removes the display of the lat/long position and just displays ICAO callsign.
-- [apps/radar] Add Coverage tab. Instead of displaying the currently tracked aircrafts, display all aircrafts detected as dots.
+- [apps/radar] Add `--disable-lat-long. This removes the display of the lat/long position in radar mode and just displays ICAO callsign.
+- [apps/radar] Add Coverage tab. Instead of displaying the currently tracked aircrafts, display all detected aircrafts over time as plots.
+- [apps/radar] Fix lat/long scaling issues in both display modes
 
 ## [v0.1.0] 2021-09-21
 - [adsb_deku] Initial Release
