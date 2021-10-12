@@ -41,9 +41,13 @@ use tui::widgets::canvas::{Canvas, Line, Points};
 use tui::widgets::{Block, Borders, Tabs};
 use tui::Terminal;
 
+/// Amount of zoom out from your original lat/long position
 const MAX_PLOT_HIGH: f64 = 400.0;
 const MAX_PLOT_LOW: f64 = MAX_PLOT_HIGH * -1.0;
-const DIFF: f64 = 1.3;
+/// Difference between each lat point
+const LAT_DIFF: f64 = 1.2;
+/// Difference between each long point
+const LONG_DIFF: f64 = LAT_DIFF * 3.0;
 
 pub struct City {
     name: String,
@@ -173,8 +177,9 @@ fn main() {
 
                                 // draw cities
                                 for city in &cities {
-                                    let lat = ((city.lat - local_lat) / DIFF) * MAX_PLOT_HIGH;
-                                    let long = ((city.long - local_long) / DIFF) * MAX_PLOT_HIGH;
+                                    let lat = ((city.lat - local_lat) / LAT_DIFF) * MAX_PLOT_HIGH;
+                                    let long =
+                                        ((city.long - local_long) / LONG_DIFF) * MAX_PLOT_HIGH;
 
                                     // draw city coor
                                     ctx.draw(&Points {
@@ -195,9 +200,9 @@ fn main() {
                                 for key in adsb_airplanes.0.keys() {
                                     let value = adsb_airplanes.lat_long_altitude(*key);
                                     if let Some((position, _altitude)) = value {
-                                        let lat = ((position.latitude - local_lat) / DIFF)
+                                        let lat = ((position.latitude - local_lat) / LAT_DIFF)
                                             * MAX_PLOT_HIGH;
-                                        let long = ((position.longitude - local_long) / DIFF)
+                                        let long = ((position.longitude - local_long) / LONG_DIFF)
                                             * MAX_PLOT_HIGH;
 
                                         // draw dot on location
@@ -249,8 +254,9 @@ fn main() {
 
                                 // draw cities
                                 for city in &cities {
-                                    let lat = ((city.lat - local_lat) / DIFF) * MAX_PLOT_HIGH;
-                                    let long = ((city.long - local_long) / DIFF) * MAX_PLOT_HIGH;
+                                    let lat = ((city.lat - local_lat) / LAT_DIFF) * MAX_PLOT_HIGH;
+                                    let long =
+                                        ((city.long - local_long) / LONG_DIFF) * MAX_PLOT_HIGH;
 
                                     // draw city coor
                                     ctx.draw(&Points {
@@ -269,10 +275,10 @@ fn main() {
 
                                 // draw ADSB tab airplanes
                                 for position in &coverage_airplanes {
-                                    let lat =
-                                        ((position.latitude - local_lat) / DIFF) * MAX_PLOT_HIGH;
-                                    let long =
-                                        ((position.longitude - local_long) / DIFF) * MAX_PLOT_HIGH;
+                                    let lat = ((position.latitude - local_lat) / LAT_DIFF)
+                                        * MAX_PLOT_HIGH;
+                                    let long = ((position.longitude - local_long) / LONG_DIFF)
+                                        * MAX_PLOT_HIGH;
 
                                     // draw dot on location
                                     ctx.draw(&Points {
