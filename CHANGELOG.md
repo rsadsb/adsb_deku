@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 adsb_deku follows semvar when versioning, but apps are not required to follow the semvar convention.
 
 ## [Unreleased]
+- [apps/radar] Removed blocking TcpStream, thus making tui work while waiting for new ADSB message.
 
 ## [v0.1.1] 2021-10-12
 ### Apps

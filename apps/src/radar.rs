@@ -106,34 +106,41 @@ fn main() {
     let cities = opts.cities;
     let disable_lat_long = opts.disable_lat_long;
 
+    // Setup non-blocking TcpStream
     let stream = TcpStream::connect(("127.0.0.1", 30002)).unwrap();
+    stream
+        .set_read_timeout(Some(std::time::Duration::from_millis(100)))
+        .unwrap();
     let mut reader = BufReader::new(stream);
+
+    // empty containers
     let mut input = String::new();
     let mut coverage_airplanes = vec![];
     let mut adsb_airplanes = Airplanes::new();
 
+    // setup tui params
     let stdout = io::stdout();
     let mut backend = CrosstermBackend::new(stdout);
     backend.clear().unwrap();
     let mut terminal = Terminal::new(backend).unwrap();
     enable_raw_mode().unwrap();
 
+    // setup tui variables
     let mut tab_selection = Tab::ADSB;
     let mut quit = false;
 
     loop {
-        let len = reader.read_line(&mut input).unwrap();
-        let hex = &input.to_string()[1..len - 2];
-        let bytes = hex::decode(&hex).unwrap();
-        match Frame::from_bytes((&bytes, 0)) {
-            Ok((_, frame)) => {
+        // if new message, add to buffers
+        if let Ok(len) = reader.read_line(&mut input) {
+            let hex = &input.to_string()[1..len - 2];
+            let bytes = hex::decode(&hex).unwrap();
+            if let Ok((_, frame)) = Frame::from_bytes((&bytes, 0)) {
                 if let DF::ADSB(ref adsb) = frame.df {
                     if let ME::AirbornePositionBaroAltitude(_) = adsb.me {
                         adsb_airplanes.add_extended_quitter_ap(adsb.icao, frame.clone());
                     }
                 }
             }
-            Err(_) => (),
         }
 
         // add lat_long to coverage vector
@@ -309,6 +316,7 @@ fn main() {
             })
             .unwrap();
 
+        // handle keyboard events
         if poll(Duration::from_millis(100)).unwrap() {
             match read().unwrap() {
                 Event::Key(KeyEvent { code, modifiers: _ }) => match code {
