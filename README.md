@@ -4,8 +4,10 @@
 [![Rust Documentation](https://docs.rs/adsb_deku/badge.svg)](https://docs.rs/adsb_deku)
 [![Actions Status](https://github.com/wcampbell0x2a/adsb_deku/workflows/CI/badge.svg)](https://github.com/wcampbell0x2a/adsb_deku/actions)
 
-Decoder for ADS-B(Automatic Dependent Surveillance-Broadcast)/Mode-S protocol Downlink Format packets from 1090mhz.
+Decoder for [ADS-B(Automatic Dependent Surveillance-Broadcast)/Mode-S](https://en.wikipedia.org/wiki/Automatic_Dependent_Surveillance%E2%80%93Broadcast) protocol Downlink Format packets from 1090mhz.
 Derived from Aeronautical Telecommunications Volume IV: Surveillance and Collision Avoidance Systems, Fifth Edition.
+
+This library uses [deku](https://github.com/sharksforarms/deku) for serialization/deserialization of protocol.
 
 ## support
 |  DF  |  Name                           |  Section    |
