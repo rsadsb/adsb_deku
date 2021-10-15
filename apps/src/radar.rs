@@ -79,6 +79,10 @@ impl FromStr for City {
 #[clap(version = "1.0", author = "wcampbell <wcampbell1995@gmail.com>")]
 #[clap(setting = AppSettings::ColoredHelp)]
 struct Opts {
+    #[clap(long, default_value = "localhost")]
+    host: String,
+    #[clap(long, default_value = "30002")]
+    port: u16,
     /// Antenna location latitude
     #[clap(long)]
     lat: f64,
@@ -107,7 +111,7 @@ fn main() {
     let disable_lat_long = opts.disable_lat_long;
 
     // Setup non-blocking TcpStream
-    let stream = TcpStream::connect(("127.0.0.1", 30002)).unwrap();
+    let stream = TcpStream::connect((opts.host, opts.port)).unwrap();
     stream
         .set_read_timeout(Some(std::time::Duration::from_millis(100)))
         .unwrap();

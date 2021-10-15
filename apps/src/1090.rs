@@ -11,19 +11,15 @@ use apps::Airplanes;
 #[clap(version = "1.0", author = "wcampbell <wcampbell1995@gmail.com>")]
 #[clap(setting = AppSettings::ColoredHelp)]
 struct Options {
-    #[clap(long)]
-    host: Option<String>,
-    #[clap(long)]
-    port: Option<u16>,
+    #[clap(long, default_value = "localhost")]
+    host: String,
+    #[clap(long, default_value = "30002")]
+    port: u16,
 }
 
 fn main() {
     let options = Options::parse();
-    let stream = TcpStream::connect((
-        options.host.unwrap_or_else(|| "localhost".to_string()),
-        options.port.unwrap_or(30002),
-    ))
-    .unwrap();
+    let stream = TcpStream::connect((options.host, options.port)).unwrap();
     let mut reader = BufReader::new(stream);
     let mut input = String::new();
     let mut airplains = Airplanes::new();
