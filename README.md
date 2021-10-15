@@ -90,7 +90,7 @@ cd apps
 cargo r --bin 1090 --release
 ```
 
-![1090 Example](/media/2021-10-15-172738_632x1015_scrot.png)
+![1090 Example](/media/2021-10-15-173245_686x1025_scrot.png)
 
 ### radar tui
 
