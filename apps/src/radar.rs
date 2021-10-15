@@ -99,7 +99,7 @@ struct Opts {
 
 #[derive(Copy, Clone)]
 enum Tab {
-    ADSB     = 0,
+    Map      = 0,
     Coverage = 1,
 }
 
@@ -130,7 +130,7 @@ fn main() {
     enable_raw_mode().unwrap();
 
     // setup tui variables
-    let mut tab_selection = Tab::ADSB;
+    let mut tab_selection = Tab::Map;
     let mut quit = false;
 
     loop {
@@ -163,7 +163,7 @@ fn main() {
                     .constraints([Constraint::Percentage(5), Constraint::Percentage(95)].as_ref())
                     .split(f.size());
 
-                let titles = ["ADSB", "Coverage"]
+                let titles = ["Map", "Coverage"]
                     .iter()
                     .copied()
                     .map(Spans::from)
@@ -178,9 +178,9 @@ fn main() {
                 f.render_widget(tab, chunks[0]);
 
                 match tab_selection {
-                    Tab::ADSB => {
+                    Tab::Map => {
                         let canvas = Canvas::default()
-                            .block(Block::default().title("ADSB").borders(Borders::ALL))
+                            .block(Block::default().title("Map").borders(Borders::ALL))
                             .x_bounds([MAX_PLOT_LOW, MAX_PLOT_HIGH])
                             .y_bounds([MAX_PLOT_LOW, MAX_PLOT_HIGH])
                             .paint(|ctx| {
@@ -324,7 +324,7 @@ fn main() {
         if poll(Duration::from_millis(100)).unwrap() {
             match read().unwrap() {
                 Event::Key(KeyEvent { code, modifiers: _ }) => match code {
-                    KeyCode::F(1) => tab_selection = Tab::ADSB,
+                    KeyCode::F(1) => tab_selection = Tab::Map,
                     KeyCode::F(2) => tab_selection = Tab::Coverage,
                     KeyCode::Char('q') => quit = true,
                     _ => (),
