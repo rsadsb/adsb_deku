@@ -82,15 +82,15 @@ and data forwarding functions.
 ## Client Applications
 ### 1090
 
-Dump protocol bytes using this library in the same fashion as `dump1090-fa`.
-This is mostly used to find bugs with my implementation compared to other parsers, as it will panic on
-unimplemented parsing.
+Display protocol data structures and currently tracked planes using this library in the same fashion as `dump1090-fa`.
 
 ```text
 # Startup 1090 decode chain using this library
 cd apps
 cargo r --bin 1090 --release
 ```
+
+![1090 Example](/media/2021-10-15-172738_632x1015_scrot.png)
 
 ### radar tui
 
