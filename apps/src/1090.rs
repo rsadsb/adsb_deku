@@ -11,10 +11,18 @@ use apps::Airplanes;
 #[clap(version = "1.0", author = "wcampbell <wcampbell1995@gmail.com>")]
 #[clap(setting = AppSettings::ColoredHelp)]
 struct Options {
+    /// ip address of ADS-B demodulated bytes server
     #[clap(long, default_value = "localhost")]
     host: String,
+    /// port of ADS-B demodulated bytes server
     #[clap(long, default_value = "30002")]
     port: u16,
+    /// Panic on adsb_deku::Frame::fmt::Display not implemented
+    #[clap(long)]
+    panic_display: bool,
+    /// Panic on adsb_deku::Frame::from_bytes() error
+    #[clap(long)]
+    panic_decode: bool,
 }
 
 fn main() {
@@ -39,11 +47,15 @@ fn main() {
                         airplains.add_extended_quitter_ap(adsb.icao, frame.clone());
                     }
                 }
-                if frame.to_string() == "" {
+                if (frame.to_string() == "") && options.panic_display {
                     panic!("[E] fmt::Display not implemented");
                 }
             }
-            Err(e) => panic!("[E] {}", e),
+            Err(e) => {
+                if options.panic_decode {
+                    panic!("[E] {}", e);
+                }
+            }
         }
         input.clear();
         airplains.prune();
