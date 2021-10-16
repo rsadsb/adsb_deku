@@ -101,10 +101,15 @@ impl Frame {
         const MODES_LONG_MSG_BYTES: usize = 14;
         const MODES_SHORT_MSG_BYTES: usize = 7;
 
-        let bit_len = if df.deku_id().unwrap() & 0x10 != 0 {
-            MODES_LONG_MSG_BYTES * 8
+        let bit_len = if let Ok(id) = df.deku_id() {
+            if id & 0x10 != 0 {
+                MODES_LONG_MSG_BYTES * 8
+            } else {
+                MODES_SHORT_MSG_BYTES * 8
+            }
         } else {
-            MODES_SHORT_MSG_BYTES * 8
+            // In this case, it's the DF::CommD, which has multiple ids
+            MODES_LONG_MSG_BYTES * 8
         };
 
         let crc = crc::modes_checksum(rest.as_raw_slice(), bit_len)?;
@@ -183,7 +188,7 @@ impl std::fmt::Display for Frame {
             }
             DF::CommDExtendedLengthMessage { .. } => {
                 writeln!(f, " Comm-D Extended Length Message")?;
-                writeln!(f, "  ICAO Address:  {:x?} (Mode S / ADS-B)", self.crc)?;
+                writeln!(f, "    ICAO Address:  {:x?} (Mode S / ADS-B)", self.crc)?;
             }
         }
         Ok(())
@@ -365,10 +370,8 @@ pub enum DF {
         parity: ICAO,
     },
 
-    /// 24: Comm-D, Downlink Format 24 (3.1.2.7.3)
-    ///
-    /// TODO: test me
-    #[deku(id = "24")]
+    /// 24..=31: Comm-D(ELM), Downlink Format 24 (3.1.2.7.3)
+    #[deku(id_pat = "24..=31")]
     CommDExtendedLengthMessage {
         /// Spare - 1 bit
         #[deku(bits = "1")]

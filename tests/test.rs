@@ -552,3 +552,16 @@ fn testing_df_21() {
         resulting_string
     );
 }
+
+#[test]
+fn testing_df_24() {
+    let bytes = hex!("daca7f82613c2db14a49c535a3a2");
+    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let resulting_string = format!("{}", frame);
+    assert_eq!(
+        r#" Comm-D Extended Length Message
+    ICAO Address:  a01f73 (Mode S / ADS-B)
+"#,
+        resulting_string
+    );
+}
