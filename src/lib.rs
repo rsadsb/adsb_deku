@@ -856,7 +856,7 @@ impl AC13Field {
     }
 }
 
-/// (3.1.2.5.2.2.1) Transponder level and additional information
+/// Transponder level and additional information (3.1.2.5.2.2.1)
 #[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
 #[deku(type = "u8", bits = "3")]
 #[allow(non_camel_case_types)]
