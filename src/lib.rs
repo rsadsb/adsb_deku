@@ -528,6 +528,7 @@ fn decode_id13_field(id13_field: u32) -> u32 {
     hex_gillham
 }
 
+/// Even / Odd
 #[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
 #[deku(type = "u8", bits = "1")]
 pub enum CPRFormat {
@@ -554,6 +555,7 @@ impl std::fmt::Display for CPRFormat {
     }
 }
 
+/// Positive / Negative
 #[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
 #[deku(type = "u8", bits = "1")]
 pub enum Sign {
@@ -707,6 +709,7 @@ mod mode_ac {
     }
 }
 
+/// 13 bit identity code
 #[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
 pub struct IdentityCode(#[deku(reader = "Self::read(deku::rest)")] u16);
 
@@ -750,6 +753,7 @@ impl std::fmt::Display for ICAO {
     }
 }
 
+/// Type of DownlinkRequest
 #[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
 #[deku(type = "u8", bits = "5")]
 pub enum DownlinkRequest {
@@ -761,6 +765,7 @@ pub enum DownlinkRequest {
     Unknown,
 }
 
+/// Uplink / Downlink
 #[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
 #[deku(type = "u8", bits = "1")]
 pub enum KE {
@@ -784,6 +789,7 @@ pub enum UtilityMessageType {
     CommD         = 0b11,
 }
 
+/// Airborne / Ground and SPI
 #[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
 #[deku(type = "u8", bits = "3")]
 pub enum FlightStatus {
@@ -815,8 +821,7 @@ impl std::fmt::Display for FlightStatus {
     }
 }
 
-/// Altitude for [`DF::ShortAirAirSurveillance `] || [`DF::CommDExtendedLengthMessage`] ||
-/// [`DF::LongAirAir`]
+/// 13 bit encoded altitude
 #[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
 pub struct AC13Field(#[deku(reader = "Self::read(deku::rest)")] pub u32);
 
