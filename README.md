@@ -92,7 +92,7 @@ Display protocol data structures and currently tracked planes using this library
 ```text
 # Startup 1090 decode chain using this library
 > cd apps
-> cargo r --bin 1090 --release
+> cargo r --bin 1090 --release -- --debug
 ```
 
 ![1090 Example](/media/2021-10-15-173245_686x1025_scrot.png)
