@@ -13,6 +13,8 @@ adsb_deku follows semvar when versioning, but apps are not required to follow th
 - Moved all ADS-B related struct/enum parsing into `adsb` module for improve documentation and separation of functionality
 
 ### Apps
+- [apps/1090] Add `--disable-airplanes` to disable airplane lat/long/altitude output
+- [apps/1090] Add `--debug` for displaying Debug trait output
 - [apps/1090] Add `--panic-display` and `--panic-decode` for optional testing
 - [apps/radar] Rename ADSB Tab to MAP
 - [apps/radar] Remove blocking TcpStream, thus making tui work while waiting for new ADS-B message.
