@@ -54,12 +54,17 @@ assert_eq!(
 
 Test data was generated using my rtl-sdr with `dump1090-fa`.
 ```text
-cargo test
+> cargo test
+```
+
+This library is also fuzzed, ensuring no panic when parsing from demodulated bytes.
+```text
+> cargo fuzz run fuzz_target_1
 ```
 
 ### fmt
 ```text
-cargo +nightly fmt
+> cargo +nightly fmt
 ```
 
 # Applications
@@ -69,14 +74,14 @@ cargo +nightly fmt
 This is the most tested application/implementation of 2400 sample rate demodulation used by flightaware.
 
 ```text
-./dump1090 --net --quiet
+> ./dump1090 --net --quiet
 ```
 
 ### (Rust) [dump1090_rs](https://github.com/wcampbell0x2a/dump1090_rs.git)
 This is a fork of [dump1090_rs](https://github.com/johnwstanford/dump1090_rs) with only demodulation
 and data forwarding functions.
 ```text
-./cargo r --release
+> ./cargo r --release
 ```
 
 ## Client Applications
@@ -86,8 +91,8 @@ Display protocol data structures and currently tracked planes using this library
 
 ```text
 # Startup 1090 decode chain using this library
-cd apps
-cargo r --bin 1090 --release
+> cd apps
+> cargo r --bin 1090 --release
 ```
 
 ![1090 Example](/media/2021-10-15-173245_686x1025_scrot.png)
@@ -99,8 +104,8 @@ The terminal used is [cool-retro-terminal](https://github.com/Swordfish90/cool-r
 
 ```text
 # Startup "radar" display in tui relative to your sdr position
-cd apps
-cargo r --bin radar --release -- --lat="50.0" --long="50.0" --cities "(name,lat,long)" "(name,lat,long)"
+> cd apps
+> cargo r --bin radar --release -- --lat="50.0" --long="50.0" --cities "(name,lat,long)" "(name,lat,long)"
 ```
 
 #### Radar Mode
