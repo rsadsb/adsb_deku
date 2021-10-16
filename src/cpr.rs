@@ -1,4 +1,10 @@
-//! From https://github.com/asmarques/adsb/blob/master/src/cpr.rs
+/*!
+Compact Position Reporting
+
+This module turns an ADS-B CPR format into Latitude/Longitude: `Position`.
+
+reference: ICAO 9871 (D.2.4.7)
+!*/
 
 use crate::{Altitude, CPRFormat};
 use std::cmp;
@@ -8,6 +14,7 @@ const D_LAT_EVEN: f64 = 360.0 / (4.0 * NZ);
 const D_LAT_ODD: f64 = 360.0 / (4.0 * NZ - 1.0);
 const CPR_MAX: f64 = 131_072.0;
 
+/// Post-processing of CPR into Latitude/Longitude
 #[derive(Debug, PartialEq, Clone)]
 pub struct Position {
     pub latitude: f64,
@@ -202,10 +209,11 @@ pub(crate) fn cpr_nl(lat: f64) -> u64 {
     1
 }
 
-/// Calculates a globally unambiguous position based on a pair of frames containing position information
-/// encoded in CPR format. A position is returned when passed a tuple containing two frames of opposite parity
-/// (even and odd). The frames in the tuple should be ordered according to when they were received: the first
-/// frame being the oldest frame and the second frame being the latest.
+/// Calculate Globally unambiguous position decoding
+///
+/// Using both an Odd and Even `Altitude`, calculate the latitude/longitude
+///
+/// reference: ICAO 9871 (D.2.4.7.7)
 pub fn get_position(cpr_frames: (&Altitude, &Altitude)) -> Option<Position> {
     let latest_frame = cpr_frames.1;
     let (even_frame, odd_frame) = match cpr_frames {

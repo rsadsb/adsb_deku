@@ -1,5 +1,6 @@
+use adsb_deku::adsb::ME;
 use adsb_deku::deku::DekuContainerRead;
-use adsb_deku::{Frame, DF, ME};
+use adsb_deku::{Frame, DF};
 
 use clap::{AppSettings, Clap};
 use std::io::{BufRead, BufReader};

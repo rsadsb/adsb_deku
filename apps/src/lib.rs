@@ -1,4 +1,5 @@
-use adsb_deku::{cpr, Altitude, CPRFormat, Frame, DF, ICAO, ME};
+use adsb_deku::adsb::ME;
+use adsb_deku::{cpr, Altitude, CPRFormat, Frame, DF, ICAO};
 use std::collections::HashMap;
 use std::fmt;
 use std::time::SystemTime;
