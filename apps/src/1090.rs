@@ -24,6 +24,12 @@ struct Options {
     /// Panic on adsb_deku::Frame::from_bytes() error
     #[clap(long)]
     panic_decode: bool,
+    /// Display debug of adsb::Frame
+    #[clap(long)]
+    debug: bool,
+    /// Disable display of currently tracked airplanes lat/long/altitude
+    #[clap(long)]
+    disable_airplanes: bool,
 }
 
 fn main() {
@@ -31,7 +37,7 @@ fn main() {
     let stream = TcpStream::connect((options.host, options.port)).unwrap();
     let mut reader = BufReader::new(stream);
     let mut input = String::new();
-    let mut airplains = Airplanes::new();
+    let mut airplanes = Airplanes::new();
 
     loop {
         let len = reader.read_line(&mut input).unwrap();
@@ -40,12 +46,16 @@ fn main() {
         let bytes = hex::decode(&hex).unwrap();
         match Frame::from_bytes((&bytes, 0)) {
             Ok((_, frame)) => {
-                println!("{:#?}", frame);
+                if options.debug {
+                    println!("{:#?}", frame);
+                }
                 println!("{}", frame);
-                println!("{}", airplains);
+                if !options.disable_airplanes {
+                    println!("{}", airplanes);
+                }
                 if let DF::ADSB(ref adsb) = frame.df {
                     if let ME::AirbornePositionBaroAltitude(_) = adsb.me {
-                        airplains.add_extended_quitter_ap(adsb.icao, frame.clone());
+                        airplanes.add_extended_quitter_ap(adsb.icao, frame.clone());
                     }
                 }
                 if (frame.to_string() == "") && options.panic_display {
@@ -59,6 +69,6 @@ fn main() {
             }
         }
         input.clear();
-        airplains.prune();
+        airplanes.prune();
     }
 }
