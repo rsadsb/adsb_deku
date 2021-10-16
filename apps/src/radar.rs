@@ -77,7 +77,12 @@ impl FromStr for City {
 }
 
 #[derive(Clap)]
-#[clap(version = "1.0", author = "wcampbell <wcampbell1995@gmail.com>")]
+#[clap(
+    version,
+    name = "radar",
+    author = "wcampbell0x2a",
+    about = "TUI Display of ADS-B protocol info from demodulator"
+)]
 #[clap(setting = AppSettings::ColoredHelp)]
 struct Opts {
     #[clap(long, default_value = "localhost")]

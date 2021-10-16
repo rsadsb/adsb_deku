@@ -9,7 +9,12 @@ use std::net::TcpStream;
 use apps::Airplanes;
 
 #[derive(Debug, Clap)]
-#[clap(version = "1.0", author = "wcampbell <wcampbell1995@gmail.com>")]
+#[clap(
+    version,
+    name = "1090",
+    author = "wcampbell0x2a",
+    about = "Dump ADS-B protocol info from demodulator"
+)]
 #[clap(setting = AppSettings::ColoredHelp)]
 struct Options {
     /// ip address of ADS-B demodulated bytes server

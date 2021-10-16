@@ -1,7 +1,7 @@
 [package]
 name = "adsb_deku"
 version = "0.2.0"
-authors = ["wcampbell"]
+authors = ["wcampbell0x2a"]
 edition = "2018"
 license = "MIT"
 description = "Decoder for ADS-B(Automatic Depedent Surveillance-Broadcast) - written with deku"
