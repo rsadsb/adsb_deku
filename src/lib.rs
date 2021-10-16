@@ -82,7 +82,7 @@ use adsb::{ControlField, ADSB};
 use deku::bitvec::{BitSlice, Msb0};
 use deku::prelude::*;
 
-/// Downlink ADSB Packet
+/// Downlink ADS-B Packet
 #[derive(Debug, PartialEq, DekuRead, Clone)]
 pub struct Frame {
     /// 5 bit identifier
