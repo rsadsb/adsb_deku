@@ -2,7 +2,6 @@
 name = "apps"
 version = "0.2.0"
 edition = "2018"
-author = ["wcampbell0x2a"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
