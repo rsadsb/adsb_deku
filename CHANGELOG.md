@@ -7,7 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 adsb_deku follows semvar when versioning, but apps are not required to follow the semvar convention.
 
 ## [Unreleased]
-- [apps/radar] Removed blocking TcpStream, thus making tui work while waiting for new ADSB message.
+
+## [v0.2.0] 2021-10-16
+### adsb_deku
+- Moved all ADS-B related struct/enum parsing into `adsb` module for improve documentation and separation of functionality
+
+### Apps
+- [apps/1090] Add `--panic-display` and `--panic-decode` for optional testing
+- [apps/radar] Rename ADSB Tab to MAP
+- [apps/radar] Remove blocking TcpStream, thus making tui work while waiting for new ADS-B message.
+- [apps/radar, apps/1090] Add --host and --port ([@wiseman](https://github.com/wiseman)) ([#1](https://github.com/wcampbell0x2a/adsb_deku/pull/1))
 
 ## [v0.1.1] 2021-10-12
 ### Apps
