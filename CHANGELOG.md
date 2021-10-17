@@ -8,7 +8,7 @@ adsb_deku follows semvar when versioning, but apps are not required to follow th
 
 ## [Unreleased]
 
-## [v0.2.0] 2021-10-16
+## [v0.2.0] 2021-10-17
 ### adsb_deku
 - Moved all ADS-B related struct/enum parsing into `adsb` module for improve documentation and separation of functionality
 - `DF::CommDExtendedLengthMessage` now matches 24..=31
