@@ -29,16 +29,15 @@ use adsb_deku::deku::DekuContainerRead;
 let bytes = hex!("8da2c1bd587ba2adb31799cb802b");
 let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
 assert_eq!(
-        r#" Extended Squitter Airborne position (barometric altitude) (11)
-  ICAO Address:  a2c1bd (Mode S / ADS-B)
+        r#" Extended Squitter Airborne position (barometric altitude)
+  Address:       a2c1bd (Mode S / ADS-B)
   Air/Ground:    airborne
   Altitude:      23650 ft barometric
   CPR type:      Airborne
   CPR odd flag:  even
-  CPR NUCp/NIC:  7
+  CPR NUCp/NIC:  ?
   CPR latitude:  (87769)
   CPR longitude: (71577)
-  CPR decoding:  global
 "#,
     frame.to_string()
 );
@@ -163,10 +162,11 @@ impl std::fmt::Display for Frame {
                 }
             }
             DF::ADSB(adsb) => {
-                write!(f, "{}", adsb.to_string(17).unwrap())?;
+                write!(f, "{}", adsb.to_string("(Mode S / ADS-B)").unwrap())?;
             }
-            // TODO
-            DF::TisB { .. } => {}
+            DF::TisB { cf, .. } => {
+                write!(f, "{}", cf)?;
+            }
             // TODO
             DF::ExtendedQuitterMilitaryApplication { .. } => {}
             DF::CommBAltitudeReply { mb, parity, .. } => {
@@ -188,7 +188,7 @@ impl std::fmt::Display for Frame {
             }
             DF::CommDExtendedLengthMessage { .. } => {
                 writeln!(f, " Comm-D Extended Length Message")?;
-                writeln!(f, "    ICAO Address:  {:x?} (Mode S / ADS-B)", self.crc)?;
+                writeln!(f, "    ICAO Address:     {:x?} (Mode S / ADS-B)", self.crc)?;
             }
         }
         Ok(())
@@ -413,7 +413,7 @@ pub struct Altitude {
     pub tc: u8,
     pub ss: SurveillanceStatus,
     #[deku(bits = "1")]
-    pub saf: u8,
+    pub saf_or_imf: u8,
     #[deku(reader = "Self::read(deku::rest)")]
     pub alt: u32,
     /// UTC sync or not
@@ -434,12 +434,11 @@ impl std::fmt::Display for Altitude {
         writeln!(f, "  CPR type:      Airborne")?;
         writeln!(f, "  CPR odd flag:  {}", self.odd_flag)?;
         // TODO: fix me
-        writeln!(f, "  CPR NUCp/NIC:  7")?;
+        writeln!(f, "  CPR NUCp/NIC:  ?")?;
         writeln!(f, "  CPR latitude:  ({})", self.lat_cpr)?;
         writeln!(f, "  CPR longitude: ({})", self.lon_cpr)?;
         // TODO: fix me
         //println!("{}", self.t);
-        writeln!(f, "  CPR decoding:  global")?;
         Ok(())
     }
 }

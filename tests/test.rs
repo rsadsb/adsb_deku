@@ -280,8 +280,8 @@ fn testing_df_extendedsquitteraircraftopstatus() {
     let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
     let resulting_string = format!("{}", frame);
     assert_eq!(
-        r#" Extended Quitter Aircraft operational status (airborne) (31/0)
- ICAO Address:  0d097e (Mode S / ADS-B)
+        r#" Extended Squitter Aircraft operational status (airborne)
+ Address:       0d097e (Mode S / ADS-B)
  Air/Ground:    airborne
  Aircraft Operational Status:
    Version:            2
@@ -300,8 +300,8 @@ fn testing_df_extendedsquitteraircraftopstatus() {
     let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
     let resulting_string = format!("{}", frame);
     assert_eq!(
-        r#" Extended Quitter Aircraft operational status (airborne) (31/0)
- ICAO Address:  a1a8da (Mode S / ADS-B)
+        r#" Extended Squitter Aircraft operational status (airborne)
+ Address:       a1a8da (Mode S / ADS-B)
  Air/Ground:    airborne
  Aircraft Operational Status:
    Version:            2
@@ -337,16 +337,15 @@ fn testing_airbornepositionbaroaltitude() {
     let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
     let resulting_string = format!("{}", frame);
     assert_eq!(
-        r#" Extended Squitter Airborne position (barometric altitude) (11)
-  ICAO Address:  a2c1bd (Mode S / ADS-B)
+        r#" Extended Squitter Airborne position (barometric altitude)
+  Address:       a2c1bd (Mode S / ADS-B)
   Air/Ground:    airborne
   Altitude:      23650 ft barometric
   CPR type:      Airborne
   CPR odd flag:  even
-  CPR NUCp/NIC:  7
+  CPR NUCp/NIC:  ?
   CPR latitude:  (87769)
   CPR longitude: (71577)
-  CPR decoding:  global
 "#,
         resulting_string
     );
@@ -405,8 +404,8 @@ fn testing_airbornevelocity() {
     let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
     let resulting_string = format!("{}", frame);
     assert_eq!(
-        r#" Extended Squitter Airborne velocity over ground, subsonic (19/1)
-  ICAO Address:  ac8e1a (Mode S / ADS-B)
+        r#" Extended Squitter Airborne velocity over ground, subsonic
+  Address:       ac8e1a (Mode S / ADS-B)
   Air/Ground:    airborne
   GNSS delta:    1400 ft
   Heading:       356
@@ -420,8 +419,8 @@ fn testing_airbornevelocity() {
     let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
     let resulting_string = format!("{}", frame);
     assert_eq!(
-        r#" Extended Squitter Airborne velocity over ground, subsonic (19/1)
-  ICAO Address:  a3f9cb (Mode S / ADS-B)
+        r#" Extended Squitter Airborne velocity over ground, subsonic
+  Address:       a3f9cb (Mode S / ADS-B)
   Air/Ground:    airborne
   GNSS delta:    -100 ft
   Heading:       8
@@ -438,8 +437,8 @@ fn testing_targetstateandstatusinformation() {
     let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
     let resulting_string = format!("{}", frame);
     assert_eq!(
-        r#" Extended Squitter Target state and status (V2) (29/1)
-  ICAO Address:  a97753 (Mode S / ADS-B)
+        r#" Extended Squitter Target state and status (V2)
+  Address:       a97753 (Mode S / ADS-B)
   Air/Ground:    airborne
   Target State and Status:
     Target altitude:   MCP, 23008 ft
@@ -477,8 +476,8 @@ fn testing_aircraftidentificationandcategory() {
     let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
     let resulting_string = format!("{}", frame);
     assert_eq!(
-        r#" Extended Squitter Aircraft identification and category (4)
-  ICAO Address:  a3f9cb (Mode S / ADS-B)
+        r#" Extended Squitter Aircraft identification and category
+  Address:       a3f9cb (Mode S / ADS-B)
   Air/Ground:    airborne
   Ident:         N3550U
   Category:      A1
@@ -493,8 +492,8 @@ fn testing_issue_01() {
     let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
     let resulting_string = format!("{}", frame);
     assert_eq!(
-        r#" Extended Squitter Target state and status (V2) (29/1)
-  ICAO Address:  ad50a9 (Mode S / ADS-B)
+        r#" Extended Squitter Target state and status (V2)
+  Address:       ad50a9 (Mode S / ADS-B)
   Air/Ground:    airborne
   Target State and Status:
     Target altitude:   MCP, 36000 ft
@@ -560,7 +559,103 @@ fn testing_df_24() {
     let resulting_string = format!("{}", frame);
     assert_eq!(
         r#" Comm-D Extended Length Message
-    ICAO Address:  a01f73 (Mode S / ADS-B)
+    ICAO Address:     a01f73 (Mode S / ADS-B)
+"#,
+        resulting_string
+    );
+}
+
+#[test]
+fn testing_df_18() {
+    // test github issue #2 (with sample output from dump1090_fa as control)
+    let bytes = hex!("95298FCA680946499671468C7ACA");
+    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let resulting_string = format!("{}", frame);
+    assert_eq!(
+        r#" Extended Squitter (Non-Transponder) Airborne position (barometric altitude)
+  Address:       298fca (TIS-B)
+  Air/Ground:    airborne?
+  Altitude:      700 ft barometric
+  CPR type:      Airborne
+  CPR odd flag:  odd
+  CPR NUCp/NIC:  ?
+  CPR latitude:  (74955)
+  CPR longitude: (28998)
+"#,
+        resulting_string
+    );
+
+    // test github issue #3 (with sample output from dump1090_fa as control)
+    let bytes = hex!("96A082FB213B1CF2113820D6EDDF");
+    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let resulting_string = format!("{}", frame);
+    assert_eq!(
+        r#" Extended Squitter (Non-Transponder) Aircraft identification and category
+  Address:       a082fb (ADS-R)
+  Air/Ground:    airborne?
+  Ident:         N132DS
+  Category:      A1
+"#,
+        resulting_string
+    );
+
+    // test github issue #4 (with sample output from dump1090_fa as control)
+    let bytes = hex!("96A6C24699141E0E8018074AA959");
+    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let resulting_string = format!("{}", frame);
+    assert_eq!(
+        r#" Extended Squitter (Non-Transponder) Airborne velocity over ground, subsonic
+  Address:       a6c246 (ADS-R)
+  Air/Ground:    airborne?
+  GNSS delta:    150 ft
+  Heading:       346
+  Speed:         118 kt groundspeed
+  Vertical rate: 320 ft/min barometric
+"#,
+        resulting_string
+    );
+
+    // test github issue #5 (with sample output from dump1090_fa as control)
+    let bytes = hex!("92A24528993C238900062053CDEF");
+    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let resulting_string = format!("{}", frame);
+    assert_eq!(
+        r#" Extended Squitter (Non-Transponder) Airborne velocity over ground, subsonic
+  Address:       a24528 (TIS-B)
+  Air/Ground:    airborne?
+  GNSS delta:    775 ft
+  Heading:       206
+  Speed:         78 kt groundspeed
+  Vertical rate: 0 ft/min barometric
+"#,
+        resulting_string
+    );
+
+    // test github issue #6 (with sample output from dump1090_fa as control)
+    let bytes = hex!("96130D9D910F86188A7A71EF6DCB");
+    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let resulting_string = format!("{}", frame);
+    assert_eq!(
+        r#" Extended Squitter (Non-Transponder) Airborne position (barometric altitude)
+  Address:       130d9d (ADS-R)
+  Air/Ground:    airborne?
+  Altitude:      2000 ft barometric
+  CPR type:      Airborne
+  CPR odd flag:  odd
+  CPR NUCp/NIC:  ?
+  CPR latitude:  (68677)
+  CPR longitude: (31345)
+"#,
+        resulting_string
+    );
+
+    // test github issue #7 (with sample output from dump1090_fa as control)
+    let bytes = hex!("91ADF9CEC11C0524407F11538EE5");
+    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let resulting_string = format!("{}", frame);
+    assert_eq!(
+        r#" Extended Squitter (Non-Transponder) Reserved for surface system status
+  Address:      adf9ce (ADS-B)
 "#,
         resulting_string
     );
