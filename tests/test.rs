@@ -659,4 +659,14 @@ fn testing_df_18() {
 "#,
         resulting_string
     );
+
+    let bytes = hex!("97CAEEF737FB1341BF58DF19118A");
+    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let resulting_string = format!("{}", frame);
+    assert_eq!(
+        r#" Extended Squitter (Non-Transponder) Surface position
+  Address:       caeef7 (unknown addressing scheme)
+"#,
+        resulting_string
+    );
 }

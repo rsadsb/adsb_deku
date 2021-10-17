@@ -267,7 +267,7 @@ pub enum ControlField {
 
     /// Code 7, Reserved
     #[deku(id = "7")]
-    Reserved,
+    Reserved(ADSB_ICAO),
 }
 
 impl std::fmt::Display for ControlField {
@@ -336,7 +336,21 @@ impl std::fmt::Display for ControlField {
                         .unwrap()
                 )?;
             }
-            Self::Reserved => (),
+            Self::Reserved(tisb_adsb) => {
+                write!(
+                    f,
+                    "{}",
+                    tisb_adsb
+                        .me
+                        .to_string(
+                            tisb_adsb.aa,
+                            "(unknown addressing scheme)",
+                            Capability::AG_UNCERTAIN3,
+                            false,
+                        )
+                        .unwrap()
+                )?;
+            }
         }
         Ok(())
     }
@@ -423,7 +437,10 @@ impl ME {
                 writeln!(f, "  Category:      {}{}", tc, ca)?;
             }
             // TODO
-            ME::SurfacePosition(..) => (),
+            ME::SurfacePosition(..) => {
+                writeln!(f, " Extended Squitter{}Surface position", transponder)?;
+                writeln!(f, "  Address:       {} {}", icao, address_type)?;
+            }
             ME::AirbornePositionBaroAltitude(altitude) => {
                 writeln!(
                     f,
