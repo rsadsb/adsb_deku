@@ -35,7 +35,7 @@ impl ADSB {
             self.me
                 .to_string(self.icao, address_type, self.capability, true)
                 .unwrap()
-        );
+        )?;
         Ok(f)
     }
 }
