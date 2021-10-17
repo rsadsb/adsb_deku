@@ -28,7 +28,7 @@ use std::time::Duration;
 
 use apps::Airplanes;
 
-use clap::{AppSettings, Clap};
+use clap::Parser;
 
 use crossterm::event::{poll, read, Event, KeyCode, KeyEvent};
 use crossterm::terminal::enable_raw_mode;
@@ -76,14 +76,13 @@ impl FromStr for City {
     }
 }
 
-#[derive(Clap)]
+#[derive(Parser)]
 #[clap(
     version,
     name = "radar",
     author = "wcampbell0x2a",
     about = "TUI Display of ADS-B protocol info from demodulator"
 )]
-#[clap(setting = AppSettings::ColoredHelp)]
 struct Opts {
     #[clap(long, default_value = "localhost")]
     host: String,

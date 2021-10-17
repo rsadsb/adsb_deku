@@ -2,20 +2,19 @@ use adsb_deku::adsb::ME;
 use adsb_deku::deku::DekuContainerRead;
 use adsb_deku::{Frame, DF};
 
-use clap::{AppSettings, Clap};
+use clap::Parser;
 use std::io::{BufRead, BufReader};
 use std::net::TcpStream;
 
 use apps::Airplanes;
 
-#[derive(Debug, Clap)]
+#[derive(Debug, Parser)]
 #[clap(
     version,
     name = "1090",
     author = "wcampbell0x2a",
     about = "Dump ADS-B protocol info from demodulator"
 )]
-#[clap(setting = AppSettings::ColoredHelp)]
 struct Options {
     /// ip address of ADS-B demodulated bytes server
     #[clap(long, default_value = "localhost")]

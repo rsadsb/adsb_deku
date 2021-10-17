@@ -18,4 +18,4 @@ adsb_deku = { path = "../", version = "0.2.0" }
 hex = "0.4"
 tui = {version = "0.16", default-features = false, features = ["crossterm"]}
 crossterm = "0.21"
-clap = "3.0.0-beta.4"
+clap = {version = "3.0.0-beta.5", features = ["color"]}
