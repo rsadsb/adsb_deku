@@ -319,6 +319,7 @@ impl std::fmt::Display for OperationStatusAirborne {
         writeln!(f, "   Version:            {}", self.version_number)?;
         writeln!(f, "   Capability classes:{}", self.capability_class)?;
         writeln!(f, "   Operational modes: {}", self.operational_mode)?;
+        writeln!(f, "   NIC-A:              {}", self.nic_supplement_a)?;
         writeln!(
             f,
             "   NACp:               {}",
@@ -439,7 +440,9 @@ pub struct OperationStatusSurface {
 impl std::fmt::Display for OperationStatusSurface {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "  Version:            {}", self.version_number)?;
-        write!(f, "   Capability classes:{}", self.capability_class)?;
+        writeln!(f, "   NIC-A:              {}", self.nic_supplement_a)?;
+        write!(f, "{}", self.capability_class)?;
+        write!(f, "   Capability classes:")?;
         if self.lw_codes != 0 {
             writeln!(f, " L/W={}", self.lw_codes)?;
         } else {
@@ -504,6 +507,14 @@ pub struct CapabilityClassSurface {
     /// NIC Supplement used on the Surface
     #[deku(bits = "1")]
     pub nic_supplement_c: u8,
+}
+
+impl std::fmt::Display for CapabilityClassSurface {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "   NIC-C:              {}", self.nic_supplement_c)?;
+        writeln!(f, "   NACv:               {}", self.nac_v)?;
+        Ok(())
+    }
 }
 
 /// OperationMode field not including the last 8 bits that are different for Surface/Airborne

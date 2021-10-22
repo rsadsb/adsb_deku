@@ -287,6 +287,7 @@ fn testing_df_extendedsquitteraircraftopstatus() {
    Version:            2
    Capability classes: ACAS ARV TS
    Operational modes:  SAF SDA=3
+   NIC-A:              1
    NACp:               10
    GVA:                2
    SIL:                3 (per hour)
@@ -307,6 +308,7 @@ fn testing_df_extendedsquitteraircraftopstatus() {
    Version:            2
    Capability classes: ACAS ARV TS
    Operational modes:  SAF SDA=2
+   NIC-A:              0
    NACp:               9
    GVA:                2
    SIL:                3 (per hour)
@@ -682,6 +684,9 @@ fn testing_df_18() {
  Air/Ground:    airborne?
  Aircraft Operational Status:
    Version:            2
+   NIC-A:              0
+   NIC-C:              0
+   NACv:               1
    Capability classes: L/W=1
    Operational modes:  SAF SDA=2
    NACp:               9
