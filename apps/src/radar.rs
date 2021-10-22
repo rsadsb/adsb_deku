@@ -165,7 +165,7 @@ fn main() {
                 let chunks = Layout::default()
                     .direction(Direction::Vertical)
                     .margin(1)
-                    .constraints([Constraint::Percentage(5), Constraint::Percentage(95)].as_ref())
+                    .constraints([Constraint::Min(3), Constraint::Percentage(100)].as_ref())
                     .split(f.size());
 
                 let titles = ["Map", "Coverage"]
