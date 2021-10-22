@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 adsb_deku follows semvar when versioning, but apps are not required to follow the semvar convention.
 
 ## [Unreleased]
-- Fix [!8](https://github.com/wcampbell0x2a/adsb_deku/issue/8) - Support ME::AircraftOperationStatus Surface Status message parsing
+- Fix [!8](https://github.com/wcampbell0x2a/adsb_deku/issue/8) - Support `ME::AircraftOperationStatus` Surface Status message parsing
 
 ## [v0.2.0] 2021-10-17
 ### adsb_deku
