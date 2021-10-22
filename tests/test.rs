@@ -669,4 +669,26 @@ fn testing_df_18() {
 "#,
         resulting_string
     );
+
+    // test github issue #8 (with sample output from dump1090_fa as control)
+    let bytes = hex!("96A4D01FF900210600493075E234");
+    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    println!("{:#?}", frame);
+    let resulting_string = format!("{}", frame);
+    println!("{}", resulting_string);
+    assert_eq!(
+        r#" Extended Squitter (Non-Transponder) Aircraft operational status (surface)
+ Address:       a4d01f (ADS-R)
+ Air/Ground:    airborne?
+ Aircraft Operational Status:
+   Version:            2
+   Capability classes: L/W=1
+   Operational modes:  SAF SDA=2
+   NACp:               9
+   SIL:                3 (per hour)
+   NICbaro:            0
+   Heading reference:  true north
+"#,
+        resulting_string
+    );
 }

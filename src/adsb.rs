@@ -40,346 +40,6 @@ impl ADSB {
     }
 }
 
-/// [`ME::AirborneVelocity`] && [`AirborneVelocitySubType::GroundSpeedDecoding`]
-#[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
-pub struct GroundSpeedDecoding {
-    pub ew_sign: Sign,
-    #[deku(endian = "big", bits = "10")]
-    pub ew_vel: u16,
-    pub ns_sign: Sign,
-    #[deku(endian = "big", bits = "10")]
-    pub ns_vel: u16,
-}
-
-/// [`ME::AirborneVelocity`] && [`AirborneVelocitySubType::AirspeedDecoding`]
-#[derive(Debug, PartialEq, DekuRead, Clone)]
-pub struct AirspeedDecoding {
-    #[deku(bits = "1")]
-    pub status_heading: u8,
-    #[deku(endian = "big", bits = "10")]
-    pub mag_heading: u16,
-    #[deku(bits = "1")]
-    pub airspeed_type: u8,
-    #[deku(endian = "big", bits = "10")]
-    pub airspeed: u16,
-}
-
-/// [`ME::AircraftOperationStatus`]
-#[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
-#[deku(type = "u8", bits = "3")]
-pub enum OperationStatus {
-    #[deku(id = "0")]
-    Airborne(OperationStatusAirborne),
-    #[deku(id = "1")]
-    Surface(OperationStatusSurface),
-}
-
-/// [`ME::AircraftOperationStatus`] && [`OperationStatus`] == 0
-#[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
-pub struct OperationStatusAirborne {
-    // 16 bits
-    pub capability_codes: CapabilityCode,
-    #[deku(bits = "5")]
-    pub operational_mode_unused1: u8,
-    #[deku(bits = "1")]
-    pub saf: bool,
-    #[deku(bits = "2")]
-    pub sda: u8,
-    pub operational_mode_unused2: u8,
-    pub version_number: ADSBVersion,
-    #[deku(bits = "1")]
-    pub nic_supplement_a: u8,
-    #[deku(bits = "4")]
-    pub navigational_accuracy_category: u8,
-    #[deku(bits = "2")]
-    pub geometric_vertical_accuracy: u8,
-    #[deku(bits = "2")]
-    pub source_integrity_level: u8,
-    #[deku(bits = "1")]
-    pub barometric_altitude_integrity: u8,
-    #[deku(bits = "1")]
-    pub horizontal_reference_direction: u8,
-    #[deku(bits = "1")]
-    pub sil_supplement: u8,
-    #[deku(bits = "1")]
-    pub reserved: u8,
-}
-
-impl std::fmt::Display for OperationStatusAirborne {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "   Version:            {}", self.version_number)?;
-        writeln!(f, "   Capability classes:{}", self.capability_codes)?;
-        write!(f, "   Operational modes:  ")?;
-        if self.saf {
-            write!(f, "SAF ")?;
-        }
-        if self.sda != 0 {
-            write!(f, "SDA={}", self.sda)?;
-        }
-        writeln!(f)?;
-        writeln!(
-            f,
-            "   NACp:               {}",
-            self.navigational_accuracy_category
-        )?;
-        writeln!(
-            f,
-            "   GVA:                {}",
-            self.geometric_vertical_accuracy
-        )?;
-        writeln!(
-            f,
-            "   SIL:                {} (per hour)",
-            self.source_integrity_level
-        )?;
-        writeln!(
-            f,
-            "   NICbaro:            {}",
-            self.barometric_altitude_integrity
-        )?;
-        if self.horizontal_reference_direction == 1 {
-            writeln!(f, "   Heading reference:  magnetic north")?;
-        } else {
-            writeln!(f, "   Heading reference:  true north")?;
-        }
-        Ok(())
-    }
-}
-
-/// [`ME::AircraftOperationStatus`]
-#[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
-pub struct CapabilityCode {
-    #[deku(bits = "2")]
-    pub reserved0: u8,
-    #[deku(bits = "1")]
-    pub acas: u8,
-    #[deku(bits = "1")]
-    pub cdti: u8,
-    #[deku(bits = "2")]
-    pub reserved1: u8,
-    #[deku(bits = "1")]
-    pub arv: u8,
-    #[deku(bits = "1")]
-    pub ts: u8,
-    #[deku(bits = "2")]
-    pub tc: u8,
-    #[deku(bits = "6")]
-    pub reserved2: u8,
-}
-
-impl std::fmt::Display for CapabilityCode {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        if self.acas == 1 {
-            write!(f, " ACAS")?;
-        }
-        if self.cdti == 1 {
-            write!(f, " CDTI")?;
-        }
-        if self.arv == 1 {
-            write!(f, " ARV")?;
-        }
-        if self.ts == 1 {
-            write!(f, " TS")?;
-        }
-        if self.tc == 1 {
-            write!(f, " TC")?;
-        }
-        Ok(())
-    }
-}
-
-/// [`ME::AircraftOperationStatus`] && [`OperationStatus`] == 1
-#[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
-pub struct OperationStatusSurface {
-    pub capacity_codes: CapabilityCode,
-    #[deku(bits = "4")]
-    pub capacity_len_code: u8,
-    pub operational_mode_codes: u16,
-    pub version_number: ADSBVersion,
-    #[deku(bits = "1")]
-    pub nic_supplement_a: u8,
-    #[deku(bits = "4")]
-    pub navigational_accuracy_category: u8,
-    #[deku(bits = "1")]
-    pub reserved0: u8,
-    #[deku(bits = "2")]
-    pub source_integrity_level: u8,
-    #[deku(bits = "1")]
-    pub track_angle_or_heading: u8,
-    #[deku(bits = "1")]
-    pub horizontal_reference_direction: u8,
-    #[deku(bits = "1")]
-    pub sil_supplement: u8,
-    #[deku(bits = "1")]
-    pub reserved1: u8,
-}
-
-/// ADS-B Defined from different ICAO documents
-///
-/// reference: ICAO 9871 (5.3.2.3)
-#[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
-#[deku(type = "u8", bits = "3")]
-pub enum ADSBVersion {
-    #[deku(id = "0b000")]
-    DOC9871AppendixA,
-    #[deku(id = "0b001")]
-    DOC9871AppendixB,
-    #[deku(id = "0b010")]
-    DOC9871AppendixC,
-}
-
-/// Control Field (B.3) for [`crate::DF::TisB`]
-///
-/// reference: ICAO 9871
-#[derive(Debug, PartialEq, DekuRead, Clone)]
-#[deku(type = "u8", bits = "3")]
-#[allow(non_camel_case_types)]
-pub enum ControlField {
-    /// ADS-B Message from a non-transponder device
-    #[deku(id = "0")]
-    ADSB_ES_NT(ADSB_ICAO),
-
-    /// Reserved for ADS-B for ES/NT devices for alternate address space
-    #[deku(id = "1")]
-    ADSB_ES_NT_ALT(ADSB_ICAO),
-
-    /// Code 2, Fine Format TIS-B Message
-    #[deku(id = "2")]
-    TISB_FINE(ADSB_ICAO),
-
-    /// Code 3, Coarse Format TIS-B Message
-    #[deku(id = "3")]
-    TISB_COARSE(ADSB_ICAO),
-
-    /// Code 4, Coarse Format TIS-B Message
-    #[deku(id = "4")]
-    TISB_MANAGE(ADSB_ICAO),
-
-    /// Code 5, TIS-B Message for replay ADS-B Message
-    ///
-    /// Anonymous 24-bit addresses
-    #[deku(id = "5")]
-    TISB_ADSB_RELAY(ADSB_ICAO),
-
-    /// Code 6, TIS-B Message, Same as DF=17
-    #[deku(id = "6")]
-    TISB_ADSB(ADSB_ICAO),
-
-    /// Code 7, Reserved
-    #[deku(id = "7")]
-    Reserved(ADSB_ICAO),
-}
-
-impl std::fmt::Display for ControlField {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::ADSB_ES_NT(adsb_icao) => {
-                write!(
-                    f,
-                    "{}",
-                    adsb_icao
-                        .me
-                        .to_string(adsb_icao.aa, "(ADS-B)", Capability::AG_UNCERTAIN3, false,)
-                        .unwrap()
-                )?;
-            }
-            Self::ADSB_ES_NT_ALT(adsb_icao) => {
-                write!(
-                    f,
-                    "{}",
-                    adsb_icao
-                        .me
-                        .to_string(adsb_icao.aa, "(ADS-B)", Capability::AG_UNCERTAIN3, false,)
-                        .unwrap()
-                )?;
-            }
-            Self::TISB_FINE(adsb_icao) => {
-                write!(
-                    f,
-                    "{}",
-                    adsb_icao
-                        .me
-                        .to_string(adsb_icao.aa, "(TIS-B)", Capability::AG_UNCERTAIN3, false,)
-                        .unwrap()
-                )?;
-            }
-            Self::TISB_COARSE(adsb_icao) => {
-                write!(
-                    f,
-                    "{}",
-                    adsb_icao
-                        .me
-                        .to_string(adsb_icao.aa, "(TIS-B)", Capability::AG_UNCERTAIN3, false,)
-                        .unwrap()
-                )?;
-            }
-            Self::TISB_MANAGE(tisb_manage) => {
-                write!(f, " Address:   {} (ADS-R)", tisb_manage.aa)?;
-            }
-            Self::TISB_ADSB_RELAY(adsb_icao) => {
-                write!(
-                    f,
-                    "{}",
-                    adsb_icao
-                        .me
-                        .to_string(adsb_icao.aa, "(TIS-B)", Capability::AG_UNCERTAIN3, false,)
-                        .unwrap()
-                )?;
-            }
-            Self::TISB_ADSB(tisb_adsb) => {
-                write!(
-                    f,
-                    "{}",
-                    tisb_adsb
-                        .me
-                        .to_string(tisb_adsb.aa, "(ADS-R)", Capability::AG_UNCERTAIN3, false,)
-                        .unwrap()
-                )?;
-            }
-            Self::Reserved(tisb_adsb) => {
-                write!(
-                    f,
-                    "{}",
-                    tisb_adsb
-                        .me
-                        .to_string(
-                            tisb_adsb.aa,
-                            "(unknown addressing scheme)",
-                            Capability::AG_UNCERTAIN3,
-                            false,
-                        )
-                        .unwrap()
-                )?;
-            }
-        }
-        Ok(())
-    }
-}
-
-/// [`crate::DF::TisB`] Containing ICAO
-#[derive(Debug, PartialEq, DekuRead, Clone)]
-#[allow(non_camel_case_types)]
-pub struct ADSB_ICAO {
-    /// AA: Address, Announced
-    aa: ICAO,
-    /// ME: message, extended quitter
-    me: ME,
-}
-
-/// TODO This should have sort of [ignore] attribute, since we don't need to implement DekuRead on this.
-#[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
-#[deku(type = "u8", bits = "1")]
-pub enum Unit {
-    Meter = 0,
-    Feet  = 1,
-}
-
-impl Default for Unit {
-    fn default() -> Self {
-        Self::Meter
-    }
-}
-
 /// ADS-B Message, 5 first bits are known as Type Code (TC)
 ///
 /// reference: ICAO 9871 (A.2.3.1)
@@ -565,7 +225,7 @@ impl ME {
                 writeln!(f, " Air/Ground:    {}", capability)?;
                 write!(f, " Aircraft Operational Status:\n{}", opstatus_airborne)?;
             }
-            ME::AircraftOperationStatus(OperationStatus::Surface(..)) => {
+            ME::AircraftOperationStatus(OperationStatus::Surface(opstatus_surface)) => {
                 writeln!(
                     f,
                     " Extended Squitter{}Aircraft operational status (surface)",
@@ -573,10 +233,491 @@ impl ME {
                 )?;
                 writeln!(f, " Address:       {} {}", icao, address_type)?;
                 writeln!(f, " Air/Ground:    {}", capability)?;
-                write!(f, " Aircraft Operational Status:\nTODO")?;
+                write!(f, " Aircraft Operational Status:\n {}", opstatus_surface)?;
             }
         }
         Ok(f)
+    }
+}
+
+/// [`ME::AirborneVelocity`] && [`AirborneVelocitySubType::GroundSpeedDecoding`]
+#[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
+pub struct GroundSpeedDecoding {
+    pub ew_sign: Sign,
+    #[deku(endian = "big", bits = "10")]
+    pub ew_vel: u16,
+    pub ns_sign: Sign,
+    #[deku(endian = "big", bits = "10")]
+    pub ns_vel: u16,
+}
+
+/// [`ME::AirborneVelocity`] && [`AirborneVelocitySubType::AirspeedDecoding`]
+#[derive(Debug, PartialEq, DekuRead, Clone)]
+pub struct AirspeedDecoding {
+    #[deku(bits = "1")]
+    pub status_heading: u8,
+    #[deku(endian = "big", bits = "10")]
+    pub mag_heading: u16,
+    #[deku(bits = "1")]
+    pub airspeed_type: u8,
+    #[deku(endian = "big", bits = "10")]
+    pub airspeed: u16,
+}
+
+/// Aircraft Operational Status Subtype
+#[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
+#[deku(type = "u8", bits = "3")]
+pub enum OperationStatus {
+    #[deku(id = "0")]
+    Airborne(OperationStatusAirborne),
+    #[deku(id = "1")]
+    Surface(OperationStatusSurface),
+}
+
+/// [`ME::AircraftOperationStatus`] && [`OperationStatus`] == 0
+///
+/// Version 2 support only
+#[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
+pub struct OperationStatusAirborne {
+    /// CC (16 bits)
+    pub capability_class: CapabilityClassAirborne,
+
+    /// OM
+    pub operational_mode: OperationalMode,
+    /// OM last 8 bits (diff for airborne/surface)
+    reserved: u8,
+
+    pub version_number: ADSBVersion,
+
+    #[deku(bits = "1")]
+    pub nic_supplement_a: u8,
+
+    #[deku(bits = "4")]
+    pub navigational_accuracy_category: u8,
+
+    #[deku(bits = "2")]
+    pub geometric_vertical_accuracy: u8,
+
+    #[deku(bits = "2")]
+    pub source_integrity_level: u8,
+
+    #[deku(bits = "1")]
+    pub barometric_altitude_integrity: u8,
+
+    #[deku(bits = "1")]
+    pub horizontal_reference_direction: u8,
+
+    #[deku(bits = "1")]
+    pub sil_supplement: u8,
+
+    #[deku(bits = "1")]
+    pub reserved1: u8,
+}
+
+impl std::fmt::Display for OperationStatusAirborne {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "   Version:            {}", self.version_number)?;
+        writeln!(f, "   Capability classes:{}", self.capability_class)?;
+        writeln!(f, "   Operational modes: {}", self.operational_mode)?;
+        writeln!(
+            f,
+            "   NACp:               {}",
+            self.navigational_accuracy_category
+        )?;
+        writeln!(
+            f,
+            "   GVA:                {}",
+            self.geometric_vertical_accuracy
+        )?;
+        writeln!(
+            f,
+            "   SIL:                {} (per hour)",
+            self.source_integrity_level
+        )?;
+        writeln!(
+            f,
+            "   NICbaro:            {}",
+            self.barometric_altitude_integrity
+        )?;
+        if self.horizontal_reference_direction == 1 {
+            writeln!(f, "   Heading reference:  magnetic north")?;
+        } else {
+            writeln!(f, "   Heading reference:  true north")?;
+        }
+        Ok(())
+    }
+}
+
+/// [`ME::AircraftOperationStatus`]
+#[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
+pub struct CapabilityClassAirborne {
+    #[deku(bits = "2")]
+    pub reserved0: u8,
+    #[deku(bits = "1")]
+    pub acas: u8,
+    #[deku(bits = "1")]
+    pub cdti: u8,
+    #[deku(bits = "2")]
+    pub reserved1: u8,
+    #[deku(bits = "1")]
+    pub arv: u8,
+    #[deku(bits = "1")]
+    pub ts: u8,
+    #[deku(bits = "2")]
+    pub tc: u8,
+    #[deku(bits = "6")]
+    pub reserved2: u8,
+}
+
+impl std::fmt::Display for CapabilityClassAirborne {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if self.acas == 1 {
+            write!(f, " ACAS")?;
+        }
+        if self.cdti == 1 {
+            write!(f, " CDTI")?;
+        }
+        if self.arv == 1 {
+            write!(f, " ARV")?;
+        }
+        if self.ts == 1 {
+            write!(f, " TS")?;
+        }
+        if self.tc == 1 {
+            write!(f, " TC")?;
+        }
+        Ok(())
+    }
+}
+
+/// [`ME::AircraftOperationStatus`] && [`OperationStatus`] == 1
+///
+/// Version 2 support only
+#[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
+pub struct OperationStatusSurface {
+    /// CC (14 bits)
+    pub capability_class: CapabilityClassSurface,
+    /// CC L/W codes
+    #[deku(bits = "4")]
+    pub lw_codes: u8,
+
+    /// OM
+    pub operational_mode: OperationalMode,
+    /// OM last 8 bits (diff for airborne/surface)
+    // TODO: parse:
+    // http://www.anteni.net/adsb/Doc/1090-WP30-18-DRAFT_DO-260B-V42.pdf
+    // 2.2.3.2.7.2.4.7 “GPS Antenna Offset” OM Code Subfield in Aircraft Operational Status Messages
+    pub gps_antenna_offset: u8,
+
+    pub version_number: ADSBVersion,
+
+    #[deku(bits = "1")]
+    pub nic_supplement_a: u8,
+
+    #[deku(bits = "4")]
+    pub navigational_accuracy_category: u8,
+
+    #[deku(bits = "2")]
+    pub reserved0: u8,
+
+    #[deku(bits = "2")]
+    pub source_integrity_level: u8,
+
+    #[deku(bits = "1")]
+    pub barometric_altitude_integrity: u8,
+
+    #[deku(bits = "1")]
+    pub horizontal_reference_direction: u8,
+
+    #[deku(bits = "1")]
+    pub sil_supplement: u8,
+
+    #[deku(bits = "1")]
+    pub reserved1: u8,
+}
+
+impl std::fmt::Display for OperationStatusSurface {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "  Version:            {}", self.version_number)?;
+        write!(f, "   Capability classes:{}", self.capability_class)?;
+        if self.lw_codes != 0 {
+            writeln!(f, " L/W={}", self.lw_codes)?;
+        } else {
+            writeln!(f)?;
+        }
+        write!(f, "   Operational modes: {}", self.operational_mode)?;
+        writeln!(f)?;
+        writeln!(
+            f,
+            "   NACp:               {}",
+            self.navigational_accuracy_category
+        )?;
+        writeln!(
+            f,
+            "   SIL:                {} (per hour)",
+            self.source_integrity_level
+        )?;
+        writeln!(
+            f,
+            "   NICbaro:            {}",
+            self.barometric_altitude_integrity
+        )?;
+        if self.horizontal_reference_direction == 1 {
+            writeln!(f, "   Heading reference:  magnetic north")?;
+        } else {
+            writeln!(f, "   Heading reference:  true north")?;
+        }
+        Ok(())
+    }
+}
+
+/// [`ME::AircraftOperationStatus`]
+#[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
+pub struct CapabilityClassSurface {
+    /// 0, 0 in current version, reserved as id for later versions
+    #[deku(bits = "2", assert_eq = "0")]
+    pub reserved0: u8,
+
+    /// Position Offset Applied
+    #[deku(bits = "1")]
+    pub poe: u8,
+
+    /// Aircraft has ADS-B 1090ES Receive Capability
+    #[deku(bits = "1")]
+    pub es1090: u8,
+
+    #[deku(bits = "2")]
+    pub reserved1: u8,
+
+    /// Class B2 Ground Vehicle transmitting with less than 70 watts
+    #[deku(bits = "1")]
+    pub b2_low: u8,
+
+    /// Aircraft has ADS-B UAT Receive Capability
+    #[deku(bits = "1")]
+    pub uat_in: u8,
+
+    /// Nagivation Accuracy Category for Velocity
+    #[deku(bits = "3")]
+    pub nac_v: u8,
+
+    /// NIC Supplement used on the Surface
+    #[deku(bits = "1")]
+    pub nic_supplement_c: u8,
+}
+
+/// OperationMode field not including the last 8 bits that are different for Surface/Airborne
+#[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
+pub struct OperationalMode {
+    /// (0, 0) in Version 2, reserved for other values
+    #[deku(bits = "2", assert_eq = "0")]
+    reserved: u8,
+
+    #[deku(bits = "1")]
+    tcas_ra_active: bool,
+
+    #[deku(bits = "1")]
+    ident_switch_active: bool,
+
+    #[deku(bits = "1")]
+    reserved_recv_atc_service: bool,
+
+    #[deku(bits = "1")]
+    single_antenna_flag: bool,
+
+    #[deku(bits = "2")]
+    system_design_assurance: u8,
+}
+
+impl std::fmt::Display for OperationalMode {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if self.tcas_ra_active {
+            write!(f, " TCAS")?;
+        }
+        if self.ident_switch_active {
+            write!(f, " IDENT_SWITCH_ACTIVE")?;
+        }
+        if self.reserved_recv_atc_service {
+            write!(f, " ATC")?;
+        }
+        if self.single_antenna_flag {
+            write!(f, " SAF")?;
+        }
+        if self.system_design_assurance != 0 {
+            write!(f, " SDA={}", self.system_design_assurance)?;
+        }
+        Ok(())
+    }
+}
+
+/// ADS-B Defined from different ICAO documents
+///
+/// reference: ICAO 9871 (5.3.2.3)
+#[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
+#[deku(type = "u8", bits = "3")]
+pub enum ADSBVersion {
+    #[deku(id = "0")]
+    DOC9871AppendixA,
+    #[deku(id = "1")]
+    DOC9871AppendixB,
+    #[deku(id = "2")]
+    DOC9871AppendixC,
+}
+
+impl std::fmt::Display for ADSBVersion {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.deku_id().unwrap())
+    }
+}
+
+/// Control Field (B.3) for [`crate::DF::TisB`]
+///
+/// reference: ICAO 9871
+#[derive(Debug, PartialEq, DekuRead, Clone)]
+#[deku(type = "u8", bits = "3")]
+#[allow(non_camel_case_types)]
+pub enum ControlField {
+    /// ADS-B Message from a non-transponder device
+    #[deku(id = "0")]
+    ADSB_ES_NT(ADSB_ICAO),
+
+    /// Reserved for ADS-B for ES/NT devices for alternate address space
+    #[deku(id = "1")]
+    ADSB_ES_NT_ALT(ADSB_ICAO),
+
+    /// Code 2, Fine Format TIS-B Message
+    #[deku(id = "2")]
+    TISB_FINE(ADSB_ICAO),
+
+    /// Code 3, Coarse Format TIS-B Message
+    #[deku(id = "3")]
+    TISB_COARSE(ADSB_ICAO),
+
+    /// Code 4, Coarse Format TIS-B Message
+    #[deku(id = "4")]
+    TISB_MANAGE(ADSB_ICAO),
+
+    /// Code 5, TIS-B Message for replay ADS-B Message
+    ///
+    /// Anonymous 24-bit addresses
+    #[deku(id = "5")]
+    TISB_ADSB_RELAY(ADSB_ICAO),
+
+    /// Code 6, TIS-B Message, Same as DF=17
+    #[deku(id = "6")]
+    TISB_ADSB(ADSB_ICAO),
+
+    /// Code 7, Reserved
+    #[deku(id = "7")]
+    Reserved(ADSB_ICAO),
+}
+
+impl std::fmt::Display for ControlField {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::ADSB_ES_NT(adsb_icao) => {
+                write!(
+                    f,
+                    "{}",
+                    adsb_icao
+                        .me
+                        .to_string(adsb_icao.aa, "(ADS-B)", Capability::AG_UNCERTAIN3, false,)
+                        .unwrap()
+                )?;
+            }
+            Self::ADSB_ES_NT_ALT(adsb_icao) => {
+                write!(
+                    f,
+                    "{}",
+                    adsb_icao
+                        .me
+                        .to_string(adsb_icao.aa, "(ADS-B)", Capability::AG_UNCERTAIN3, false,)
+                        .unwrap()
+                )?;
+            }
+            Self::TISB_FINE(adsb_icao) => {
+                write!(
+                    f,
+                    "{}",
+                    adsb_icao
+                        .me
+                        .to_string(adsb_icao.aa, "(TIS-B)", Capability::AG_UNCERTAIN3, false,)
+                        .unwrap()
+                )?;
+            }
+            Self::TISB_COARSE(adsb_icao) => {
+                write!(
+                    f,
+                    "{}",
+                    adsb_icao
+                        .me
+                        .to_string(adsb_icao.aa, "(TIS-B)", Capability::AG_UNCERTAIN3, false,)
+                        .unwrap()
+                )?;
+            }
+            Self::TISB_MANAGE(tisb_manage) => {
+                write!(f, " Address:   {} (ADS-R)", tisb_manage.aa)?;
+            }
+            Self::TISB_ADSB_RELAY(adsb_icao) => {
+                write!(
+                    f,
+                    "{}",
+                    adsb_icao
+                        .me
+                        .to_string(adsb_icao.aa, "(TIS-B)", Capability::AG_UNCERTAIN3, false,)
+                        .unwrap()
+                )?;
+            }
+            Self::TISB_ADSB(tisb_adsb) => {
+                write!(
+                    f,
+                    "{}",
+                    tisb_adsb
+                        .me
+                        .to_string(tisb_adsb.aa, "(ADS-R)", Capability::AG_UNCERTAIN3, false,)
+                        .unwrap()
+                )?;
+            }
+            Self::Reserved(tisb_adsb) => {
+                write!(
+                    f,
+                    "{}",
+                    tisb_adsb
+                        .me
+                        .to_string(
+                            tisb_adsb.aa,
+                            "(unknown addressing scheme)",
+                            Capability::AG_UNCERTAIN3,
+                            false,
+                        )
+                        .unwrap()
+                )?;
+            }
+        }
+        Ok(())
+    }
+}
+
+/// [`crate::DF::TisB`] Containing ICAO
+#[derive(Debug, PartialEq, DekuRead, Clone)]
+#[allow(non_camel_case_types)]
+pub struct ADSB_ICAO {
+    /// AA: Address, Announced
+    aa: ICAO,
+    /// ME: message, extended quitter
+    me: ME,
+}
+
+#[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
+#[deku(type = "u8", bits = "1")]
+pub enum Unit {
+    Meter = 0,
+    Feet  = 1,
+}
+
+impl Default for Unit {
+    fn default() -> Self {
+        Self::Meter
     }
 }
 
@@ -628,12 +769,6 @@ pub struct OperationCodeSurface {
     pub lw: u8,
     #[deku(bits = "6")]
     pub reserved: u16,
-}
-
-impl std::fmt::Display for ADSBVersion {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.deku_id().unwrap())
-    }
 }
 
 #[derive(Debug, PartialEq, DekuRead, Clone)]

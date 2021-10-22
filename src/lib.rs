@@ -69,6 +69,10 @@ different `adsb_deku` uses. See the [`README.md`] for examples of use.
 [`deku`]: https://github.com/sharksforarms/deku
 !*/
 
+// good reference: http://www.anteni.net/adsb/Doc/1090-WP30-18-DRAFT_DO-260B-V42.pdf
+//
+// Maybe always reference this in the future?
+
 /// re-export deku
 pub use deku;
 
