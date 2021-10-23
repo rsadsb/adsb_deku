@@ -465,7 +465,6 @@ impl Altitude {
             // mode c?
             // TODO this is feet
             let n = ((num & 0x0fc0) << 1) | (num & 0x003f);
-            let _altitude = mode_ac::mode_a_to_index(decode_id13_field(n));
             Ok((rest, ((n as u32) * 100)))
         }
     }
