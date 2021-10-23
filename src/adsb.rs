@@ -355,10 +355,15 @@ impl std::fmt::Display for OperationStatusAirborne {
 pub struct CapabilityClassAirborne {
     #[deku(bits = "2")]
     pub reserved0: u8,
+
+    /// TCAS Operational
     #[deku(bits = "1")]
     pub acas: u8,
+
+    /// 1090ES IN
     #[deku(bits = "1")]
     pub cdti: u8,
+
     #[deku(bits = "2")]
     pub reserved1: u8,
     #[deku(bits = "1")]
