@@ -362,7 +362,7 @@ pub enum DF {
         #[deku(
             bits = "13",
             endian = "big",
-            map = "|squawk: u32| -> Result<_, DekuError> {Ok(decode_id13_field(squawk))}"
+            map = "|squawk: u32| -> Result<_, DekuError> {Ok(mode_ac::decode_id13_field(squawk))}"
         )]
         id: u32,
         /// MB Message, COMM-B
@@ -485,51 +485,6 @@ impl Default for SurveillanceStatus {
     }
 }
 
-/// gillham code
-fn decode_id13_field(id13_field: u32) -> u32 {
-    let mut hex_gillham: u32 = 0;
-
-    if id13_field & 0x1000 != 0 {
-        hex_gillham |= 0x0010;
-    } // Bit 12 = C1
-    if id13_field & 0x0800 != 0 {
-        hex_gillham |= 0x1000;
-    } // Bit 11 = A1
-    if id13_field & 0x0400 != 0 {
-        hex_gillham |= 0x0020;
-    } // Bit 10 = C2
-    if id13_field & 0x0200 != 0 {
-        hex_gillham |= 0x2000;
-    } // Bit  9 = A2
-    if id13_field & 0x0100 != 0 {
-        hex_gillham |= 0x0040;
-    } // Bit  8 = C4
-    if id13_field & 0x0080 != 0 {
-        hex_gillham |= 0x4000;
-    } // Bit  7 = A4
-      //if id13_field & 0x0040 != 0 {hex_gillham |= 0x0800;} // Bit  6 = X  or M
-    if id13_field & 0x0020 != 0 {
-        hex_gillham |= 0x0100;
-    } // Bit  5 = B1
-    if id13_field & 0x0010 != 0 {
-        hex_gillham |= 0x0001;
-    } // Bit  4 = D1 or Q
-    if id13_field & 0x0008 != 0 {
-        hex_gillham |= 0x0200;
-    } // Bit  3 = B2
-    if id13_field & 0x0004 != 0 {
-        hex_gillham |= 0x0002;
-    } // Bit  2 = D2
-    if id13_field & 0x0002 != 0 {
-        hex_gillham |= 0x0400;
-    } // Bit  1 = B4
-    if id13_field & 0x0001 != 0 {
-        hex_gillham |= 0x0004;
-    } // Bit  0 = D4
-
-    hex_gillham
-}
-
 /// Even / Odd
 #[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
 #[deku(type = "u8", bits = "1")]
@@ -586,16 +541,8 @@ impl std::fmt::Display for Sign {
         )
     }
 }
-mod mode_ac {
-    // TODO test this module
-    /// convert from mode A hex to 0-4095 index
-    pub fn mode_a_to_index(mode_a: u32) -> u32 {
-        (mode_a & 0x0007)
-            | ((mode_a & 0x0070) >> 1)
-            | ((mode_a & 0x0700) >> 2)
-            | ((mode_a & 0x7000) >> 3)
-    }
 
+mod mode_ac {
     pub fn decode_id13_field(id13_field: u32) -> u32 {
         let mut hex_gillham: u32 = 0;
 

@@ -676,3 +676,18 @@ fn testing_df_18() {
         resulting_string
     );
 }
+#[test]
+fn test_emergency() {
+    let bytes = hex!("8dc06800e1108500000000baa81f");
+    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let resulting_string = format!("{}", frame);
+    assert_eq!(
+        r#" Extended Squitter Emergency/priority status
+  Address:       c06800 (Mode S / ADS-B)
+  Air/Ground:    airborne
+  Squawk:        4016
+  Emergency/priority:    no emergency
+"#,
+        resulting_string
+    );
+}

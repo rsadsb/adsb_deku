@@ -165,8 +165,7 @@ impl ME {
             }
             ME::Reserved1 => (),
             ME::AircraftStatus(AircraftStatus {
-                sub_type: _,
-                emergency_state: _,
+                emergency_state,
                 squawk,
                 ..
             }) => {
@@ -175,9 +174,10 @@ impl ME {
                     " Extended Squitter{}Emergency/priority status",
                     transponder
                 )?;
-                writeln!(f, "  Address:     {} {}", icao, address_type)?;
+                writeln!(f, "  Address:       {} {}", icao, address_type)?;
                 writeln!(f, "  Air/Ground:    {}", capability)?;
-                writeln!(f, "  Squawk:        {}", squawk)?;
+                writeln!(f, "  Squawk:        {:x?}", squawk)?;
+                writeln!(f, "  Emergency/priority:    {}", emergency_state)?;
             }
             ME::TargetStateAndStatusInformation(target_info) => {
                 writeln!(
@@ -763,10 +763,28 @@ pub enum EmergencyState {
     None                 = 0,
     General              = 1,
     Lifeguard            = 2,
-    MinimumFuel          = 4,
+    MinimumFuel          = 3,
+    NoCommunication      = 4,
     UnlawfulInterference = 5,
-    Reserved1            = 6,
+    DownedAircraft       = 6,
     Reserved2            = 7,
+}
+
+impl std::fmt::Display for EmergencyState {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let s = match self {
+            Self::None => "no emergency",
+            Self::General => "general",
+            Self::Lifeguard => "lifeguard",
+            Self::MinimumFuel => "minimum fuel",
+            Self::NoCommunication => "no communication",
+            Self::UnlawfulInterference => "unflawful interference",
+            Self::DownedAircraft => "downed aircraft",
+            Self::Reserved2 => "reserved2",
+        };
+        write!(f, "{}", s)?;
+        Ok(())
+    }
 }
 
 #[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
@@ -898,7 +916,7 @@ pub struct AirborneVelocity {
     #[deku(bits = "3")]
     pub st: u8,
     #[deku(bits = "5")]
-    pub extra: u8,
+    pub nac_v: u8,
     #[deku(ctx = "*st")]
     pub sub_type: AirborneVelocitySubType,
     pub vrate_src: VerticalRateSource,
