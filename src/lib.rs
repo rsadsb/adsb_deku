@@ -35,7 +35,6 @@ assert_eq!(
   Altitude:      23650 ft barometric
   CPR type:      Airborne
   CPR odd flag:  even
-  CPR NUCp/NIC:  ?
   CPR latitude:  (87769)
   CPR longitude: (71577)
 "#,
@@ -437,8 +436,6 @@ impl std::fmt::Display for Altitude {
         // TODO: fix me
         writeln!(f, "  CPR type:      Airborne")?;
         writeln!(f, "  CPR odd flag:  {}", self.odd_flag)?;
-        // TODO: fix me
-        writeln!(f, "  CPR NUCp/NIC:  ?")?;
         writeln!(f, "  CPR latitude:  ({})", self.lat_cpr)?;
         writeln!(f, "  CPR longitude: ({})", self.lon_cpr)?;
         // TODO: fix me

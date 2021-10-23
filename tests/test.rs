@@ -345,7 +345,6 @@ fn testing_airbornepositionbaroaltitude() {
   Altitude:      23650 ft barometric
   CPR type:      Airborne
   CPR odd flag:  even
-  CPR NUCp/NIC:  ?
   CPR latitude:  (87769)
   CPR longitude: (71577)
 "#,
@@ -580,7 +579,6 @@ fn testing_df_18() {
   Altitude:      700 ft barometric
   CPR type:      Airborne
   CPR odd flag:  odd
-  CPR NUCp/NIC:  ?
   CPR latitude:  (74955)
   CPR longitude: (28998)
 "#,
@@ -644,7 +642,6 @@ fn testing_df_18() {
   Altitude:      2000 ft barometric
   CPR type:      Airborne
   CPR odd flag:  odd
-  CPR NUCp/NIC:  ?
   CPR latitude:  (68677)
   CPR longitude: (31345)
 "#,
