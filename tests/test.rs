@@ -656,9 +656,7 @@ fn testing_df_18() {
     // test github issue #8 (with sample output from dump1090_fa as control)
     let bytes = hex!("96A4D01FF900210600493075E234");
     let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-    println!("{:#?}", frame);
     let resulting_string = format!("{}", frame);
-    println!("{}", resulting_string);
     assert_eq!(
         r#" Extended Squitter (Non-Transponder) Aircraft operational status (surface)
  Address:       a4d01f (ADS-R)
