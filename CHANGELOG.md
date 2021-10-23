@@ -16,6 +16,7 @@ adsb_deku follows semvar when versioning, but apps are not required to follow th
 
 ### Apps
 - [radar] Enforce minimum constraint on size of tab text
+- [radar] Add `+` and `-` for zooming the map during operation
 
 ## [v0.2.0] 2021-10-17
 ### adsb_deku

@@ -16,23 +16,19 @@
 //! all aircrafts and only display a dot where detection at the lat/long position. This is for
 //! testing the reach of your antenna.
 
-use adsb_deku::adsb::ME;
-use adsb_deku::deku::DekuContainerRead;
-use adsb_deku::{Frame, DF};
-
+// std
 use std::io::{self, BufRead, BufReader};
 use std::net::TcpStream;
 use std::num::ParseFloatError;
 use std::str::FromStr;
 use std::time::Duration;
-
-use apps::Airplanes;
-
+// third-party
+use adsb_deku::adsb::ME;
+use adsb_deku::deku::DekuContainerRead;
+use adsb_deku::{Frame, DF};
 use clap::Parser;
-
 use crossterm::event::{poll, read, Event, KeyCode, KeyEvent};
 use crossterm::terminal::enable_raw_mode;
-
 use tui::backend::{Backend, CrosstermBackend};
 use tui::layout::{Constraint, Direction, Layout};
 use tui::style::{Color, Style};
@@ -41,14 +37,12 @@ use tui::text::Spans;
 use tui::widgets::canvas::{Canvas, Line, Points};
 use tui::widgets::{Block, Borders, Tabs};
 use tui::Terminal;
+// crate
+use apps::Airplanes;
 
 /// Amount of zoom out from your original lat/long position
 const MAX_PLOT_HIGH: f64 = 400.0;
 const MAX_PLOT_LOW: f64 = MAX_PLOT_HIGH * -1.0;
-/// Difference between each lat point
-const LAT_DIFF: f64 = 1.2;
-/// Difference between each long point
-const LONG_DIFF: f64 = LAT_DIFF * 3.0;
 
 pub struct City {
     name: String,
@@ -137,6 +131,7 @@ fn main() {
     // setup tui variables
     let mut tab_selection = Tab::Map;
     let mut quit = false;
+    let mut scale = 1.2;
 
     loop {
         // if new message, add to buffers
@@ -191,34 +186,20 @@ fn main() {
                             .paint(|ctx| {
                                 ctx.layer();
 
+                                let (lat_diff, long_diff) = scale_lat_long(scale);
+
                                 // draw cities
-                                for city in &cities {
-                                    let lat = ((city.lat - local_lat) / LAT_DIFF) * MAX_PLOT_HIGH;
-                                    let long =
-                                        ((city.long - local_long) / LONG_DIFF) * MAX_PLOT_HIGH;
-
-                                    // draw city coor
-                                    ctx.draw(&Points {
-                                        coords: &[(long, lat)],
-                                        color: Color::Green,
-                                    });
-
-                                    // draw city name
-                                    ctx.print(
-                                        long + 3.0,
-                                        lat,
-                                        Box::leak(city.name.to_string().into_boxed_str()),
-                                        Color::Green,
-                                    );
-                                }
+                                draw_cities(
+                                    ctx, &cities, local_lat, local_long, lat_diff, long_diff,
+                                );
 
                                 // draw ADSB tab airplanes
                                 for key in adsb_airplanes.0.keys() {
                                     let value = adsb_airplanes.lat_long_altitude(*key);
                                     if let Some((position, _altitude)) = value {
-                                        let lat = ((position.latitude - local_lat) / LAT_DIFF)
+                                        let lat = ((position.latitude - local_lat) / lat_diff)
                                             * MAX_PLOT_HIGH;
-                                        let long = ((position.longitude - local_long) / LONG_DIFF)
+                                        let long = ((position.longitude - local_long) / long_diff)
                                             * MAX_PLOT_HIGH;
 
                                         // draw dot on location
@@ -242,21 +223,7 @@ fn main() {
                                     }
                                 }
 
-                                // Draw vertical and horizontal lines
-                                ctx.draw(&Line {
-                                    x1: MAX_PLOT_HIGH,
-                                    y1: 0.0,
-                                    x2: MAX_PLOT_LOW,
-                                    y2: 0.0,
-                                    color: Color::White,
-                                });
-                                ctx.draw(&Line {
-                                    x1: 0.0,
-                                    y1: MAX_PLOT_HIGH,
-                                    x2: 0.0,
-                                    y2: MAX_PLOT_LOW,
-                                    color: Color::White,
-                                });
+                                draw_lines(ctx);
                             });
                         f.render_widget(canvas, chunks[1]);
                     }
@@ -268,32 +235,18 @@ fn main() {
                             .paint(|ctx| {
                                 ctx.layer();
 
+                                let (lat_diff, long_diff) = scale_lat_long(scale);
+
                                 // draw cities
-                                for city in &cities {
-                                    let lat = ((city.lat - local_lat) / LAT_DIFF) * MAX_PLOT_HIGH;
-                                    let long =
-                                        ((city.long - local_long) / LONG_DIFF) * MAX_PLOT_HIGH;
-
-                                    // draw city coor
-                                    ctx.draw(&Points {
-                                        coords: &[(long, lat)],
-                                        color: Color::Green,
-                                    });
-
-                                    // draw city name
-                                    ctx.print(
-                                        long + 3.0,
-                                        lat,
-                                        Box::leak(city.name.to_string().into_boxed_str()),
-                                        Color::Green,
-                                    );
-                                }
+                                draw_cities(
+                                    ctx, &cities, local_lat, local_long, lat_diff, long_diff,
+                                );
 
                                 // draw ADSB tab airplanes
                                 for position in &coverage_airplanes {
-                                    let lat = ((position.latitude - local_lat) / LAT_DIFF)
+                                    let lat = ((position.latitude - local_lat) / lat_diff)
                                         * MAX_PLOT_HIGH;
-                                    let long = ((position.longitude - local_long) / LONG_DIFF)
+                                    let long = ((position.longitude - local_long) / long_diff)
                                         * MAX_PLOT_HIGH;
 
                                     // draw dot on location
@@ -303,21 +256,7 @@ fn main() {
                                     });
                                 }
 
-                                // Draw vertical and horizontal lines
-                                ctx.draw(&Line {
-                                    x1: MAX_PLOT_HIGH,
-                                    y1: 0.0,
-                                    x2: MAX_PLOT_LOW,
-                                    y2: 0.0,
-                                    color: Color::White,
-                                });
-                                ctx.draw(&Line {
-                                    x1: 0.0,
-                                    y1: MAX_PLOT_HIGH,
-                                    x2: 0.0,
-                                    y2: MAX_PLOT_LOW,
-                                    color: Color::White,
-                                });
+                                draw_lines(ctx);
                             });
                         f.render_widget(canvas, chunks[1]);
                     }
@@ -332,6 +271,8 @@ fn main() {
                     KeyCode::F(1) => tab_selection = Tab::Map,
                     KeyCode::F(2) => tab_selection = Tab::Coverage,
                     KeyCode::Char('q') => quit = true,
+                    KeyCode::Char('-') => scale += 0.1,
+                    KeyCode::Char('+') => scale -= 0.1,
                     _ => (),
                 },
                 _ => (),
@@ -339,6 +280,62 @@ fn main() {
         }
         if quit {
             break;
+        }
+
+        /// Draw vertical and horizontal lines
+        fn draw_lines(ctx: &mut tui::widgets::canvas::Context<'_>) {
+            ctx.draw(&Line {
+                x1: MAX_PLOT_HIGH,
+                y1: 0.0,
+                x2: MAX_PLOT_LOW,
+                y2: 0.0,
+                color: Color::White,
+            });
+            ctx.draw(&Line {
+                x1: 0.0,
+                y1: MAX_PLOT_HIGH,
+                x2: 0.0,
+                y2: MAX_PLOT_LOW,
+                color: Color::White,
+            });
+        }
+
+        /// Draw cities on the map
+        fn draw_cities(
+            ctx: &mut tui::widgets::canvas::Context<'_>,
+            cities: &[City],
+            local_lat: f64,
+            local_long: f64,
+            lat_diff: f64,
+            long_diff: f64,
+        ) {
+            for city in cities {
+                let lat = ((city.lat - local_lat) / lat_diff) * MAX_PLOT_HIGH;
+                let long = ((city.long - local_long) / long_diff) * MAX_PLOT_HIGH;
+
+                // draw city coor
+                ctx.draw(&Points {
+                    coords: &[(long, lat)],
+                    color: Color::Green,
+                });
+
+                // draw city name
+                ctx.print(
+                    long + 3.0,
+                    lat,
+                    Box::leak(city.name.to_string().into_boxed_str()),
+                    Color::Green,
+                );
+            }
+        }
+
+        fn scale_lat_long(scale: f64) -> (f64, f64) {
+            // Difference between each lat point
+            let lat_diff = scale;
+            // Difference between each long point
+            let long_diff = lat_diff * 3.0;
+
+            (lat_diff, long_diff)
         }
     }
 }
