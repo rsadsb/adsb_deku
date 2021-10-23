@@ -448,27 +448,10 @@ fn testing_targetstateandstatusinformation() {
     NACp:              10
     NICbaro:           1
     SIL:               3 (per sample)
+    QNH:               1012.8 millibars
 "#,
         resulting_string
     );
-    //        let bytes = hex!("8da2c1bd587ba2adb31799cb802b");
-    //        let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-    //        let resulting_string = format!("{}", frame);
-    //        assert_eq!(
-    //            r#" Extended Squitter Target state and status (V2) (29/1)
-    //  ICAO Address:  A230D6 (Mode S / ADS-B)
-    //  Air/Ground:    airborne
-    //  Target State and Status:
-    //    Target altitude:   MCP, 33024 ft
-    //    Altimeter setting: 1013.6 millibars
-    //    Active modes:      autopilot VNAV
-    //    ACAS:              operational
-    //    NACp:              10
-    //    NICbaro:           1
-    //    SIL:               3 (per sample)
-    //"#,
-    //            resulting_string
-    //        );
 }
 
 #[test]
@@ -504,6 +487,7 @@ fn testing_issue_01() {
     NACp:              8
     NICbaro:           1
     SIL:               3 (per sample)
+    QNH:               1013.6 millibars
 "#,
         resulting_string
     );

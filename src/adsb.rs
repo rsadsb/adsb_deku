@@ -214,6 +214,7 @@ impl ME {
                 writeln!(f, "    NACp:              {}", target_info.nacp)?;
                 writeln!(f, "    NICbaro:           {}", target_info.nicbaro)?;
                 writeln!(f, "    SIL:               {} (per sample)", target_info.sil)?;
+                writeln!(f, "    QNH:               {} millibars", target_info.qnh)?;
             }
             ME::AircraftOperationStatus(OperationStatus::Airborne(opstatus_airborne)) => {
                 writeln!(

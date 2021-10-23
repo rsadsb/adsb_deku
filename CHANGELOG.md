@@ -10,6 +10,7 @@ adsb_deku follows semvar when versioning, but apps are not required to follow th
 
 ### adsb_deku
 - Fix [!8](https://github.com/wcampbell0x2a/adsb_deku/issue/8) - Support `ME::AircraftOperationStatus` Surface Status message parsing
+- Add `QNH` to `fmt::Display` for `ME::TargetStateAndStatusInformation`
 - Remove `NUC/NIC` from `fmt::Display` for `Altitude`
 
 ### Apps
