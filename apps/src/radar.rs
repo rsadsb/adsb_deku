@@ -272,7 +272,11 @@ fn main() {
                     KeyCode::F(2) => tab_selection = Tab::Coverage,
                     KeyCode::Char('q') => quit = true,
                     KeyCode::Char('-') => scale += 0.1,
-                    KeyCode::Char('+') => scale -= 0.1,
+                    KeyCode::Char('+') => {
+                        if scale > 0.0 {
+                            scale -= 0.1
+                        }
+                    }
                     _ => (),
                 },
                 _ => (),
