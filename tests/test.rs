@@ -691,3 +691,22 @@ fn test_emergency() {
         resulting_string
     );
 }
+
+#[test]
+fn issue_10() {
+    let bytes = hex!("8DA35EBC9B000024B00C0004E897");
+    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    println!("{:#?}", frame);
+    let resulting_string = format!("{}", frame);
+    println!("{}", resulting_string);
+    assert_eq!(
+        r#" Extended Squitter Airspeed and heading, subsonic
+  Address:       a35ebc (Mode S / ADS-B)
+  Air/Ground:    airborne
+  IAS:           292 kt
+  Baro rate:     128 ft/min
+  NACv:          0
+"#,
+        resulting_string
+    );
+}

@@ -13,6 +13,7 @@ adsb_deku follows semvar when versioning, but apps are not required to follow th
 - Add `QNH` to `fmt::Display` for `ME::TargetStateAndStatusInformation`
 - Remove `NUC/NIC` from `fmt::Display` for `Altitude`
 - Fix/Add Emergency Status to `fmt::Display` for `ME::AircraftStatus`
+- Fix [!10](https://github.com/wcampbell0x2a/adsb_deku/issue/10) - Support `AirborneVelocity` Airspeed `fmt::Display`
 
 ### Apps
 - [radar] Enforce minimum constraint on size of tab text

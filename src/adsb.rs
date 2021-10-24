@@ -112,8 +112,7 @@ impl ME {
                 write!(f, "{}", altitude)?;
             }
             ME::AirborneVelocity(airborne_velocity) => {
-                if let AirborneVelocitySubType::GroundSpeedDecoding(_) = airborne_velocity.sub_type
-                {
+                if let AirborneVelocitySubType::GroundSpeedDecoding(_) = &airborne_velocity.sub_type {
                     writeln!(
                         f,
                         " Extended Squitter{}Airborne velocity over ground, subsonic",
@@ -143,6 +142,18 @@ impl ME {
                     } else {
                         writeln!(f, "  Invalid packet")?;
                     }
+                }
+                if let AirborneVelocitySubType::AirspeedDecoding(airspeed_decoding) = &airborne_velocity.sub_type {
+                    writeln!(
+                        f,
+                        " Extended Squitter{}Airspeed and heading, subsonic",
+                        transponder
+                    )?;
+                    writeln!(f, "  Address:       {} {}", icao, address_type)?;
+                    writeln!(f, "  Air/Ground:    {}", capability)?;
+                    writeln!(f, "  IAS:           {} kt", airspeed_decoding.airspeed)?;
+                    writeln!(f, "  Baro rate:     {}{} ft/min", airborne_velocity.vrate_sign, (airborne_velocity.vrate_value - 1) * 64)?;
+                    writeln!(f, "  NACv:          {}", airborne_velocity.nac_v)?;
                 }
             }
             ME::AirbornePositionGNSSAltitude(altitude) => {
@@ -261,7 +272,11 @@ pub struct AirspeedDecoding {
     pub mag_heading: u16,
     #[deku(bits = "1")]
     pub airspeed_type: u8,
-    #[deku(endian = "big", bits = "10")]
+    #[deku(
+        endian = "big",
+        bits = "10",
+        map = "|airspeed: u16| -> Result<_, DekuError> {Ok(airspeed - 1)}"
+    )]
     pub airspeed: u16,
 }
 
@@ -939,7 +954,7 @@ pub struct AirborneVelocity {
 }
 
 impl AirborneVelocity {
-    /// Return effective (heading, ground_speed, vertical_rate)
+    /// Return effective (heading, ground_speed, vertical_rate) for groundspeed
     pub fn calculate(&self) -> Option<(f64, f64, i16)> {
         if let AirborneVelocitySubType::GroundSpeedDecoding(ground_speed) = &self.sub_type {
             let v_ew = f64::from((ground_speed.ew_vel as i16 - 1) * ground_speed.ew_sign.value());
