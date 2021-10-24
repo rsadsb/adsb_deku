@@ -218,27 +218,21 @@ pub fn get_position(cpr_frames: (&Altitude, &Altitude)) -> Option<Position> {
     let latest_frame = cpr_frames.1;
     let (even_frame, odd_frame) = match cpr_frames {
         (
-            even
-            @
-            Altitude {
+            even @ Altitude {
                 odd_flag: CPRFormat::Even,
                 ..
             },
-            odd
-            @ Altitude {
+            odd @ Altitude {
                 odd_flag: CPRFormat::Odd,
                 ..
             },
         )
         | (
-            odd
-            @ Altitude {
+            odd @ Altitude {
                 odd_flag: CPRFormat::Odd,
                 ..
             },
-            even
-            @
-            Altitude {
+            even @ Altitude {
                 odd_flag: CPRFormat::Even,
                 ..
             },
