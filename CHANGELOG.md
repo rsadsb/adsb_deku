@@ -9,11 +9,11 @@ adsb_deku follows semvar when versioning, but apps are not required to follow th
 ## [Unreleased]
 
 ### adsb_deku
-- Fix [!8](https://github.com/wcampbell0x2a/adsb_deku/issue/8) - Support `ME::AircraftOperationStatus` Surface Status message parsing
+- Fix [#8](https://github.com/wcampbell0x2a/adsb_deku/issue/8) - Support `ME::AircraftOperationStatus` Surface Status message parsing
 - Add `QNH` to `fmt::Display` for `ME::TargetStateAndStatusInformation`
 - Remove `NUC/NIC` from `fmt::Display` for `Altitude`
 - Fix/Add Emergency Status to `fmt::Display` for `ME::AircraftStatus`
-- Fix [!10](https://github.com/wcampbell0x2a/adsb_deku/issue/10) - Support `AirborneVelocity` Airspeed `fmt::Display`
+- Fix [#10](https://github.com/wcampbell0x2a/adsb_deku/issue/10) - Support `AirborneVelocity` Airspeed `fmt::Display`
 
 ### Apps
 - [radar] Enforce minimum constraint on size of tab text
@@ -33,7 +33,7 @@ adsb_deku follows semvar when versioning, but apps are not required to follow th
 - [1090] Add `--panic-display` and `--panic-decode` for optional testing
 - [radar] Rename ADSB Tab to MAP
 - [radar] Remove blocking TcpStream, thus making tui work while waiting for new ADS-B message
-- [radar, 1090] Add --host and --port ([@wiseman](https://github.com/wiseman)) ([#1](https://github.com/wcampbell0x2a/adsb_deku/pull/1))
+- [radar, 1090] Add --host and --port ([@wiseman](https://github.com/wiseman)) ([!1](https://github.com/wcampbell0x2a/adsb_deku/pull/1))
 
 ## [v0.1.1] 2021-10-12
 ### Apps
