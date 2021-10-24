@@ -1,9 +1,9 @@
 //! All data structures needed for parsing only [`crate::DF::ADSB`] or [`crate::DF::TisB`]
 
+use std::fmt::Write;
+
 use deku::bitvec::{BitSlice, Msb0};
 use deku::prelude::*;
-
-use std::fmt::Write;
 
 use crate::mode_ac::decode_id13_field;
 use crate::{Altitude, CPRFormat, Capability, Sign, ICAO};
@@ -95,12 +95,12 @@ impl ME {
                 writeln!(f, "  Air/Ground:    {}", capability)?;
                 writeln!(f, "  Ident:         {}", cn)?;
                 writeln!(f, "  Category:      {}{}", tc, ca)?;
-            }
+            },
             // TODO
             ME::SurfacePosition(..) => {
                 writeln!(f, " Extended Squitter{}Surface position", transponder)?;
                 writeln!(f, "  Address:       {} {}", icao, address_type)?;
-            }
+            },
             ME::AirbornePositionBaroAltitude(altitude) => {
                 writeln!(
                     f,
@@ -110,7 +110,7 @@ impl ME {
                 writeln!(f, "  Address:       {} {}", icao, address_type)?;
                 writeln!(f, "  Air/Ground:    {}", capability)?;
                 write!(f, "{}", altitude)?;
-            }
+            },
             ME::AirborneVelocity(airborne_velocity) => {
                 if let AirborneVelocitySubType::GroundSpeedDecoding(_) = &airborne_velocity.sub_type
                 {
@@ -163,7 +163,7 @@ impl ME {
                     )?;
                     writeln!(f, "  NACv:          {}", airborne_velocity.nac_v)?;
                 }
-            }
+            },
             ME::AirbornePositionGNSSAltitude(altitude) => {
                 writeln!(
                     f,
@@ -172,7 +172,7 @@ impl ME {
                 )?;
                 writeln!(f, "  Address:      {} {}", icao, address_type)?;
                 write!(f, "{}", altitude)?;
-            }
+            },
             ME::Reserved0 => (),
             ME::SurfaceSystemStatus => {
                 writeln!(
@@ -181,7 +181,7 @@ impl ME {
                     transponder
                 )?;
                 writeln!(f, "  Address:      {} {}", icao, address_type)?;
-            }
+            },
             ME::Reserved1 => (),
             ME::AircraftStatus(AircraftStatus {
                 emergency_state,
@@ -197,7 +197,7 @@ impl ME {
                 writeln!(f, "  Air/Ground:    {}", capability)?;
                 writeln!(f, "  Squawk:        {:x?}", squawk)?;
                 writeln!(f, "  Emergency/priority:    {}", emergency_state)?;
-            }
+            },
             ME::TargetStateAndStatusInformation(target_info) => {
                 writeln!(
                     f,
@@ -234,7 +234,7 @@ impl ME {
                 writeln!(f, "    NICbaro:           {}", target_info.nicbaro)?;
                 writeln!(f, "    SIL:               {} (per sample)", target_info.sil)?;
                 writeln!(f, "    QNH:               {} millibars", target_info.qnh)?;
-            }
+            },
             ME::AircraftOperationStatus(OperationStatus::Airborne(opstatus_airborne)) => {
                 writeln!(
                     f,
@@ -244,7 +244,7 @@ impl ME {
                 writeln!(f, " Address:       {} {}", icao, address_type)?;
                 writeln!(f, " Air/Ground:    {}", capability)?;
                 write!(f, " Aircraft Operational Status:\n{}", opstatus_airborne)?;
-            }
+            },
             ME::AircraftOperationStatus(OperationStatus::Surface(opstatus_surface)) => {
                 writeln!(
                     f,
@@ -254,7 +254,7 @@ impl ME {
                 writeln!(f, " Address:       {} {}", icao, address_type)?;
                 writeln!(f, " Air/Ground:    {}", capability)?;
                 write!(f, " Aircraft Operational Status:\n {}", opstatus_surface)?;
-            }
+            },
         }
         Ok(f)
     }
@@ -664,7 +664,7 @@ impl std::fmt::Display for ControlField {
                         .to_string(adsb_icao.aa, "(ADS-B)", Capability::AG_UNCERTAIN3, false,)
                         .unwrap()
                 )?;
-            }
+            },
             Self::ADSB_ES_NT_ALT(adsb_icao) => {
                 write!(
                     f,
@@ -674,7 +674,7 @@ impl std::fmt::Display for ControlField {
                         .to_string(adsb_icao.aa, "(ADS-B)", Capability::AG_UNCERTAIN3, false,)
                         .unwrap()
                 )?;
-            }
+            },
             Self::TISB_FINE(adsb_icao) => {
                 write!(
                     f,
@@ -684,7 +684,7 @@ impl std::fmt::Display for ControlField {
                         .to_string(adsb_icao.aa, "(TIS-B)", Capability::AG_UNCERTAIN3, false,)
                         .unwrap()
                 )?;
-            }
+            },
             Self::TISB_COARSE(adsb_icao) => {
                 write!(
                     f,
@@ -694,10 +694,10 @@ impl std::fmt::Display for ControlField {
                         .to_string(adsb_icao.aa, "(TIS-B)", Capability::AG_UNCERTAIN3, false,)
                         .unwrap()
                 )?;
-            }
+            },
             Self::TISB_MANAGE(tisb_manage) => {
                 write!(f, " Address:   {} (ADS-R)", tisb_manage.aa)?;
-            }
+            },
             Self::TISB_ADSB_RELAY(adsb_icao) => {
                 write!(
                     f,
@@ -707,7 +707,7 @@ impl std::fmt::Display for ControlField {
                         .to_string(adsb_icao.aa, "(TIS-B)", Capability::AG_UNCERTAIN3, false,)
                         .unwrap()
                 )?;
-            }
+            },
             Self::TISB_ADSB(tisb_adsb) => {
                 write!(
                     f,
@@ -717,7 +717,7 @@ impl std::fmt::Display for ControlField {
                         .to_string(tisb_adsb.aa, "(ADS-R)", Capability::AG_UNCERTAIN3, false,)
                         .unwrap()
                 )?;
-            }
+            },
             Self::Reserved(tisb_adsb) => {
                 write!(
                     f,
@@ -732,7 +732,7 @@ impl std::fmt::Display for ControlField {
                         )
                         .unwrap()
                 )?;
-            }
+            },
         }
         Ok(())
     }
@@ -895,13 +895,15 @@ pub struct TargetStateAndStatusInformation {
     #[deku(
         bits = "12",
         endian = "big",
-        map = "|altitude: u32| -> Result<_, DekuError> {Ok(if altitude > 1 {(altitude - 1) * 32} else {0} )}"
+        map = "|altitude: u32| -> Result<_, DekuError> {Ok(if altitude > 1 {(altitude - 1) * 32} \
+               else {0} )}"
     )]
     pub altitude: u32,
     #[deku(
         bits = "9",
         endian = "big",
-        map = "|qnh: u32| -> Result<_, DekuError> {if qnh == 0 { Ok(0.0) } else { Ok(800.0 + ((qnh - 1) as f32) * 0.8)}}"
+        map = "|qnh: u32| -> Result<_, DekuError> {if qnh == 0 { Ok(0.0) } else { Ok(800.0 + \
+               ((qnh - 1) as f32) * 0.8)}}"
     )]
     pub qnh: f32,
     #[deku(bits = "1")]
@@ -956,7 +958,8 @@ pub struct AirborneVelocity {
     pub gnss_sign: Sign,
     #[deku(
         bits = "7",
-        map = "|gnss_baro_diff: u16| -> Result<_, DekuError> {Ok(if gnss_baro_diff > 1 {(gnss_baro_diff - 1)* 25} else { 0 })}"
+        map = "|gnss_baro_diff: u16| -> Result<_, DekuError> {Ok(if gnss_baro_diff > 1 \
+               {(gnss_baro_diff - 1)* 25} else { 0 })}"
     )]
     pub gnss_baro_diff: u16,
 }
@@ -1021,11 +1024,11 @@ impl AirborneVelocitySubFields {
             AirborneVelocityType::Subsonic => {
                 u16::read(rest, (deku::ctx::Endian::Big, deku::ctx::Size::Bits(10)))
                     .map(|(rest, value)| (rest, value - 1))
-            }
+            },
             AirborneVelocityType::Supersonic => {
                 u16::read(rest, (deku::ctx::Endian::Big, deku::ctx::Size::Bits(10)))
                     .map(|(rest, value)| (rest, 4 * (value - 1)))
-            }
+            },
         }
     }
 }

@@ -6,8 +6,9 @@ This module turns an ADS-B CPR format into Latitude/Longitude: `Position`.
 reference: ICAO 9871 (D.2.4.7)
 !*/
 
-use crate::{Altitude, CPRFormat};
 use std::cmp;
+
+use crate::{Altitude, CPRFormat};
 
 const NZ: f64 = 15.0;
 const D_LAT_EVEN: f64 = 360.0 / (4.0 * NZ);

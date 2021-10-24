@@ -16,16 +16,16 @@
 //! all aircrafts and only display a dot where detection at the lat/long position. This is for
 //! testing the reach of your antenna.
 
-// std
 use std::io::{self, BufRead, BufReader};
 use std::net::TcpStream;
 use std::num::ParseFloatError;
 use std::str::FromStr;
 use std::time::Duration;
-// third-party
+
 use adsb_deku::adsb::ME;
 use adsb_deku::deku::DekuContainerRead;
 use adsb_deku::{Frame, DF};
+use apps::Airplanes;
 use clap::Parser;
 use crossterm::event::{poll, read, Event, KeyCode, KeyEvent};
 use crossterm::terminal::enable_raw_mode;
@@ -37,8 +37,6 @@ use tui::text::Spans;
 use tui::widgets::canvas::{Canvas, Line, Points};
 use tui::widgets::{Block, Borders, Tabs};
 use tui::Terminal;
-// crate
-use apps::Airplanes;
 
 /// Amount of zoom out from your original lat/long position
 const MAX_PLOT_HIGH: f64 = 400.0;
@@ -226,7 +224,7 @@ fn main() {
                                 draw_lines(ctx);
                             });
                         f.render_widget(canvas, chunks[1]);
-                    }
+                    },
                     Tab::Coverage => {
                         let canvas = Canvas::default()
                             .block(Block::default().title("Coverage").borders(Borders::ALL))
@@ -259,7 +257,7 @@ fn main() {
                                 draw_lines(ctx);
                             });
                         f.render_widget(canvas, chunks[1]);
-                    }
+                    },
                 }
             })
             .unwrap();
@@ -276,7 +274,7 @@ fn main() {
                         if scale > 0.0 {
                             scale -= 0.1
                         }
-                    }
+                    },
                     _ => (),
                 },
                 _ => (),

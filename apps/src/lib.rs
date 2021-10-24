@@ -1,8 +1,9 @@
-use adsb_deku::adsb::ME;
-use adsb_deku::{cpr, Altitude, CPRFormat, Frame, DF, ICAO};
 use std::collections::HashMap;
 use std::fmt;
 use std::time::SystemTime;
+
+use adsb_deku::adsb::ME;
+use adsb_deku::{cpr, Altitude, CPRFormat, Frame, DF, ICAO};
 
 #[derive(Debug)]
 pub struct AirplaneCoor {
@@ -52,13 +53,13 @@ impl Airplanes {
                             altitudes: [airplane_coor.altitudes[0], Some(altitude)],
                             last_time: SystemTime::now(),
                         };
-                    }
+                    },
                     CPRFormat::Even => {
                         *airplane_coor = AirplaneCoor {
                             altitudes: [Some(altitude), airplane_coor.altitudes[1]],
                             last_time: SystemTime::now(),
                         };
-                    }
+                    },
                 },
                 _ => (),
             },
@@ -78,7 +79,7 @@ impl Airplanes {
                 } else {
                     None
                 }
-            }
+            },
             None => None,
         }
     }

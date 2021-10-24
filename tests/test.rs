@@ -1,7 +1,6 @@
 use adsb_deku::adsb::{VerticalRateSource, ME};
 use adsb_deku::deku::prelude::*;
 use adsb_deku::{CPRFormat, Capability, Frame, DF};
-
 use assert_hex::assert_eq_hex;
 use hexlit::hex;
 

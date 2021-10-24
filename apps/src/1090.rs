@@ -1,12 +1,11 @@
-use adsb_deku::adsb::ME;
-use adsb_deku::deku::DekuContainerRead;
-use adsb_deku::{Frame, DF};
-
-use clap::Parser;
 use std::io::{BufRead, BufReader};
 use std::net::TcpStream;
 
+use adsb_deku::adsb::ME;
+use adsb_deku::deku::DekuContainerRead;
+use adsb_deku::{Frame, DF};
 use apps::Airplanes;
+use clap::Parser;
 
 #[derive(Debug, Parser)]
 #[clap(
@@ -65,12 +64,12 @@ fn main() {
                 if (frame.to_string() == "") && options.panic_display {
                     panic!("[E] fmt::Display not implemented");
                 }
-            }
+            },
             Err(e) => {
                 if options.panic_decode {
                     panic!("[E] {}", e);
                 }
-            }
+            },
         }
         input.clear();
         airplanes.prune();

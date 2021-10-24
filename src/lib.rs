@@ -80,7 +80,6 @@ pub mod cpr;
 mod crc;
 
 use adsb::{ControlField, ADSB};
-
 use deku::bitvec::{BitSlice, Msb0};
 use deku::prelude::*;
 
@@ -131,7 +130,7 @@ impl std::fmt::Display for Frame {
                 } else {
                     writeln!(f, "  Air/Ground:    ground")?;
                 }
-            }
+            },
             DF::SurveillanceAltitudeReply { fs, ac, .. } => {
                 writeln!(f, " Surveillance, Altitude Reply")?;
                 writeln!(f, "  ICAO Address:  {:06x} (Mode S / ADS-B)", self.crc)?;
@@ -139,20 +138,20 @@ impl std::fmt::Display for Frame {
                 if ac.0 > 0 {
                     writeln!(f, "  Altitude:      {} ft barometric", ac.0)?;
                 }
-            }
+            },
             DF::SurveillanceIdentityReply { fs, id, .. } => {
                 writeln!(f, " Surveillance, Identity Reply")?;
                 writeln!(f, "  ICAO Address:  {:06x} (Mode S / ADS-B)", self.crc)?;
                 writeln!(f, "  Air/Ground:    {}", fs)?;
                 writeln!(f, "  Identity:      {:04x}", id.0)?;
-            }
+            },
             DF::AllCallReply {
                 capability, icao, ..
             } => {
                 writeln!(f, " All Call Reply")?;
                 writeln!(f, "  ICAO Address:  {} (Mode S / ADS-B)", icao)?;
                 writeln!(f, "  Air/Ground:    {}", capability)?;
-            }
+            },
             DF::LongAirAir { altitude, .. } => {
                 writeln!(f, " Long Air-Air ACAS")?;
                 writeln!(f, "  ICAO Address:  {:06x} (Mode S / ADS-B)", self.crc)?;
@@ -163,20 +162,20 @@ impl std::fmt::Display for Frame {
                 } else {
                     writeln!(f, "  Air/Ground:    ground")?;
                 }
-            }
+            },
             DF::ADSB(adsb) => {
                 write!(f, "{}", adsb.to_string("(Mode S / ADS-B)").unwrap())?;
-            }
+            },
             DF::TisB { cf, .. } => {
                 write!(f, "{}", cf)?;
-            }
+            },
             // TODO
-            DF::ExtendedQuitterMilitaryApplication { .. } => {}
+            DF::ExtendedQuitterMilitaryApplication { .. } => {},
             DF::CommBAltitudeReply { mb, parity, .. } => {
                 writeln!(f, " Comm-B Altitude Reply")?;
                 writeln!(f, "  data: {:x?}", mb)?;
                 writeln!(f, "  ICAO Address: {} (Mode S / ADS-B)", parity)?;
-            }
+            },
             DF::CommBIdentityReply {
                 id, message_comm_b, ..
             } => {
@@ -188,11 +187,11 @@ impl std::fmt::Display for Frame {
                 }
                 writeln!(f, "    ICAO Address:  {:x?} (Mode S / ADS-B)", self.crc)?;
                 writeln!(f, "    Squawk:        {:x?}", id)?;
-            }
+            },
             DF::CommDExtendedLengthMessage { .. } => {
                 writeln!(f, " Comm-D Extended Length Message")?;
                 writeln!(f, "    ICAO Address:     {:x?} (Mode S / ADS-B)", self.crc)?;
-            }
+            },
         }
         Ok(())
     }
@@ -592,7 +591,7 @@ mod mode_ac {
         let mut one_hundreds: u32 = 0;
 
         // check zero bits are zero, D1 set is illegal; C1,,C4 cannot be Zero
-        if (mode_a & 0xFFFF_8889) != 0 || (mode_a & 0x0000_00F0) == 0 {
+        if (mode_a & 0xffff_8889) != 0 || (mode_a & 0x0000_00f0) == 0 {
             return Err("Invalid altitude");
         }
 
@@ -618,20 +617,20 @@ mod mode_ac {
 
         // if mode_a & 0x0001 {five_hundreds ^= 0x1FF;} // D1 never used for altitude
         if mode_a & 0x0002 != 0 {
-            five_hundreds ^= 0x0FF;
+            five_hundreds ^= 0x0ff;
         } // D2
         if mode_a & 0x0004 != 0 {
-            five_hundreds ^= 0x07F;
+            five_hundreds ^= 0x07f;
         } // D4
 
         if mode_a & 0x1000 != 0 {
-            five_hundreds ^= 0x03F;
+            five_hundreds ^= 0x03f;
         } // A1
         if mode_a & 0x2000 != 0 {
-            five_hundreds ^= 0x01F;
+            five_hundreds ^= 0x01f;
         } // A2
         if mode_a & 0x4000 != 0 {
-            five_hundreds ^= 0x00F;
+            five_hundreds ^= 0x00f;
         } // A4
 
         if mode_a & 0x0100 != 0 {
