@@ -112,7 +112,8 @@ impl ME {
                 write!(f, "{}", altitude)?;
             }
             ME::AirborneVelocity(airborne_velocity) => {
-                if let AirborneVelocitySubType::GroundSpeedDecoding(_) = &airborne_velocity.sub_type {
+                if let AirborneVelocitySubType::GroundSpeedDecoding(_) = &airborne_velocity.sub_type
+                {
                     writeln!(
                         f,
                         " Extended Squitter{}Airborne velocity over ground, subsonic",
@@ -143,7 +144,9 @@ impl ME {
                         writeln!(f, "  Invalid packet")?;
                     }
                 }
-                if let AirborneVelocitySubType::AirspeedDecoding(airspeed_decoding) = &airborne_velocity.sub_type {
+                if let AirborneVelocitySubType::AirspeedDecoding(airspeed_decoding) =
+                    &airborne_velocity.sub_type
+                {
                     writeln!(
                         f,
                         " Extended Squitter{}Airspeed and heading, subsonic",
@@ -152,7 +155,12 @@ impl ME {
                     writeln!(f, "  Address:       {} {}", icao, address_type)?;
                     writeln!(f, "  Air/Ground:    {}", capability)?;
                     writeln!(f, "  IAS:           {} kt", airspeed_decoding.airspeed)?;
-                    writeln!(f, "  Baro rate:     {}{} ft/min", airborne_velocity.vrate_sign, (airborne_velocity.vrate_value - 1) * 64)?;
+                    writeln!(
+                        f,
+                        "  Baro rate:     {}{} ft/min",
+                        airborne_velocity.vrate_sign,
+                        (airborne_velocity.vrate_value - 1) * 64
+                    )?;
                     writeln!(f, "  NACv:          {}", airborne_velocity.nac_v)?;
                 }
             }
