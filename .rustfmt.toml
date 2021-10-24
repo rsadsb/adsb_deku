@@ -1,6 +1,5 @@
 enum_discrim_align_threshold = 40
 format_code_in_doc_comments = true
-format_strings = true
 hex_literal_case = "Lower"
 match_block_trailing_comma = true
 imports_granularity = "Module"

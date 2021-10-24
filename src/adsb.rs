@@ -895,15 +895,13 @@ pub struct TargetStateAndStatusInformation {
     #[deku(
         bits = "12",
         endian = "big",
-        map = "|altitude: u32| -> Result<_, DekuError> {Ok(if altitude > 1 {(altitude - 1) * 32} \
-               else {0} )}"
+        map = "|altitude: u32| -> Result<_, DekuError> {Ok(if altitude > 1 {(altitude - 1) * 32} else {0} )}"
     )]
     pub altitude: u32,
     #[deku(
         bits = "9",
         endian = "big",
-        map = "|qnh: u32| -> Result<_, DekuError> {if qnh == 0 { Ok(0.0) } else { Ok(800.0 + \
-               ((qnh - 1) as f32) * 0.8)}}"
+        map = "|qnh: u32| -> Result<_, DekuError> {if qnh == 0 { Ok(0.0) } else { Ok(800.0 + ((qnh - 1) as f32) * 0.8)}}"
     )]
     pub qnh: f32,
     #[deku(bits = "1")]
@@ -958,8 +956,7 @@ pub struct AirborneVelocity {
     pub gnss_sign: Sign,
     #[deku(
         bits = "7",
-        map = "|gnss_baro_diff: u16| -> Result<_, DekuError> {Ok(if gnss_baro_diff > 1 \
-               {(gnss_baro_diff - 1)* 25} else { 0 })}"
+        map = "|gnss_baro_diff: u16| -> Result<_, DekuError> {Ok(if gnss_baro_diff > 1 {(gnss_baro_diff - 1)* 25} else { 0 })}"
     )]
     pub gnss_baro_diff: u16,
 }
