@@ -9,11 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### adsb_deku
-- Fix [#8](https://github.com/wcampbell0x2a/adsb_deku/issue/8) - Support `ME::AircraftOperationStatus` Surface Status message parsing
+- Fix [#8](https://github.com/wcampbell0x2a/adsb_deku/issues/8) - Support `ME::AircraftOperationStatus` Surface Status message parsing
 - Add `QNH` to `fmt::Display` for `ME::TargetStateAndStatusInformation`
 - Remove `NUC/NIC` from `fmt::Display` for `Altitude`
 - Fix/Add Emergency Status to `fmt::Display` for `ME::AircraftStatus`
-- Fix [#10](https://github.com/wcampbell0x2a/adsb_deku/issue/10) - Support `AirborneVelocity` Airspeed `fmt::Display`
+- Fix [#10](https://github.com/wcampbell0x2a/adsb_deku/issues/10) - Support `AirborneVelocity` Airspeed `fmt::Display`
 
 ### Apps
 - [radar] Enforce minimum constraint on size of tab text
