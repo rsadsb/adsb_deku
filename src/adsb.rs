@@ -95,7 +95,7 @@ impl ME {
                 )?;
                 writeln!(f, "  Address:       {} {}", icao, address_type)?;
                 writeln!(f, "  Air/Ground:    {}", capability)?;
-            }
+            },
             ME::AircraftIdentification(Identification { tc, ca, cn }) => {
                 writeln!(
                     f,
