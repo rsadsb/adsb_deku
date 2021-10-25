@@ -184,14 +184,19 @@ impl ME {
                 writeln!(f, "  Address:      {} {}", icao, address_type)?;
                 write!(f, "{}", altitude)?;
             },
-            ME::Reserved0 => (),
+            ME::Reserved0 => {
+                writeln!(f, " Extended Squitter{}Unknown", transponder)?;
+                writeln!(f, "  Address:       {} {}", icao, address_type)?;
+                writeln!(f, "  Air/Ground:    {}", capability)?;
+            },
             ME::SurfaceSystemStatus => {
                 writeln!(
                     f,
                     " Extended Squitter{}Reserved for surface system status",
                     transponder
                 )?;
-                writeln!(f, "  Address:      {} {}", icao, address_type)?;
+                writeln!(f, "  Address:       {} {}", icao, address_type)?;
+                writeln!(f, "  Air/Ground:    {}", capability)?;
             },
             ME::Reserved1 => (),
             ME::AircraftStatus(AircraftStatus {

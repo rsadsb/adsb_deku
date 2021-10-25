@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix/Add Emergency Status to `fmt::Display` for `ME::AircraftStatus`
 - Fix [#10](https://github.com/wcampbell0x2a/adsb_deku/issues/10) - Support `AirborneVelocity` Airspeed `fmt::Display`
 - Fix [#11](https://github.com/wcampbell0x2a/adsb_deku/issues/11) and [#12](https://github.com/wcampbell0x2a/adsb_deku/issues/12) - Add `ME::NoPosition` and `fmt::Display`
+- Add `fmt::Display` for `ME::Reserved0`
 
 ### Apps
 - [radar] Enforce minimum constraint on size of tab text

@@ -637,7 +637,8 @@ fn testing_df_18() {
     let resulting_string = format!("{}", frame);
     assert_eq!(
         r#" Extended Squitter (Non-Transponder) Reserved for surface system status
-  Address:      adf9ce (ADS-B)
+  Address:       adf9ce (ADS-B)
+  Air/Ground:    airborne?
 "#,
         resulting_string
     );
@@ -728,6 +729,20 @@ fn issue_11_12() {
         r#" Extended Squitter (Non-Transponder) No position information
   Address:       ef92b3 (TIS-B)
   Air/Ground:    airborne?
+"#,
+        resulting_string
+    );
+}
+
+#[test]
+fn fix_issue() {
+    let bytes = hex!("8d85d792beaf5654b710d87357ee");
+    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let resulting_string = format!("{}", frame);
+    assert_eq!(
+        r#" Extended Squitter Unknown
+  Address:       85d792 (Mode S / ADS-B)
+  Air/Ground:    airborne
 "#,
         resulting_string
     );
