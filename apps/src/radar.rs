@@ -102,8 +102,10 @@ enum Tab {
 
 fn main() {
     let opts = Opts::parse();
-    let local_lat = opts.lat;
-    let local_long = opts.long;
+    let original_local_lat = opts.lat;
+    let original_local_long = opts.long;
+    let mut local_lat = original_local_lat;
+    let mut local_long = original_local_long;
     let cities = opts.cities;
     let disable_lat_long = opts.disable_lat_long;
 
@@ -167,7 +169,11 @@ fn main() {
                     .map(Spans::from)
                     .collect();
                 let tab = Tabs::new(titles)
-                    .block(Block::default().title("Tabs").borders(Borders::ALL))
+                    .block(
+                        Block::default()
+                            .title(format!("({},{})", local_lat, local_long))
+                            .borders(Borders::ALL),
+                    )
                     .style(Style::default().fg(Color::White))
                     .highlight_style(Style::default().fg(Color::Green))
                     .select(tab_selection as usize)
@@ -274,6 +280,14 @@ fn main() {
                         if scale > 0.0 {
                             scale -= 0.1
                         }
+                    },
+                    KeyCode::Up => local_lat += 0.005,
+                    KeyCode::Down => local_lat -= 0.005,
+                    KeyCode::Left => local_long -= 0.03,
+                    KeyCode::Right => local_long += 0.03,
+                    KeyCode::Enter => {
+                        local_lat = original_local_lat;
+                        local_long = original_local_long;
                     },
                     _ => (),
                 },
