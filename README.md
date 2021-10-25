@@ -56,6 +56,12 @@ Test data was generated using my rtl-sdr with `dump1090-fa`.
 > cargo test
 ```
 
+For testing this library, you can run our app `1090` with the following options for exiting program 
+on missing `fmt::Display` or bytes protocol decode.
+```text
+> cargo r --release --bin 1090 -- --debug --disable-airplanes --panic-decode --panic-display
+```
+
 This library is also fuzzed, ensuring no panic when parsing from demodulated bytes.
 ```text
 > cargo fuzz run fuzz_target_1
