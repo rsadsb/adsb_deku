@@ -46,6 +46,8 @@ impl ADSB {
 #[derive(Debug, PartialEq, DekuRead, Clone)]
 #[deku(type = "u8", bits = "5")]
 pub enum ME {
+    #[deku(id = "0")]
+    NoPosition([u8; 6]),
     #[deku(id_pat = "1..=4")]
     AircraftIdentification(Identification),
     #[deku(id_pat = "5..=8")]
@@ -85,6 +87,15 @@ impl ME {
         };
         let mut f = String::new();
         match self {
+            ME::NoPosition(_) => {
+                writeln!(
+                    f,
+                    " Extended Squitter{}No position information",
+                    transponder
+                )?;
+                writeln!(f, "  Address:       {} {}", icao, address_type)?;
+                writeln!(f, "  Air/Ground:    {}", capability)?;
+            }
             ME::AircraftIdentification(Identification { tc, ca, cn }) => {
                 writeln!(
                     f,

@@ -707,3 +707,28 @@ fn issue_10() {
         resulting_string
     );
 }
+
+#[test]
+fn issue_11_12() {
+    let bytes = hex!("8da90a6e000000000000005cab8b");
+    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let resulting_string = format!("{}", frame);
+    assert_eq!(
+        r#" Extended Squitter No position information
+  Address:       a90a6e (Mode S / ADS-B)
+  Air/Ground:    airborne
+"#,
+        resulting_string
+    );
+
+    let bytes = hex!("92ef92b301154cb9ab09466702c6");
+    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let resulting_string = format!("{}", frame);
+    assert_eq!(
+        r#" Extended Squitter (Non-Transponder) No position information
+  Address:       ef92b3 (TIS-B)
+  Air/Ground:    airborne?
+"#,
+        resulting_string
+    );
+}
