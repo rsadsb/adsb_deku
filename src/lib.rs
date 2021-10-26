@@ -449,12 +449,20 @@ impl Altitude {
         if q > 0 {
             let n = ((num & 0x0fe0) >> 1) | (num & 0x000f);
             let n = n * 25;
-            Ok((rest, (n - 1000) as u32))
+            if n > 1000 {
+                Ok((rest, (n - 1000) as u32))
+            } else {
+                Ok((rest, 0))
+            }
         } else {
             let mut n = ((num & 0x0fc0) << 1) | (num & 0x003f);
             n = mode_ac::decode_id13_field(n);
-            n = mode_ac::mode_a_to_mode_c(n).unwrap();
-            Ok((rest, ((n as u32) * 100)))
+            if let Ok(n) = mode_ac::mode_a_to_mode_c(n) {
+                Ok((rest, ((n as u32) * 100)))
+            } else {
+                println!("error");
+                Ok((rest, (0)))
+            }
         }
     }
 }
@@ -638,7 +646,12 @@ mod mode_ac {
             one_hundreds = 6 - one_hundreds;
         }
 
-        Ok((five_hundreds * 5) + one_hundreds - 13)
+        let n = (five_hundreds * 5) + one_hundreds;
+        if n >= 13 {
+            Ok(n - 13)
+        } else {
+            Err("Invalid altitude")
+        }
     }
 }
 

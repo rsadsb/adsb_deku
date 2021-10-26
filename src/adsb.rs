@@ -166,12 +166,14 @@ impl ME {
                     writeln!(f, "  Address:       {} {}", icao, address_type)?;
                     writeln!(f, "  Air/Ground:    {}", capability)?;
                     writeln!(f, "  IAS:           {} kt", airspeed_decoding.airspeed)?;
-                    writeln!(
-                        f,
-                        "  Baro rate:     {}{} ft/min",
-                        airborne_velocity.vrate_sign,
-                        (airborne_velocity.vrate_value - 1) * 64
-                    )?;
+                    if airborne_velocity.vrate_value > 0 {
+                        writeln!(
+                            f,
+                            "  Baro rate:     {}{} ft/min",
+                            airborne_velocity.vrate_sign,
+                            (airborne_velocity.vrate_value - 1) * 64
+                        )?;
+                    }
                     writeln!(f, "  NACv:          {}", airborne_velocity.nac_v)?;
                 }
             },
@@ -298,7 +300,7 @@ pub struct AirspeedDecoding {
     #[deku(
         endian = "big",
         bits = "10",
-        map = "|airspeed: u16| -> Result<_, DekuError> {Ok(airspeed - 1)}"
+        map = "|airspeed: u16| -> Result<_, DekuError> {Ok(if airspeed > 0 { airspeed - 1 } else { 0 })}"
     )]
     pub airspeed: u16,
 }
