@@ -735,7 +735,7 @@ fn issue_11_12() {
 }
 
 #[test]
-fn fix_issue() {
+fn fix_issue_unknown() {
     let bytes = hex!("8d85d792beaf5654b710d87357ee");
     let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
     let resulting_string = format!("{}", frame);
@@ -746,4 +746,16 @@ fn fix_issue() {
 "#,
         resulting_string
     );
+
+    let bytes = hex!("972ae8d6d73e298fcaa6bec4c338");
+    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let resulting_string = format!("{}", frame);
+    assert_eq!(
+        r#" Extended Squitter (Non-Transponder) Unknown
+  Address:       2ae8d6 (unknown addressing scheme)
+  Air/Ground:    airborne?
+"#,
+        resulting_string
+    );
 }
+
