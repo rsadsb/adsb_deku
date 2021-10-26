@@ -759,3 +759,80 @@ fn fix_issue_unknown() {
     );
 }
 
+#[test]
+fn fix_issue_13() {
+    // 1
+    let bytes = hex!("8dab92a2593e0664204c69d8fe84");
+    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let resulting_string = format!("{}", frame);
+    assert_eq!(
+        r#" Extended Squitter Airborne position (barometric altitude)
+  Address:       ab92a2 (Mode S / ADS-B)
+  Air/Ground:    airborne
+  Altitude:      10600 ft barometric
+  CPR type:      Airborne
+  CPR odd flag:  odd
+  CPR latitude:  (78352)
+  CPR longitude: (19561)
+"#,
+        resulting_string
+    );
+
+    // 2
+    let bytes = hex!("8dab92a299105e93001486608c6d");
+    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let resulting_string = format!("{}", frame);
+    assert_eq!(
+        r#" Extended Squitter Airborne velocity over ground, subsonic
+  Address:       ab92a2 (Mode S / ADS-B)
+  Air/Ground:    airborne
+  GNSS delta:    -125 ft
+  Heading:       149
+  Speed:         177 kt groundspeed
+  Vertical rate: 256 ft/min barometric
+"#,
+        resulting_string
+    );
+
+    // 3
+    let bytes = hex!("020007a0d08ff4");
+    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let resulting_string = format!("{}", frame);
+    assert_eq!(
+        r#" Short Air-Air Surveillance
+  ICAO Address:  ab92a2 (Mode S / ADS-B)
+  Air/Ground:    airborne?
+  Altitude:      10600 ft barometric
+"#,
+        resulting_string
+    );
+
+    // 4
+    let bytes = hex!("5dab92a2b04912");
+    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let resulting_string = format!("{}", frame);
+    assert_eq!(
+        r#" All Call Reply
+  ICAO Address:  ab92a2 (Mode S / ADS-B)
+  Air/Ground:    airborne
+"#,
+        resulting_string
+    );
+
+    // 4
+    let bytes = hex!("8dab92a2593e0664204c69d8fe84");
+    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let resulting_string = format!("{}", frame);
+    assert_eq!(
+        r#" Extended Squitter Airborne position (barometric altitude)
+  Address:       ab92a2 (Mode S / ADS-B)
+  Air/Ground:    airborne
+  Altitude:      10600 ft barometric
+  CPR type:      Airborne
+  CPR odd flag:  odd
+  CPR latitude:  (78352)
+  CPR longitude: (19561)
+"#,
+        resulting_string
+    );
+}

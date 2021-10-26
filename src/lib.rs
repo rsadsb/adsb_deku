@@ -432,13 +432,10 @@ pub struct Altitude {
 impl std::fmt::Display for Altitude {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "  Altitude:      {} ft barometric", self.alt)?;
-        // TODO: fix me
         writeln!(f, "  CPR type:      Airborne")?;
         writeln!(f, "  CPR odd flag:  {}", self.odd_flag)?;
         writeln!(f, "  CPR latitude:  ({})", self.lat_cpr)?;
         writeln!(f, "  CPR longitude: ({})", self.lon_cpr)?;
-        // TODO: fix me
-        //println!("{}", self.t);
         Ok(())
     }
 }
@@ -450,20 +447,13 @@ impl Altitude {
         let q = num & 0x10;
 
         if q > 0 {
-            // regular
-            // TODO this is meters?
             let n = ((num & 0x0fe0) >> 1) | (num & 0x000f);
             let n = n * 25;
-            if n > 1000 {
-                Ok((rest, (n - 1000) as u32))
-            } else {
-                // TODO add error
-                Ok((rest, 0))
-            }
+            Ok((rest, (n - 1000) as u32))
         } else {
-            // mode c?
-            // TODO this is feet
-            let n = ((num & 0x0fc0) << 1) | (num & 0x003f);
+            let mut n = ((num & 0x0fc0) << 1) | (num & 0x003f);
+            n = mode_ac::decode_id13_field(n);
+            n = mode_ac::mode_a_to_mode_c(n).unwrap();
             Ok((rest, ((n as u32) * 100)))
         }
     }
@@ -646,11 +636,6 @@ mod mode_ac {
         // Correct order of one_hundreds.
         if five_hundreds & 1 != 0 && one_hundreds <= 6 {
             one_hundreds = 6 - one_hundreds;
-        }
-
-        // Check for invalid one_hundres
-        if one_hundreds < 13 {
-            return Err("Invalid one_hundred");
         }
 
         Ok((five_hundreds * 5) + one_hundreds - 13)
