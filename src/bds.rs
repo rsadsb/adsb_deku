@@ -6,6 +6,10 @@ use crate::aircraft_identification_read;
 #[deku(type = "u8", bits = "8")]
 pub enum BDS {
     /// (1, 0) Table A-2-16
+    #[deku(id = "0x00")]
+    Empty([u8; 6]),
+
+    /// (1, 0) Table A-2-16
     #[deku(id = "0x10")]
     DataLinkCapability(DataLinkCapability),
 
@@ -20,6 +24,9 @@ pub enum BDS {
 impl std::fmt::Display for BDS {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            Self::Empty(_) => {
+                writeln!(f, "Comm-B format: empty response")?;
+            }
             Self::AircraftIdentification(s) => {
                 writeln!(f, "Comm-B format: BDS2,0 Aircraft identification")?;
                 writeln!(f, "  Ident:         {}", s)?;

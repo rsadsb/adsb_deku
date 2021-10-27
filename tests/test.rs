@@ -864,3 +864,30 @@ fn test_issue_14() {
         resulting_string
     );
 }
+
+#[test]
+fn test_issue_09() {
+    let bytes = hex!("a00017b010030a80f60000a0fc1e");
+    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let resulting_string = format!("{}", frame);
+    assert_eq!(
+        r#" Comm-B, Altitude Reply
+  ICAO Address:  a6c756 (Mode S / ADS-B)
+  Altitude:      37000 ft
+  Comm-B format: BDS1,0 Datalink capabilities
+"#,
+        resulting_string
+    );
+
+    let bytes = hex!("a000179f0000000000000019a524");
+    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let resulting_string = format!("{}", frame);
+    assert_eq!(
+        r#" Comm-B, Altitude Reply
+  ICAO Address:  a6c756 (Mode S / ADS-B)
+  Altitude:      36975 ft
+  Comm-B format: empty response
+"#,
+        resulting_string
+    );
+}
