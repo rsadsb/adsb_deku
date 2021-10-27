@@ -46,12 +46,8 @@ fn main() {
         let len = reader.read_line(&mut input).unwrap();
         if len > 0 {
             let hex = &mut input.to_string()[1..len - 2].to_string();
-            //hex.retain(|c| (c != '*') || (c != ';'));
             println!("{}", hex.to_lowercase());
             let bytes = hex::decode(&hex).unwrap();
-            //if bytes[0] == 0x00 {
-            //    continue;
-            //}
             match Frame::from_bytes((&bytes, 0)) {
                 Ok((_, frame)) => {
                     if options.debug {

@@ -841,7 +841,6 @@ fn fix_issue_13() {
 fn test_issue_14() {
     let bytes = hex!("a0001910204d7075d35820c25c0c");
     let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-    println!("{:#x?}", frame);
     let resulting_string = format!("{}", frame);
     assert_eq!(
         r#" Comm-B, Altitude Reply
@@ -855,7 +854,6 @@ fn test_issue_14() {
 
     let bytes = hex!("a000171810030a80f6000012bd7b");
     let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-    println!("{:#x?}", frame);
     let resulting_string = format!("{}", frame);
     assert_eq!(
         r#" Comm-B, Altitude Reply
