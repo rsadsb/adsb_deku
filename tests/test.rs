@@ -852,4 +852,17 @@ fn test_issue_14() {
 "#,
         resulting_string
     );
+
+    let bytes = hex!("a000171810030a80f6000012bd7b");
+    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    println!("{:#x?}", frame);
+    let resulting_string = format!("{}", frame);
+    assert_eq!(
+        r#" Comm-B, Altitude Reply
+  ICAO Address:  aacb19 (Mode S / ADS-B)
+  Altitude:      36000 ft
+  Comm-B format: BDS1,0 Datalink capabilities
+"#,
+        resulting_string
+    );
 }
