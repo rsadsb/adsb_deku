@@ -18,5 +18,6 @@ members = [
 deku = "0.12"
 
 [dev-dependencies]
+hex = "0.4"
 hexlit = "0.5"
 assert_hex = "0.2"
