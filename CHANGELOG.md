@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add `fmt::Display` for `ME::Reserved0`
 - Add `fmt::Display` for `ME::Reserved1`
 - Fix [#13](https://github.com/wcampbell0x2a/adsb_deku/issues/13) - Correct Altitude for Mode C Messages, thanks ([@wiseman](https://github.com/wiseman))
+- Support some `BDS` fields for `Comm-B` messages
 
 ### Apps
 - [radar] Enforce minimum constraint on size of tab text
