@@ -1,7 +1,7 @@
 /*!
 `adsb_deku` provides decoding for the [`ADS-B`] Downlink protocol by using the [`deku`] crate.
 
-# Support
+## Downlink Format support
 |  [`DF`]  |  Name                               |  Section    |
 | -------- | ----------------------------------- | ----------- |
 | 0        | [`Short Air-Air Surveillance`]      | 3.1.2.8.2   |
@@ -15,6 +15,14 @@
 | 20       | [`Comm-B Altitude Reply`]           | 3.1.2.6.6   |
 | 21       | [`Comm-B Identity Reply`]           | 3.1.2.6.8   |
 | 24       | [`Comm-D`]                          | 3.1.2.7.3   |
+
+# Comm-B support
+|  BDS  |  Name                                   |  Table      |
+| ----  | --------------------------------------- | ----------- |
+| (0,0) | [`Empty`]                               |             |
+| (1,0) | [`Data Link Capability`]                | A-2-16      |
+| (1,7) | [`Common Usage GICB Capability Report`] | A-2-23      |
+| (2,0) | [`Aircraft Identification`]             | A-2-32      |
 
 # Example
 To begin using `adsb_deku`, import the [`Frame`] struct as well as the trait [`deku::DekuContainerRead`].
@@ -46,7 +54,10 @@ assert_eq!(
 The [`apps/`] directory of the project repository contains programs `radar` and `1090` for showcasing
 different `adsb_deku` uses. See the [`README.md`] for examples of use.
 
-
+[`Empty`]: crate::bds::BDS::Empty
+[`Data Link Capability`]: crate::bds::BDS::DataLinkCapability
+[`Common Usage GICB Capability Report`]: crate::bds::BDS::CommonUsageGICBCapabilityReport
+[`Aircraft Identification`]: crate::bds::BDS::AircraftIdentification
 [`DF`]: crate::DF
 [`Short Air-Air Surveillance`]: crate::DF::ShortAirAirSurveillance
 [`Surveillance Altitude Reply`]: crate::DF::SurveillanceAltitudeReply

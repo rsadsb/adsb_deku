@@ -9,7 +9,7 @@ Derived from Aeronautical Telecommunications Volume IV: Surveillance and Collisi
 
 This library uses [deku](https://github.com/sharksforarms/deku) for serialization/deserialization of protocol.
 
-## support
+## Downlink Format support
 |  DF  |  Name                           |  Section    |
 | ---- | ------------------------------- | ----------- |
 | 0    | Short Air-Air Surveillance      | 3.1.2.8.2   |
@@ -23,6 +23,14 @@ This library uses [deku](https://github.com/sharksforarms/deku) for serializatio
 | 20   | Comm-B Altitude Reply           | 3.1.2.6.6   |
 | 21   | Comm-B Identity Reply           | 3.1.2.6.8   |
 | 24   | Comm-D                          | 3.1.2.7.3   |
+
+## Comm-B support
+|  BDS  |  Name                               |  Table      |
+| ----  | ----------------------------------- | ----------- |
+| (0,0) | Empty                               |             |
+| (1,0) | Data Link Capability                | A-2-16      |
+| (1,7) | Common Usage GICB Capability Report | A-2-23      |
+| (2,0) | Aircraft Identification             | A-2-32      |
 
 ## example usage
 ```rust
