@@ -136,12 +136,14 @@ fn main() {
     loop {
         // if new message, add to buffers
         if let Ok(len) = reader.read_line(&mut input) {
-            let hex = &input.to_string()[1..len - 2];
-            let bytes = hex::decode(&hex).unwrap();
-            if let Ok((_, frame)) = Frame::from_bytes((&bytes, 0)) {
-                if let DF::ADSB(ref adsb) = frame.df {
-                    if let ME::AirbornePositionBaroAltitude(_) = adsb.me {
-                        adsb_airplanes.add_extended_quitter_ap(adsb.icao, frame.clone());
+            if len > 0 {
+                let hex = &input.to_string()[1..len - 2];
+                let bytes = hex::decode(&hex).unwrap();
+                if let Ok((_, frame)) = Frame::from_bytes((&bytes, 0)) {
+                    if let DF::ADSB(ref adsb) = frame.df {
+                        if let ME::AirbornePositionBaroAltitude(_) = adsb.me {
+                            adsb_airplanes.add_extended_quitter_ap(adsb.icao, frame.clone());
+                        }
                     }
                 }
             }
