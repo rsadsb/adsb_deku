@@ -76,10 +76,12 @@ different `adsb_deku` uses. See the [`README.md`] for examples of use.
 pub use deku;
 
 pub mod adsb;
+pub mod bds;
 pub mod cpr;
 mod crc;
 
 use adsb::{ControlField, ADSB};
+use bds::BDS;
 use deku::bitvec::{BitSlice, Msb0};
 use deku::prelude::*;
 
@@ -171,22 +173,17 @@ impl std::fmt::Display for Frame {
             },
             // TODO
             DF::ExtendedQuitterMilitaryApplication { .. } => {},
-            DF::CommBAltitudeReply { mb, parity, .. } => {
-                writeln!(f, " Comm-B Altitude Reply")?;
-                writeln!(f, "  data: {:x?}", mb)?;
-                writeln!(f, "  ICAO Address: {} (Mode S / ADS-B)", parity)?;
+            DF::CommBAltitudeReply { bds, alt, .. } => {
+                writeln!(f, " Comm-B, Altitude Reply")?;
+                writeln!(f, "  ICAO Address:  {:x?} (Mode S / ADS-B)", self.crc)?;
+                writeln!(f, "  Altitude:      {} ft", alt.0)?;
+                write!(f, "  {}", bds)?;
             },
-            DF::CommBIdentityReply {
-                id, message_comm_b, ..
-            } => {
+            DF::CommBIdentityReply { id, bds, .. } => {
                 writeln!(f, " Comm-B, Identity Reply")?;
-                if message_comm_b.is_empty() {
-                    writeln!(f, "    Comm-B format: unknown format")?;
-                } else {
-                    writeln!(f, "    Comm-B format: {}", message_comm_b)?;
-                }
                 writeln!(f, "    ICAO Address:  {:x?} (Mode S / ADS-B)", self.crc)?;
                 writeln!(f, "    Squawk:        {:x?}", id)?;
+                write!(f, "    {}", bds)?;
             },
             DF::CommDExtendedLengthMessage { .. } => {
                 writeln!(f, " Comm-D Extended Length Message")?;
@@ -337,11 +334,9 @@ pub enum DF {
         /// UM: Utility Message
         um: UtilityMessage,
         /// AC: Altitude Code
-        #[deku(reader = "Altitude::read(deku::rest)")]
-        alt: u32,
+        alt: AC13Field,
         /// MB Message, Comm-B
-        #[deku(count = "7")]
-        mb: Vec<u8>,
+        bds: BDS,
         /// AP: address/parity
         parity: ICAO,
     },
@@ -364,10 +359,8 @@ pub enum DF {
             map = "|squawk: u32| -> Result<_, DekuError> {Ok(mode_ac::decode_id13_field(squawk))}"
         )]
         id: u32,
-        /// MB Message, COMM-B
-        //#TODO: this works?
-        #[deku(reader = "read_comm_b(deku::rest)")]
-        message_comm_b: String,
+        /// MB Message, Comm-B
+        bds: BDS,
         /// AP address/parity
         parity: ICAO,
     },
@@ -389,23 +382,6 @@ pub enum DF {
         /// AP: address/parity
         parity: ICAO,
     },
-}
-
-fn read_comm_b(rest: &BitSlice<Msb0, u8>) -> Result<(&BitSlice<Msb0, u8>, String), DekuError> {
-    pub const AIS_CHARSET: &str =
-        "@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_ !\"#$%&'()*+,-./0123456789:;<=>?";
-    let (rest, ident) = <u8>::read(rest, deku::ctx::Size::Bits(7))?;
-
-    let mut inside_rest = rest;
-    let mut callsign = String::new();
-    if ident == 0x20 {
-        for _ in 0..8 {
-            let (for_rest, c) = <u8>::read(inside_rest, deku::ctx::Size::Bits(5))?;
-            callsign.push(AIS_CHARSET.chars().nth(c as usize).unwrap());
-            inside_rest = for_rest;
-        }
-    }
-    Ok((inside_rest, callsign))
 }
 
 /// [`DF::CommBAltitudeReply`] || ([`DF::ADSB`] && ([`adsb::ME::AirbornePositionBaroAltitude`] || [`adsb::ME::AirbornePositionGNSSAltitude`])
@@ -441,6 +417,7 @@ impl std::fmt::Display for Altitude {
 }
 
 impl Altitude {
+    /// decodeAC12Field
     fn read(rest: &BitSlice<Msb0, u8>) -> Result<(&BitSlice<Msb0, u8>, u32), DekuError> {
         let (rest, num) = u32::read(rest, (deku::ctx::Endian::Big, deku::ctx::Size::Bits(12)))?;
 
@@ -837,4 +814,27 @@ impl std::fmt::Display for Capability {
             }
         )
     }
+}
+
+const CHAR_LOOKUP: &[u8; 64] = b"#ABCDEFGHIJKLMNOPQRSTUVWXYZ##### ###############0123456789######";
+
+pub(crate) fn aircraft_identification_read(
+    rest: &BitSlice<Msb0, u8>,
+) -> Result<(&BitSlice<Msb0, u8>, String), DekuError> {
+    let mut inside_rest = rest;
+
+    let mut chars = vec![];
+    for _ in 0..=6 {
+        let (for_rest, c) = <u8>::read(inside_rest, deku::ctx::Size::Bits(6))?;
+        if c != 32 {
+            chars.push(c);
+        }
+        inside_rest = for_rest;
+    }
+    let encoded = chars
+        .into_iter()
+        .map(|b| CHAR_LOOKUP[b as usize] as char)
+        .collect::<String>();
+
+    Ok((inside_rest, encoded))
 }

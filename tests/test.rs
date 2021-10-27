@@ -528,9 +528,9 @@ fn testing_df_21() {
     let resulting_string = format!("{}", frame);
     assert_eq!(
         r#" Comm-B, Identity Reply
-    Comm-B format: unknown format
     ICAO Address:  a95fdc (Mode S / ADS-B)
     Squawk:        6246
+    Comm-B format: unknown format
 "#,
         resulting_string
     );
@@ -832,6 +832,23 @@ fn fix_issue_13() {
   CPR odd flag:  odd
   CPR latitude:  (78352)
   CPR longitude: (19561)
+"#,
+        resulting_string
+    );
+}
+
+#[test]
+fn test_issue_14() {
+    let bytes = hex!("a0001910204d7075d35820c25c0c");
+    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    println!("{:#x?}", frame);
+    let resulting_string = format!("{}", frame);
+    assert_eq!(
+        r#" Comm-B, Altitude Reply
+  ICAO Address:  aa6f80 (Mode S / ADS-B)
+  Altitude:      39000 ft
+  Comm-B format: BDS2,0 Aircraft identification
+  Ident:         SWA545
 "#,
         resulting_string
     );

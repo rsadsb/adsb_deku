@@ -6,7 +6,7 @@ use deku::bitvec::{BitSlice, Msb0};
 use deku::prelude::*;
 
 use crate::mode_ac::decode_id13_field;
-use crate::{Altitude, CPRFormat, Capability, Sign, ICAO};
+use crate::{aircraft_identification_read, Altitude, CPRFormat, Capability, Sign, ICAO};
 
 /// [`crate::DF::ADSB`] || [`crate::DF::TisB`]
 #[derive(Debug, PartialEq, DekuRead, Clone)]
@@ -107,7 +107,6 @@ impl ME {
                 writeln!(f, "  Ident:         {}", cn)?;
                 writeln!(f, "  Category:      {}{}", tc, ca)?;
             },
-            // TODO
             ME::SurfacePosition(..) => {
                 writeln!(f, " Extended Squitter{}Surface position", transponder)?;
                 writeln!(f, "  Address:       {} {}", icao, address_type)?;
@@ -851,7 +850,7 @@ pub struct Identification {
     pub tc: TypeCoding,
     #[deku(bits = "3")]
     pub ca: u8,
-    #[deku(reader = "Self::read(deku::rest)")]
+    #[deku(reader = "aircraft_identification_read(deku::rest)")]
     pub cn: String,
 }
 
@@ -876,29 +875,6 @@ impl std::fmt::Display for TypeCoding {
                 Self::A => "A",
             }
         )
-    }
-}
-
-const CHAR_LOOKUP: &[u8; 64] = b"#ABCDEFGHIJKLMNOPQRSTUVWXYZ##### ###############0123456789######";
-
-impl Identification {
-    fn read(rest: &BitSlice<Msb0, u8>) -> Result<(&BitSlice<Msb0, u8>, String), DekuError> {
-        let mut inside_rest = rest;
-
-        let mut chars = vec![];
-        for _ in 0..=6 {
-            let (for_rest, c) = <u8>::read(inside_rest, deku::ctx::Size::Bits(6))?;
-            if c != 32 {
-                chars.push(c);
-            }
-            inside_rest = for_rest;
-        }
-        let encoded = chars
-            .into_iter()
-            .map(|b| CHAR_LOOKUP[b as usize] as char)
-            .collect::<String>();
-
-        Ok((inside_rest, encoded))
     }
 }
 
