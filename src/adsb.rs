@@ -759,9 +759,9 @@ impl std::fmt::Display for ControlField {
 #[allow(non_camel_case_types)]
 pub struct ADSB_ICAO {
     /// AA: Address, Announced
-    aa: ICAO,
+    pub aa: ICAO,
     /// ME: message, extended quitter
-    me: ME,
+    pub me: ME,
 }
 
 #[derive(Debug, PartialEq, DekuRead, Copy, Clone)]

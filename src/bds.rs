@@ -56,34 +56,34 @@ impl std::fmt::Display for BDS {
 #[derive(Debug, PartialEq, DekuRead, Clone)]
 pub struct DataLinkCapability {
     #[deku(bits = "1")]
-    continuation_flag: bool,
+    pub continuation_flag: bool,
     #[deku(bits = "5")]
-    reserved0: u8,
+    pub reserved0: u8,
     #[deku(bits = "1")]
-    overlay_command_capability: bool,
+    pub overlay_command_capability: bool,
     #[deku(bits = "1")]
-    acas: bool,
+    pub acas: bool,
     #[deku(bits = "7")]
-    mode_s_subnetwork_version_number: u8,
+    pub mode_s_subnetwork_version_number: u8,
     #[deku(bits = "1")]
-    transponder_enhanced_protocol_indicator: bool,
+    pub transponder_enhanced_protocol_indicator: bool,
     #[deku(bits = "1")]
-    mode_s_specific_services_capability: bool,
+    pub mode_s_specific_services_capability: bool,
     #[deku(bits = "3")]
-    uplink_elm_average_throughput_capability: u8,
+    pub uplink_elm_average_throughput_capability: u8,
     #[deku(bits = "4")]
-    downlink_elm: u8,
+    pub downlink_elm: u8,
     #[deku(bits = "1")]
-    aircraft_identification_capability: bool,
+    pub aircraft_identification_capability: bool,
     #[deku(bits = "1")]
-    squitter_capability_subfield: bool,
+    pub squitter_capability_subfield: bool,
     #[deku(bits = "1")]
-    surveillance_identifier_code: bool,
+    pub surveillance_identifier_code: bool,
     #[deku(bits = "1")]
-    common_usage_gicb_capability_report: bool,
+    pub common_usage_gicb_capability_report: bool,
     #[deku(bits = "4")]
-    reserved_acas: u8,
-    bit_array: u16,
+    pub reserved_acas: u8,
+    pub bit_array: u16,
 }
 
 /// To indicate common usage GICB services currently supported
@@ -91,122 +91,122 @@ pub struct DataLinkCapability {
 pub struct CommonUsageGICBCapabilityReport {
     /// 0,5
     #[deku(bits = "1")]
-    extended_squitter_airborne_position: bool,
+    pub extended_squitter_airborne_position: bool,
 
     /// 0,6
     #[deku(bits = "1")]
-    extended_squitter_surface_position: bool,
+    pub extended_squitter_surface_position: bool,
 
     /// 0,7
     #[deku(bits = "1")]
-    extended_squitter_status: bool,
+    pub extended_squitter_status: bool,
 
     /// 0,8
     #[deku(bits = "1")]
-    extended_squitter_identification_and_category: bool,
+    pub extended_squitter_identification_and_category: bool,
 
     /// 0,9
     #[deku(bits = "1")]
-    extended_squitter_airborne_velocity_information: bool,
+    pub extended_squitter_airborne_velocity_information: bool,
 
     /// 0,a
     #[deku(bits = "1")]
-    extended_squitter_event_driven_information: bool,
+    pub extended_squitter_event_driven_information: bool,
 
     /// 2,0
     #[deku(bits = "1")]
-    aircraft_identification: bool,
+    pub aircraft_identification: bool,
 
     /// 2,1
     #[deku(bits = "1")]
-    aircraft_registration_number: bool,
+    pub aircraft_registration_number: bool,
 
     /// 4,0
     #[deku(bits = "1")]
-    selected_vertical_intention: bool,
+    pub selected_vertical_intention: bool,
 
     /// 4,1
     #[deku(bits = "1")]
-    next_waypoint_ident: bool,
+    pub next_waypoint_ident: bool,
 
     /// 4,2
     #[deku(bits = "1")]
-    next_waypoint_position: bool,
+    pub next_waypoint_position: bool,
 
     /// 4,3
     #[deku(bits = "1")]
-    next_waypoint_information: bool,
+    pub next_waypoint_information: bool,
 
     /// 4,4
     #[deku(bits = "1")]
-    meteorological_routine_report: bool,
+    pub meteorological_routine_report: bool,
 
     /// 4,5
     #[deku(bits = "1")]
-    meteorological_hazard_report: bool,
+    pub meteorological_hazard_report: bool,
 
     /// 4,8
     #[deku(bits = "1")]
-    vhf_channel_report: bool,
+    pub vhf_channel_report: bool,
 
     /// 5,0
     #[deku(bits = "1")]
-    track_and_turn_report: bool,
+    pub track_and_turn_report: bool,
 
     /// 5,1
     #[deku(bits = "1")]
-    position_coarse: bool,
+    pub position_coarse: bool,
 
     /// 5,2
     #[deku(bits = "1")]
-    position_fine: bool,
+    pub position_fine: bool,
 
     /// 5,3
     #[deku(bits = "1")]
-    air_referenced_state_vector: bool,
+    pub air_referenced_state_vector: bool,
 
     /// 5,4
     #[deku(bits = "1")]
-    waypoint_1: bool,
+    pub waypoint_1: bool,
 
     /// 5,5
     #[deku(bits = "1")]
-    waypoint_2: bool,
+    pub waypoint_2: bool,
 
     /// 5,6
     #[deku(bits = "1")]
-    waypoint_3: bool,
+    pub waypoint_3: bool,
 
     /// 5,f
     #[deku(bits = "1")]
-    quasi_static_parameter_monitoring: bool,
+    pub quasi_static_parameter_monitoring: bool,
 
     /// 6,0
     #[deku(bits = "1")]
-    heading_and_speed_report: bool,
+    pub heading_and_speed_report: bool,
 
     #[deku(bits = "1")]
-    reserved_for_aircraft_capability0: bool,
+    pub reserved_for_aircraft_capability0: bool,
 
     #[deku(bits = "1")]
-    reserved_for_aircraft_capability1: bool,
+    pub reserved_for_aircraft_capability1: bool,
 
     /// E,1
     #[deku(bits = "1")]
-    reserved_for_mode_s_bite: bool,
+    pub reserved_for_mode_s_bite: bool,
 
     /// E,2
     #[deku(bits = "1")]
-    reserved_for_mode_s_bit: bool,
+    pub reserved_for_mode_s_bit: bool,
 
     /// F,1
     #[deku(bits = "1")]
-    military_applications: bool,
+    pub military_applications: bool,
 
     /// Reserved0
     #[deku(bits = "3")]
-    reserved0: u8,
+    pub reserved0: u8,
 
     /// Reserved1
-    reserved1: [u8; 3],
+    pub reserved1: [u8; 3],
 }

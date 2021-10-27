@@ -645,7 +645,7 @@ mod mode_ac {
 
 /// 13 bit identity code
 #[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
-pub struct IdentityCode(#[deku(reader = "Self::read(deku::rest)")] u16);
+pub struct IdentityCode(#[deku(reader = "Self::read(deku::rest)")] pub u16);
 
 impl IdentityCode {
     fn read(rest: &BitSlice<Msb0, u8>) -> Result<(&BitSlice<Msb0, u8>, u16), DekuError> {
