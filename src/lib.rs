@@ -10,7 +10,7 @@
 | 11       | [`All Call Reply`]                  | 2.1.2.5.2.2 |
 | 16       | [`Long Air-Air Surveillance`]       | 3.1.2.8.3   |
 | 17       | [`Extended Squitter(ADS-B)`]        | 3.1.2.8.6   |
-| 18       | [`Extended Squitter(Supplementary)`]| 3.1.2.8.7   |
+| 18       | [`Extended Squitter(TIS-B)`]        | 3.1.2.8.7   |
 | 19       | [`Extended Squitter(Military)`]     | 3.1.2.8.8   |
 | 20       | [`Comm-B Altitude Reply`]           | 3.1.2.6.6   |
 | 21       | [`Comm-B Identity Reply`]           | 3.1.2.6.8   |
@@ -65,7 +65,7 @@ different `adsb_deku` uses. See the [`README.md`] for examples of use.
 [`All Call Reply`]: crate::DF::AllCallReply
 [`Long Air-Air Surveillance`]: crate::DF::LongAirAir
 [`Extended Squitter(ADS-B)`]: crate::DF::ADSB
-[`Extended Squitter(Supplementary)`]: crate::DF::TisB
+[`Extended Squitter(TIS-B)`]: crate::DF::TisB
 [`Extended Squitter(Military)`]: crate::DF::ExtendedQuitterMilitaryApplication
 [`Comm-B Altitude Reply`]: crate::DF::CommBAltitudeReply
 [`Comm-B Identity Reply`]: crate::DF::CommBIdentityReply
