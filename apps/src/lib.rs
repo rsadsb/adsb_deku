@@ -22,12 +22,12 @@ impl Default for AirplaneCoor {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Airplanes(pub HashMap<ICAO, AirplaneCoor>);
 
 impl fmt::Display for Airplanes {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        for (key, _) in &self.0 {
+        for key in self.0.keys() {
             let value = self.lat_long_altitude(*key);
             if let Some(value) = value {
                 writeln!(f, "{}: {:?}", key, value)?;
@@ -44,10 +44,10 @@ impl Airplanes {
 
     /// Add `Altitude` from adsb frame
     pub fn add_extended_quitter_ap(&mut self, icao: ICAO, frame: Frame) {
-        let airplane_coor = self.0.entry(icao).or_insert(AirplaneCoor::default());
-        match frame.df {
-            DF::ADSB(adsb) => match adsb.me {
-                ME::AirbornePositionBaroAltitude(altitude) => match altitude.odd_flag {
+        let airplane_coor = self.0.entry(icao).or_insert_with(AirplaneCoor::default);
+        if let DF::ADSB(adsb) = frame.df {
+            if let ME::AirbornePositionBaroAltitude(altitude) = adsb.me {
+                match altitude.odd_flag {
                     CPRFormat::Odd => {
                         *airplane_coor = AirplaneCoor {
                             altitudes: [airplane_coor.altitudes[0], Some(altitude)],
@@ -60,10 +60,8 @@ impl Airplanes {
                             last_time: SystemTime::now(),
                         };
                     },
-                },
-                _ => (),
-            },
-            _ => (),
+                }
+            }
         }
     }
 
@@ -87,7 +85,7 @@ impl Airplanes {
     /// Calculate all latitude/longitude from Hashmap of current "seen" aircrafts
     pub fn all_lat_long_altitude(&self) -> Vec<cpr::Position> {
         let mut all_lat_long = vec![];
-        for (_, altitudes) in &self.0 {
+        for altitudes in self.0.values() {
             if let (Some(first_altitude), Some(second_altitude)) =
                 (altitudes.altitudes[0], altitudes.altitudes[1])
             {

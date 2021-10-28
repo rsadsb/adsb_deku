@@ -12,7 +12,7 @@
 //!
 //! Instead of only showing current airplanes, only plot dots for a seen airplane location
 //!
-//! Instead of using a HashMap for only storing an aircraft position for each aircraft, store
+//! Instead of using a `HashMap` for only storing an aircraft position for each aircraft, store
 //! all aircrafts and only display a dot where detection at the lat/long position. This is for
 //! testing the reach of your antenna.
 
@@ -215,14 +215,14 @@ fn main() {
                                             color: Color::White,
                                         });
 
-                                        let name = if !disable_lat_long {
+                                        let name = if disable_lat_long {
+                                            format!("{}", key).into_boxed_str()
+                                        } else {
                                             format!(
                                                 "{} ({}, {})",
                                                 key, position.latitude, position.longitude
                                             )
                                             .into_boxed_str()
-                                        } else {
-                                            format!("{}", key).into_boxed_str()
                                         };
 
                                         // draw plane ICAO name
@@ -273,15 +273,15 @@ fn main() {
 
         // handle keyboard events
         if poll(Duration::from_millis(100)).unwrap() {
-            match read().unwrap() {
-                Event::Key(KeyEvent { code, modifiers: _ }) => match code {
+            if let Event::Key(KeyEvent { code, .. }) = read().unwrap() {
+                match code {
                     KeyCode::F(1) => tab_selection = Tab::Map,
                     KeyCode::F(2) => tab_selection = Tab::Coverage,
                     KeyCode::Char('q') => quit = true,
                     KeyCode::Char('-') => scale += 0.1,
                     KeyCode::Char('+') => {
                         if scale > 0.2 {
-                            scale -= 0.1
+                            scale -= 0.1;
                         }
                     },
                     KeyCode::Up => local_lat += 0.005,
@@ -294,8 +294,7 @@ fn main() {
                         scale = original_scale;
                     },
                     _ => (),
-                },
-                _ => (),
+                }
             }
         }
         if quit {
