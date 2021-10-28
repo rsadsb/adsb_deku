@@ -21,7 +21,6 @@
 | ----  | --------------------------------------- | ----------- |
 | (0,0) | [`Empty`]                               |             |
 | (1,0) | [`Data Link Capability`]                | A-2-16      |
-| (1,7) | [`Common Usage GICB Capability Report`] | A-2-23      |
 | (2,0) | [`Aircraft Identification`]             | A-2-32      |
 
 # Example
@@ -56,7 +55,6 @@ different `adsb_deku` uses. See the [`README.md`] for examples of use.
 
 [`Empty`]: crate::bds::BDS::Empty
 [`Data Link Capability`]: crate::bds::BDS::DataLinkCapability
-[`Common Usage GICB Capability Report`]: crate::bds::BDS::CommonUsageGICBCapabilityReport
 [`Aircraft Identification`]: crate::bds::BDS::AircraftIdentification
 [`DF`]: crate::DF
 [`Short Air-Air Surveillance`]: crate::DF::ShortAirAirSurveillance

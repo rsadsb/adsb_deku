@@ -29,7 +29,6 @@ This library uses [deku](https://github.com/sharksforarms/deku) for serializatio
 | ----  | ----------------------------------- | ----------- |
 | (0,0) | Empty                               |             |
 | (1,0) | Data Link Capability                | A-2-16      |
-| (1,7) | Common Usage GICB Capability Report | A-2-23      |
 | (2,0) | Aircraft Identification             | A-2-32      |
 
 ## example usage
