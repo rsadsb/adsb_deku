@@ -1,3 +1,4 @@
+<img src="media/logo.png" align="right" />
 # adsb_deku
 
 [![Latest Version](https://img.shields.io/crates/v/adsb_deku.svg)](https://crates.io/crates/adsb_deku)
