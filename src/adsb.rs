@@ -59,11 +59,11 @@ pub enum ME {
     #[deku(id_pat = "20..=22")]
     AirbornePositionGNSSAltitude(Altitude),
     #[deku(id = "23")]
-    Reserved0,
+    Reserved0([u8; 6]),
     #[deku(id_pat = "24")]
-    SurfaceSystemStatus,
+    SurfaceSystemStatus([u8; 6]),
     #[deku(id_pat = "25..=27")]
-    Reserved1,
+    Reserved1([u8; 6]),
     #[deku(id = "28")]
     AircraftStatus(AircraftStatus),
     #[deku(id = "29")]
@@ -185,12 +185,12 @@ impl ME {
                 writeln!(f, "  Address:      {} {}", icao, address_type)?;
                 write!(f, "{}", altitude)?;
             },
-            ME::Reserved0 | ME::Reserved1 => {
+            ME::Reserved0(_) | ME::Reserved1(_) => {
                 writeln!(f, " Extended Squitter{}Unknown", transponder)?;
                 writeln!(f, "  Address:       {} {}", icao, address_type)?;
                 writeln!(f, "  Air/Ground:    {}", capability)?;
             },
-            ME::SurfaceSystemStatus => {
+            ME::SurfaceSystemStatus(_) => {
                 writeln!(
                     f,
                     " Extended Squitter{}Reserved for surface system status",
