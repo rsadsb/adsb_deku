@@ -906,3 +906,16 @@ fn test_issue_16() {
         resulting_string
     );
 }
+
+#[test]
+fn test_operational_coordination() {
+    let bytes = hex!("9143e8eef79baeeacca522b044bf");
+    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let resulting_string = format!("{}", frame);
+    assert_eq!(
+        r#" Extended Squitter (Non-Transponder) Aircraft Operational Coordination
+  Address:       43e8ee (ADS-B)
+"#,
+        resulting_string
+    );
+}

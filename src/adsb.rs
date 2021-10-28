@@ -68,6 +68,8 @@ pub enum ME {
     AircraftStatus(AircraftStatus),
     #[deku(id = "29")]
     TargetStateAndStatusInformation(TargetStateAndStatusInformation),
+    #[deku(id = "30")]
+    AircraftOperationalCoordination([u8; 6]),
     #[deku(id = "31")]
     AircraftOperationStatus(OperationStatus),
 }
@@ -250,6 +252,14 @@ impl ME {
                 writeln!(f, "    NICbaro:           {}", target_info.nicbaro)?;
                 writeln!(f, "    SIL:               {} (per sample)", target_info.sil)?;
                 writeln!(f, "    QNH:               {} millibars", target_info.qnh)?;
+            },
+            ME::AircraftOperationalCoordination(_) => {
+                writeln!(
+                    f,
+                    " Extended Squitter{}Aircraft Operational Coordination",
+                    transponder
+                )?;
+                writeln!(f, "  Address:       {} {}", icao, address_type)?;
             },
             ME::AircraftOperationStatus(OperationStatus::Airborne(opstatus_airborne)) => {
                 writeln!(
