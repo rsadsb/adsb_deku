@@ -362,8 +362,6 @@ pub enum DF {
         /// UM: Utility Message
         um: UtilityMessage,
         /// ID: Identity
-        ///
-        /// TODO: does this work?
         #[deku(
             bits = "13",
             endian = "big",

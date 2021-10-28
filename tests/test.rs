@@ -891,3 +891,18 @@ fn test_issue_09() {
         resulting_string
     );
 }
+
+#[test]
+fn test_issue_16() {
+    let bytes = hex!("a227ed3417826515bebd01707629");
+    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let resulting_string = format!("{}", frame);
+    assert_eq!(
+        r#" Comm-B, Altitude Reply
+  ICAO Address:  abef98 (Mode S / ADS-B)
+  Altitude:      20300 ft
+  Comm-B format: unknown format
+"#,
+        resulting_string
+    );
+}
