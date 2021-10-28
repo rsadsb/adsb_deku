@@ -1,4 +1,6 @@
-#![doc(html_logo_url = "https://raw.githubusercontent.com/wcampbell0x2a/adsb_deku/master/media/logo.png")]
+#![doc(
+    html_logo_url = "https://raw.githubusercontent.com/wcampbell0x2a/adsb_deku/master/media/logo.png"
+)]
 /*!
 `adsb_deku` provides decoding for the [`ADS-B`] Downlink protocol by using the [`deku`] crate.
 
