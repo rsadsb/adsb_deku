@@ -131,7 +131,8 @@ fn main() {
     // setup tui variables
     let mut tab_selection = Tab::Map;
     let mut quit = false;
-    let mut scale = 1.2;
+    let original_scale = 1.2;
+    let mut scale = original_scale;
 
     loop {
         // if new message, add to buffers
@@ -279,7 +280,7 @@ fn main() {
                     KeyCode::Char('q') => quit = true,
                     KeyCode::Char('-') => scale += 0.1,
                     KeyCode::Char('+') => {
-                        if scale > 0.0 {
+                        if scale > 0.2 {
                             scale -= 0.1
                         }
                     },
@@ -290,6 +291,7 @@ fn main() {
                     KeyCode::Enter => {
                         local_lat = original_local_lat;
                         local_long = original_local_long;
+                        scale = original_scale;
                     },
                     _ => (),
                 },

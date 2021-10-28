@@ -16,4 +16,4 @@
 | Down  | Move Map Down             |
 | Left  | Move Map Left             |
 | Right | Move Map Right            |
-| Enter | Reset Lat/Long(Map)       |
+| Enter | Reset Map                 |
