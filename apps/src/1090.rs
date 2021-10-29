@@ -53,7 +53,11 @@ fn main() {
         // convert from string hex -> bytes
         let hex = &mut input.to_string()[1..len - 2].to_string();
         println!("{}", hex.to_lowercase());
-        let bytes = hex::decode(&hex).unwrap();
+        let bytes = if let Ok(bytes) = hex::decode(&hex) {
+            bytes
+        } else {
+            continue;
+        };
 
         // check for all 0's
         if bytes.par_iter().all(|&b| b == 0) {

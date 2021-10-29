@@ -29,6 +29,7 @@ use apps::Airplanes;
 use clap::Parser;
 use crossterm::event::{poll, read, Event, KeyCode, KeyEvent};
 use crossterm::terminal::enable_raw_mode;
+use rayon::prelude::*;
 use tui::backend::{Backend, CrosstermBackend};
 use tui::layout::{Constraint, Direction, Layout};
 use tui::style::{Color, Style};
@@ -135,16 +136,30 @@ fn main() {
     let mut scale = original_scale;
 
     loop {
-        // if new message, add to buffers
         if let Ok(len) = reader.read_line(&mut input) {
-            if len > 0 {
-                let hex = &input.to_string()[1..len - 2];
-                let bytes = hex::decode(&hex).unwrap();
-                if let Ok((_, frame)) = Frame::from_bytes((&bytes, 0)) {
-                    if let DF::ADSB(ref adsb) = frame.df {
-                        if let ME::AirbornePositionBaroAltitude(_) = adsb.me {
-                            adsb_airplanes.add_extended_quitter_ap(adsb.icao, frame.clone());
-                        }
+            // check for empty string msg
+            if len == 0 {
+                continue;
+            }
+
+            // convert from string hex -> bytes
+            let hex = &mut input.to_string()[1..len - 2].to_string();
+            let bytes = if let Ok(bytes) = hex::decode(&hex) {
+                bytes
+            } else {
+                continue;
+            };
+
+            // check for all 0's
+            if bytes.par_iter().all(|&b| b == 0) {
+                continue;
+            }
+
+            // decode
+            if let Ok((_, frame)) = Frame::from_bytes((&bytes, 0)) {
+                if let DF::ADSB(ref adsb) = frame.df {
+                    if let ME::AirbornePositionBaroAltitude(_) = adsb.me {
+                        adsb_airplanes.add_extended_quitter_ap(adsb.icao, frame.clone());
                     }
                 }
             }
