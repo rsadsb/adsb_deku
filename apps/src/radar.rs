@@ -32,11 +32,11 @@ use crossterm::terminal::enable_raw_mode;
 use rayon::prelude::*;
 use tui::backend::{Backend, CrosstermBackend};
 use tui::layout::{Constraint, Direction, Layout};
-use tui::style::{Color, Style};
+use tui::style::{Color, Modifier, Style};
 use tui::symbols::DOT;
 use tui::text::Spans;
 use tui::widgets::canvas::{Canvas, Line, Points};
-use tui::widgets::{Block, Borders, Row, Table, Tabs};
+use tui::widgets::{Block, Borders, Row, Table, TableState, Tabs};
 use tui::Terminal;
 
 /// Amount of zoom out from your original lat/long position
@@ -135,6 +135,7 @@ fn main() {
     let mut quit = false;
     let original_scale = 1.2;
     let mut scale = original_scale;
+    let mut airplanes_state = TableState::default();
 
     loop {
         if let Ok(len) = reader.read_line(&mut input) {
@@ -168,7 +169,7 @@ fn main() {
 
         // add lat_long to coverage vector
         let all_lat_long = adsb_airplanes.all_lat_long_altitude();
-        coverage_airplanes.extend(all_lat_long);
+        coverage_airplanes.extend(all_lat_long.clone());
 
         input.clear();
         // remove airplanes that timed-out
@@ -300,6 +301,15 @@ fn main() {
                         }
 
                         let rows_len = rows.len();
+
+                        // check the length of selected airplanes
+                        if let Some(selected) = airplanes_state.selected() {
+                            if selected > rows_len - 1 {
+                                airplanes_state.select(Some(rows_len - 1));
+                            }
+                        }
+
+                        // draw table
                         let table = Table::new(rows)
                             .style(Style::default().fg(Color::White))
                             .header(
@@ -317,8 +327,10 @@ fn main() {
                                 Constraint::Length(15),
                                 Constraint::Length(15),
                             ])
-                            .column_spacing(1);
-                        f.render_widget(table, chunks[1]);
+                            .column_spacing(1)
+                            .highlight_style(Style::default().add_modifier(Modifier::BOLD))
+                            .highlight_symbol(">> ");
+                        f.render_stateful_widget(table, chunks[1], &mut airplanes_state);
                     },
                 }
             })
@@ -327,25 +339,48 @@ fn main() {
         // handle keyboard events
         if poll(Duration::from_millis(10)).unwrap() {
             if let Event::Key(KeyEvent { code, .. }) = read().unwrap() {
-                match code {
-                    KeyCode::F(1) => tab_selection = Tab::Map,
-                    KeyCode::F(2) => tab_selection = Tab::Coverage,
-                    KeyCode::F(3) => tab_selection = Tab::Airplanes,
-                    KeyCode::Char('q') => quit = true,
-                    KeyCode::Char('-') => scale += 0.1,
-                    KeyCode::Char('+') => {
+                match (code, tab_selection) {
+                    // All Tabs
+                    (KeyCode::F(1), _) => tab_selection = Tab::Map,
+                    (KeyCode::F(2), _) => tab_selection = Tab::Coverage,
+                    (KeyCode::F(3), _) => tab_selection = Tab::Airplanes,
+                    (KeyCode::Char('q'), _) => quit = true,
+                    (KeyCode::Char('-'), Tab::Map | Tab::Coverage) => scale += 0.1,
+                    (KeyCode::Char('+'), Tab::Map | Tab::Coverage) => {
                         if scale > 0.2 {
                             scale -= 0.1;
                         }
                     },
-                    KeyCode::Up => local_lat += 0.005,
-                    KeyCode::Down => local_lat -= 0.005,
-                    KeyCode::Left => local_long -= 0.03,
-                    KeyCode::Right => local_long += 0.03,
-                    KeyCode::Enter => {
+                    // Map and Coverage
+                    (KeyCode::Up, Tab::Map | Tab::Coverage) => local_lat += 0.005,
+                    (KeyCode::Down, Tab::Map | Tab::Coverage) => local_lat -= 0.005,
+                    (KeyCode::Left, Tab::Map | Tab::Coverage) => local_long -= 0.03,
+                    (KeyCode::Right, Tab::Map | Tab::Coverage) => local_long += 0.03,
+                    (KeyCode::Enter, Tab::Map | Tab::Coverage) => {
                         local_lat = original_local_lat;
                         local_long = original_local_long;
                         scale = original_scale;
+                    },
+                    // Airplanes
+                    (KeyCode::Up, Tab::Airplanes) => {
+                        if let Some(selected) = airplanes_state.selected() {
+                            airplanes_state.select(Some(selected - 1));
+                        } else {
+                            airplanes_state.select(Some(0));
+                        }
+                    },
+                    (KeyCode::Down, Tab::Airplanes) => {
+                        if let Some(selected) = airplanes_state.selected() {
+                            airplanes_state.select(Some(selected + 1));
+                        } else {
+                            airplanes_state.select(Some(0));
+                        }
+                    },
+                    (KeyCode::Enter, Tab::Airplanes) => {
+                        if let Some(selected) = airplanes_state.selected() {
+                            local_lat = all_lat_long[selected].latitude;
+                            local_long = all_lat_long[selected].longitude;
+                        }
                     },
                     _ => (),
                 }
