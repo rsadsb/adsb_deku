@@ -380,6 +380,7 @@ fn main() {
                         if let Some(selected) = airplanes_state.selected() {
                             local_lat = all_lat_long[selected].latitude;
                             local_long = all_lat_long[selected].longitude;
+                            tab_selection = Tab::Map;
                         }
                     },
                     _ => (),
