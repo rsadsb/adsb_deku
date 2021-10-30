@@ -122,8 +122,10 @@ The terminal used is [cool-retro-terminal](https://github.com/Swordfish90/cool-r
 > cargo r --bin radar --release -- --lat="50.0" --long="50.0" --cities "(name,lat,long)" "(name,lat,long)"
 ```
 
-#### Radar Mode
+#### Radar Tab
 ![Radar Example](/media/2021-09-06-082636_1804x1062_scrot.png)
 
-#### Coverage Mode
+#### Coverage Tab
 ![Coverage Example](/media/2021-10-12-194028_1077x998_scrot.png)
+
+#### Aircraft Tab
