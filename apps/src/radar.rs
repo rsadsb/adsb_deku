@@ -306,7 +306,11 @@ fn main() {
                                 Row::new(vec!["ICAO Address", "Longitude", "Latitude", "Altitude"])
                                     .bottom_margin(1),
                             )
-                            .block(Block::default().title(format!("Airplanes({})", rows_len)).borders(Borders::ALL))
+                            .block(
+                                Block::default()
+                                    .title(format!("Airplanes({})", rows_len))
+                                    .borders(Borders::ALL),
+                            )
                             .widths(&[
                                 Constraint::Length(15),
                                 Constraint::Length(15),
