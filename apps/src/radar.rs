@@ -114,7 +114,7 @@ fn main() {
     // Setup non-blocking TcpStream
     let stream = TcpStream::connect((opts.host, opts.port)).unwrap();
     stream
-        .set_read_timeout(Some(std::time::Duration::from_millis(100)))
+        .set_read_timeout(Some(std::time::Duration::from_millis(50)))
         .unwrap();
     let mut reader = BufReader::new(stream);
 
