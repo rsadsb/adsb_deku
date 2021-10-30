@@ -26,6 +26,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [radar] Add `+` and `-` for zooming the map during operation
 - [radar] Add `Up`, `Down`, `Left`, and `Right` for moving map (lat/long). `Enter` for resetting Map.
 - [radar] Display current Lat/Long in tui
+- [radar] Add `Airplanes` tab for display of all airplanes(lat, long, altitude) in table format.
+Allow selection in table with Up, Down, and Enter keys for moving to the `Map` tab centered at selected aircraft.
 
 ## [v0.2.0] 2021-10-17
 ### adsb_deku
