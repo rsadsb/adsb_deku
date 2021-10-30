@@ -10,6 +10,7 @@
 | ----- | ------------------------- |
 | F1    | Move to Radar screen      |
 | F2    | Move to Coverage screen   |
+| F2    | Move to Airplanes screen   |
 | -     | Zoom out                  |
 | +     | Zoom in                   |
 | Up    | Move Map Up               |

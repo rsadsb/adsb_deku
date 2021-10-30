@@ -36,7 +36,7 @@ use tui::style::{Color, Style};
 use tui::symbols::DOT;
 use tui::text::Spans;
 use tui::widgets::canvas::{Canvas, Line, Points};
-use tui::widgets::{Block, Borders, Tabs};
+use tui::widgets::{Block, Borders, Row, Table, Tabs};
 use tui::Terminal;
 
 /// Amount of zoom out from your original lat/long position
@@ -97,8 +97,9 @@ struct Opts {
 
 #[derive(Copy, Clone)]
 enum Tab {
-    Map      = 0,
-    Coverage = 1,
+    Map       = 0,
+    Coverage  = 1,
+    Airplanes = 2,
 }
 
 fn main() {
@@ -181,7 +182,7 @@ fn main() {
                     .constraints([Constraint::Min(3), Constraint::Percentage(100)].as_ref())
                     .split(f.size());
 
-                let titles = ["Map", "Coverage"]
+                let titles = ["Map", "Coverage", "Airplanes"]
                     .iter()
                     .copied()
                     .map(Spans::from)
@@ -282,16 +283,47 @@ fn main() {
                             });
                         f.render_widget(canvas, chunks[1]);
                     },
+                    Tab::Airplanes => {
+                        let mut rows = vec![];
+                        for key in adsb_airplanes.0.keys() {
+                            let value = adsb_airplanes.lat_long_altitude(*key);
+                            if let Some((position, altitude)) = value {
+                                rows.push(Row::new(vec![
+                                    format!("{}", key),
+                                    format!("{}", position.latitude),
+                                    format!("{}", position.longitude),
+                                    format!("{}", altitude),
+                                ]))
+                            }
+                        }
+
+                        let table = Table::new(rows)
+                            .style(Style::default().fg(Color::White))
+                            .header(
+                                Row::new(vec!["ICAO Address", "Longitude", "Latitude", "Altitude"])
+                                    .bottom_margin(1),
+                            )
+                            .block(Block::default().title("Airplanes").borders(Borders::ALL))
+                            .widths(&[
+                                Constraint::Length(15),
+                                Constraint::Length(15),
+                                Constraint::Length(15),
+                                Constraint::Length(15),
+                            ])
+                            .column_spacing(1);
+                        f.render_widget(table, chunks[1]);
+                    },
                 }
             })
             .unwrap();
 
         // handle keyboard events
-        if poll(Duration::from_millis(100)).unwrap() {
+        if poll(Duration::from_millis(200)).unwrap() {
             if let Event::Key(KeyEvent { code, .. }) = read().unwrap() {
                 match code {
                     KeyCode::F(1) => tab_selection = Tab::Map,
                     KeyCode::F(2) => tab_selection = Tab::Coverage,
+                    KeyCode::F(3) => tab_selection = Tab::Airplanes,
                     KeyCode::Char('q') => quit = true,
                     KeyCode::Char('-') => scale += 0.1,
                     KeyCode::Char('+') => {
