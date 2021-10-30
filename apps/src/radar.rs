@@ -285,6 +285,8 @@ fn main() {
                     },
                     Tab::Airplanes => {
                         let mut rows = vec![];
+                        // make a vec of all strings to get a total amount of airplanes with
+                        // position information
                         for key in adsb_airplanes.0.keys() {
                             let value = adsb_airplanes.lat_long_altitude(*key);
                             if let Some((position, altitude)) = value {
@@ -297,13 +299,14 @@ fn main() {
                             }
                         }
 
+                        let rows_len = rows.len();
                         let table = Table::new(rows)
                             .style(Style::default().fg(Color::White))
                             .header(
                                 Row::new(vec!["ICAO Address", "Longitude", "Latitude", "Altitude"])
                                     .bottom_margin(1),
                             )
-                            .block(Block::default().title("Airplanes").borders(Borders::ALL))
+                            .block(Block::default().title(format!("Airplanes({})", rows_len)).borders(Borders::ALL))
                             .widths(&[
                                 Constraint::Length(15),
                                 Constraint::Length(15),
@@ -318,7 +321,7 @@ fn main() {
             .unwrap();
 
         // handle keyboard events
-        if poll(Duration::from_millis(200)).unwrap() {
+        if poll(Duration::from_millis(10)).unwrap() {
             if let Event::Key(KeyEvent { code, .. }) = read().unwrap() {
                 match code {
                     KeyCode::F(1) => tab_selection = Tab::Map,

@@ -44,51 +44,66 @@ fn main() {
     let mut airplanes = Airplanes::new();
 
     loop {
-        let len = reader.read_line(&mut input).unwrap();
-        // check for empty string msg
-        if len == 0 {
-            continue;
-        }
+        if let Ok(len) = reader.read_line(&mut input) {
+            // check for empty string msg
+            if len == 0 {
+                continue;
+            }
 
-        // convert from string hex -> bytes
-        let hex = &mut input.to_string()[1..len - 2].to_string();
-        println!("{}", hex.to_lowercase());
-        let bytes = if let Ok(bytes) = hex::decode(&hex) {
-            bytes
-        } else {
-            continue;
-        };
+            // convert from string hex -> bytes
+            let hex = &mut input.to_string()[1..len - 2].to_string();
+            println!("{}", hex.to_lowercase());
+            let bytes = if let Ok(bytes) = hex::decode(&hex) {
+                bytes
+            } else {
+                continue;
+            };
 
-        // check for all 0's
-        if bytes.par_iter().all(|&b| b == 0) {
-            continue;
-        }
-        // decode
-        match Frame::from_bytes((&bytes, 0)) {
-            Ok((_, frame)) => {
-                if options.debug {
-                    println!("{:#?}", frame);
-                }
-                println!("{}", frame);
-                if !options.disable_airplanes {
-                    println!("{}", airplanes);
-                }
-                if let DF::ADSB(ref adsb) = frame.df {
-                    if let ME::AirbornePositionBaroAltitude(_) = adsb.me {
-                        airplanes.add_extended_quitter_ap(adsb.icao, frame.clone());
+            // check for all 0's
+            if bytes.par_iter().all(|&b| b == 0) {
+                continue;
+            }
+
+            // decode
+            match Frame::from_bytes((&bytes, 0)) {
+                Ok((_, frame)) => {
+                    if options.debug {
+                        println!("{:#?}", frame);
                     }
-                }
-                if (frame.to_string() == "") && options.panic_display {
-                    panic!("[E] fmt::Display not implemented");
-                }
-            },
-            Err(e) => {
-                if options.panic_decode {
-                    panic!("[E] {}", e);
-                }
-            },
+                    println!("{}", frame);
+                    if !options.disable_airplanes {
+                        // make a vec of all strings to get a total amount of airplanes with
+                        // position information
+                        let mut fmt_airplanes_positions = vec![];
+                        for key in airplanes.0.keys() {
+                            let value = airplanes.lat_long_altitude(*key);
+                            if let Some(value) = value {
+                                fmt_airplanes_positions.push(format!("{}: {:?}", key, value));
+                            }
+                        }
+
+                        println!("Airplanes({})", fmt_airplanes_positions.len());
+                        for a in fmt_airplanes_positions {
+                            println!("{}", a);
+                        }
+                    }
+                    if let DF::ADSB(ref adsb) = frame.df {
+                        if let ME::AirbornePositionBaroAltitude(_) = adsb.me {
+                            airplanes.add_extended_quitter_ap(adsb.icao, frame.clone());
+                        }
+                    }
+                    if (frame.to_string() == "") && options.panic_display {
+                        panic!("[E] fmt::Display not implemented");
+                    }
+                },
+                Err(e) => {
+                    if options.panic_decode {
+                        panic!("[E] {}", e);
+                    }
+                },
+            }
+            input.clear();
+            airplanes.prune();
         }
-        input.clear();
-        airplanes.prune();
     }
 }
