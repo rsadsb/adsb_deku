@@ -168,6 +168,9 @@ fn main() {
         }
 
         // add lat_long to coverage vector
+        //
+        // TODO: use this data for all display of all airplanes current data instead of recomputing
+        // this multiple times
         let all_lat_long = adsb_airplanes.all_lat_long_altitude();
         coverage_airplanes.extend(all_lat_long.clone());
 
