@@ -1,3 +1,5 @@
+//! B-Definition Subfield for Comm-B Messages
+
 use deku::prelude::*;
 
 use crate::aircraft_identification_read;

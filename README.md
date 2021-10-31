@@ -6,7 +6,7 @@
 [![Rust Documentation](https://docs.rs/adsb_deku/badge.svg)](https://docs.rs/adsb_deku)
 [![Actions Status](https://github.com/wcampbell0x2a/adsb_deku/workflows/CI/badge.svg)](https://github.com/wcampbell0x2a/adsb_deku/actions)
 
-Decoder for [ADS-B(Automatic Dependent Surveillance-Broadcast)/Mode-S](https://en.wikipedia.org/wiki/Automatic_Dependent_Surveillance%E2%80%93Broadcast) protocol Downlink Format packets from 1090mhz.
+Decoder for [ADS-B(Automatic Dependent Surveillance-Broadcast)](https://en.wikipedia.org/wiki/Automatic_Dependent_Surveillance%E2%80%93Broadcast) Downlink Format protocol packets from 1090mhz.
 Derived from Aeronautical Telecommunications Volume IV: Surveillance and Collision Avoidance Systems, Fifth Edition and ICAO 9871.
 
 This library uses [deku](https://github.com/sharksforarms/deku) for serialization/deserialization of protocol.
@@ -33,6 +33,23 @@ This library uses [deku](https://github.com/sharksforarms/deku) for serializatio
 | (1,0) | Data Link Capability                | A-2-16      |
 | (2,0) | Aircraft Identification             | A-2-32      |
 
+## ME support for ADSB Messages
+|  ME(Type Code)  |  Name                          |
+| --------------- | ------------------------------ |
+| 0               | NoPosition                     |
+| 1..=4           | AircraftIdentification         |
+| 5..=8           | SurfacePosition                |
+| 9..=18          | AirbornePositionBaroAltitude   |
+| 19              | AirborneVelocity               |
+| 20..=22         | AirbornePositionGNSSAltitude   |
+| 23              | Reserved0                      |
+| 24              | SurfaceSystemStatus            |
+| 25..=27         | Reserved1                      |
+| 28              | AircraftStatus                 |
+| 29              | TargetStateAndStatusInformation|
+| 30              | AircraftOperationalCoordination|
+| 31              | AircraftOperationStatus        |
+
 ## example usage
 ```rust
 use hexlit::hex;
@@ -56,11 +73,13 @@ assert_eq!(
 );
 ```
 
+Build these docs(`> cargo doc`), or see [docs.rs](https://docs.rs/adsb_deku) for public API documentation.
+
 ## testing and development
 
 ### testing
 
-Test data was generated using my rtl-sdr with `dump1090-fa`.
+Test data was generated using a rtl-sdr with `dump1090-fa`.
 ```text
 > cargo test
 ```
@@ -84,6 +103,10 @@ This library is also fuzzed, ensuring no panic when parsing from demodulated byt
 # Applications
 
 ## Server/Demodulation(External) Applications
+
+This library contains logic for decoding a message, you must use a server for demodulating the message
+from 1090mhz into bytes usable by this library. These are called `Server` applications.
+
 ### (C) [dump1090_fa](https://github.com/flightaware/dump1090.git)
 This is the most tested application/implementation of 2400 sample rate demodulation used by flightaware.
 
@@ -99,9 +122,13 @@ and data forwarding functions.
 ```
 
 ## Client Applications
+
+Client applications use this library to display the data accumulated in various ways.
+
 ### 1090
 
-Display protocol data structures and currently tracked planes using this library in the same fashion as `dump1090-fa`.
+Display protocol data structures and currently tracked planes using this library in the same fashion as `dump1090-fa`
+to a terminal stdout. Optionally panic on missing implementation or `fmt::Display`, see `> ./1090 -h`.
 
 ```text
 # Startup 1090 decode chain using this library

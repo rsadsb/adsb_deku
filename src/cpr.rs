@@ -1,7 +1,5 @@
 /*!
-Compact Position Reporting
-
-This module turns an ADS-B CPR format into Latitude/Longitude: `Position`.
+Compact Position Reporting for [`Position`] Reporting
 
 reference: ICAO 9871 (D.2.4.7)
 !*/

@@ -19,12 +19,31 @@
 | 21       | [`Comm-B Identity Reply`]           | 3.1.2.6.8   |
 | 24       | [`Comm-D`]                          | 3.1.2.7.3   |
 
-# Comm-B support
-|  BDS  |  Name                                   |  Table      |
-| ----  | --------------------------------------- | ----------- |
-| (0,0) | [`Empty`]                               |             |
-| (1,0) | [`Data Link Capability`]                | A-2-16      |
-| (2,0) | [`Aircraft Identification`]             | A-2-32      |
+# [`Comm-B Altitude Reply`] and [`Comm-B Identity Reply`] Comm-B Support
+
+|  [`BDS`]  |  Name                                   |  Table      |
+| --------- | --------------------------------------- | ----------- |
+| (0,0)     | [`Empty`]                               |             |
+| (1,0)     | [`Data Link Capability`]                | A-2-16      |
+| (2,0)     | [`Aircraft Identification`]             | A-2-32      |
+
+# [`Extended Squitter(ADS-B)`] and [`Extended Squitter(TIS-B)`] Type Code support
+
+|  [`ME`](Type Code)  |  Name                                  |
+| ------------------- | -----------------------------------    |
+| 0                   | [`ME::NoPosition`]                     |
+| 1..=4               | [`ME::AircraftIdentification`]         |
+| 5..=8               | [`ME::SurfacePosition`]                |
+| 9..=18              | [`ME::AirbornePositionBaroAltitude`]   |
+| 19                  | [`ME::AirborneVelocity`]               |
+| 20..=22             | [`ME::AirbornePositionGNSSAltitude`]   |
+| 23                  | [`ME::Reserved0`]                      |
+| 24                  | [`ME::SurfaceSystemStatus`]            |
+| 25..=27             | [`ME::Reserved1`]                      |
+| 28                  | [`ME::AircraftStatus`]                 |
+| 29                  | [`ME::TargetStateAndStatusInformation`]|
+| 30                  | [`ME::AircraftOperationalCoordination`]|
+| 31                  | [`ME::AircraftOperationStatus`]        |
 
 # Example
 To begin using `adsb_deku`, import the [`Frame`] struct as well as the trait [`deku::DekuContainerRead`].
@@ -56,10 +75,9 @@ assert_eq!(
 The [`apps/`] directory of the project repository contains programs `radar` and `1090` for showcasing
 different `adsb_deku` uses. See the [`README.md`] for examples of use.
 
-[`Empty`]: crate::bds::BDS::Empty
-[`Data Link Capability`]: crate::bds::BDS::DataLinkCapability
-[`Aircraft Identification`]: crate::bds::BDS::AircraftIdentification
 [`DF`]: crate::DF
+[`ME`]: crate::adsb::ME
+[`BDS`]: crate::bds::BDS
 [`Short Air-Air Surveillance`]: crate::DF::ShortAirAirSurveillance
 [`Surveillance Altitude Reply`]: crate::DF::SurveillanceAltitudeReply
 [`Surveillance Identity Reply`]: crate::DF::SurveillanceIdentityReply
@@ -71,6 +89,24 @@ different `adsb_deku` uses. See the [`README.md`] for examples of use.
 [`Comm-B Altitude Reply`]: crate::DF::CommBAltitudeReply
 [`Comm-B Identity Reply`]: crate::DF::CommBIdentityReply
 [`Comm-D`]: crate::DF::CommDExtendedLengthMessage
+
+[`Empty`]: crate::bds::BDS::Empty
+[`Data Link Capability`]: crate::bds::BDS::DataLinkCapability
+[`Aircraft Identification`]: crate::bds::BDS::AircraftIdentification
+[`ME::NoPosition`]: crate::adsb::ME::NoPosition
+[`ME::AircraftIdentification`]: crate::adsb::ME::AircraftIdentification
+[`ME::SurfacePosition`]: crate::adsb::ME::SurfacePosition
+[`ME::AirbornePositionBaroAltitude`]: crate::adsb::ME::AirbornePositionBaroAltitude
+[`ME::AirborneVelocity`]: crate::adsb::ME::AirborneVelocity
+[`ME::AirbornePositionGNSSAltitude`]: crate::adsb::ME::AirbornePositionGNSSAltitude
+[`ME::Reserved0`]: crate::adsb::ME::Reserved0
+[`ME::SurfaceSystemStatus`]: crate::adsb::ME::SurfaceSystemStatus
+[`ME::Reserved1`]: crate::adsb::ME::Reserved1
+[`ME::AircraftStatus`]: crate::adsb::ME::AircraftStatus
+[`ME::TargetStateAndStatusInformation`]: crate::adsb::ME::TargetStateAndStatusInformation
+[`ME::AircraftOperationalCoordination`]: crate::adsb::ME::AircraftOperationalCoordination
+[`ME::AircraftOperationStatus`]: crate::adsb::ME::AircraftOperationStatus
+
 [`apps`]: crate::Frame
 [`Frame`]: crate::Frame
 [`deku::DekuContainerRead`]: crate::deku::DekuContainerRead
@@ -335,8 +371,6 @@ pub enum DF {
     },
 
     /// 20: COMM-B Altitude Reply (3.1.2.6.6)
-    ///
-    /// TODO: Test me
     #[deku(id = "20")]
     CommBAltitudeReply {
         /// FS: Flight Status
@@ -447,7 +481,6 @@ impl Altitude {
             if let Ok(n) = mode_ac::mode_a_to_mode_c(n) {
                 Ok((rest, ((n as u32) * 100)))
             } else {
-                println!("error");
                 Ok((rest, (0)))
             }
         }
@@ -759,7 +792,7 @@ impl std::fmt::Display for FlightStatus {
 pub struct AC13Field(#[deku(reader = "Self::read(deku::rest)")] pub u32);
 
 impl AC13Field {
-    /// TODO Add unit
+    // TODO Add unit
     fn read(rest: &BitSlice<Msb0, u8>) -> Result<(&BitSlice<Msb0, u8>, u32), DekuError> {
         let (rest, num) = u32::read(rest, (deku::ctx::Endian::Big, deku::ctx::Size::Bits(13)))?;
 
