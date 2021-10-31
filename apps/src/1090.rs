@@ -39,17 +39,19 @@ struct Options {
 fn main() {
     let options = Options::parse();
     let stream = TcpStream::connect((options.host, options.port)).unwrap();
+    stream
+        .set_read_timeout(Some(std::time::Duration::from_millis(50)))
+        .unwrap();
     let mut reader = BufReader::new(stream);
     let mut input = String::new();
     let mut airplanes = Airplanes::new();
 
     loop {
+        input.clear();
         if let Ok(len) = reader.read_line(&mut input) {
-            // check for empty string msg
             if len == 0 {
                 continue;
             }
-
             // convert from string hex -> bytes
             let hex = &mut input.to_string()[1..len - 2].to_string();
             println!("{}", hex.to_lowercase());

@@ -138,12 +138,11 @@ fn main() {
     let mut airplanes_state = TableState::default();
 
     loop {
+        input.clear();
         if let Ok(len) = reader.read_line(&mut input) {
-            // check for empty string msg
             if len == 0 {
                 continue;
             }
-
             // convert from string hex -> bytes
             let hex = &mut input.to_string()[1..len - 2].to_string();
             let bytes = if let Ok(bytes) = hex::decode(&hex) {
