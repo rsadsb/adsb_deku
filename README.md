@@ -118,7 +118,7 @@ This is the most tested application/implementation of 2400 sample rate demodulat
 This is a fork of [dump1090_rs](https://github.com/johnwstanford/dump1090_rs) with only demodulation
 and data forwarding functions.
 ```text
-> ./cargo r --release
+> > cargo r --release
 ```
 
 ## Client Applications
@@ -140,8 +140,10 @@ to a terminal stdout. Optionally panic on missing implementation or `fmt::Displa
 
 ### radar tui
 
-Display a radar like tui (terminal user interface) showing aircraft: ICAO address, lat, long.
-The terminal used is [cool-retro-terminal](https://github.com/Swordfish90/cool-retro-term).
+An ADS-B client for the terminal written in Rust. `Radar` connects to a demodulation server and
+displays the latitude/longitude output into a Map that is controllable by an operator. The binary
+also has the Coverage display which shows a history of aircraft locations and an Aircraft table
+for quickly zooming into a Aircraft on a map.
 
 ```text
 # Startup "radar" display in tui relative to your sdr position
