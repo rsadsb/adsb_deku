@@ -118,7 +118,7 @@ This is the most tested application/implementation of 2400 sample rate demodulat
 This is a fork of [dump1090_rs](https://github.com/johnwstanford/dump1090_rs) with only demodulation
 and data forwarding functions.
 ```text
-> > cargo r --release
+> cargo r --release
 ```
 
 ## Client Applications
