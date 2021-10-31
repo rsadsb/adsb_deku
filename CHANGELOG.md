@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v0.3.0] 2021-10-31
 ### adsb_deku
 - Fix [#8](https://github.com/wcampbell0x2a/adsb_deku/issues/8) - Support `ME::AircraftOperationStatus` Surface Status message parsing
 - Add `QNH` to `fmt::Display` for `ME::TargetStateAndStatusInformation`
