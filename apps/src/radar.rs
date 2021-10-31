@@ -102,6 +102,16 @@ enum Tab {
     Airplanes = 2,
 }
 
+impl Tab {
+    pub fn next_tab(&self) -> Tab {
+        match self {
+            Tab::Map => Tab::Coverage,
+            Tab::Coverage => Tab::Airplanes,
+            Tab::Airplanes => Tab::Map,
+        }
+    }
+}
+
 fn main() {
     let opts = Opts::parse();
     let original_local_lat = opts.lat;
@@ -346,6 +356,7 @@ fn main() {
                     (KeyCode::F(1), _) => tab_selection = Tab::Map,
                     (KeyCode::F(2), _) => tab_selection = Tab::Coverage,
                     (KeyCode::F(3), _) => tab_selection = Tab::Airplanes,
+                    (KeyCode::Tab, _) => tab_selection = tab_selection.next_tab(),
                     (KeyCode::Char('q'), _) => quit = true,
                     (KeyCode::Char('-'), Tab::Map | Tab::Coverage) => scale += 0.1,
                     (KeyCode::Char('+'), Tab::Map | Tab::Coverage) => {
