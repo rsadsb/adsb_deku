@@ -73,7 +73,7 @@ assert_eq!(
 );
 ```
 
-Build these docs(`> cargo doc`), or see [docs.rs](https://docs.rs/adsb_deku) for public API documentation.
+Build the docs(`> cargo doc`), or see [docs.rs](https://docs.rs/adsb_deku) for complete public API documentation.
 
 ## testing and development
 

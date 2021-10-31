@@ -137,7 +137,7 @@ use deku::prelude::*;
 /// Downlink ADS-B Packet
 #[derive(Debug, PartialEq, DekuRead, Clone)]
 pub struct Frame {
-    /// 5 bit identifier
+    /// Starting with 5 bit identifier, decode packet
     pub df: DF,
     /// Calculated from all bits, used as ICAO for Response packets
     #[deku(reader = "Self::read_crc(df, deku::input_bits)")]
@@ -244,6 +244,8 @@ impl std::fmt::Display for Frame {
 }
 
 /// Downlink Format (3.1.2.3.2.1.2)
+///
+/// Starting with 5 bits, decode the rest of the message as the correct data packets
 #[derive(Debug, PartialEq, DekuRead, Clone)]
 #[deku(type = "u8", bits = "5")]
 pub enum DF {
@@ -352,9 +354,6 @@ pub enum DF {
     ///
     /// Non-Transponder-based ADS-B Transmitting Subsystems and TIS-B Transmitting equipment.
     /// Equipment that cannot be interrogated.
-    ///
-    /// reference: Aeronautical Telecommunications Volume IV: Surveillance and
-    /// Collision Avoidance Systems, Fifth Edition
     #[deku(id = "18")]
     TisB {
         /// Enum containing message
