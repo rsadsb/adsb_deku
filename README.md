@@ -136,7 +136,7 @@ to a terminal stdout. Optionally panic on missing implementation or `fmt::Displa
 > cargo r --bin 1090 --release -- --debug
 ```
 
-![1090 Example](/media/2021-10-15-173245_686x1025_scrot.png)
+![1090 Example](/media/2021-10-31-093905_676x659_scrot.png)
 
 ### radar tui
 
@@ -149,10 +149,4 @@ The terminal used is [cool-retro-terminal](https://github.com/Swordfish90/cool-r
 > cargo r --bin radar --release -- --lat="50.0" --long="50.0" --cities "(name,lat,long)" "(name,lat,long)"
 ```
 
-#### Radar Tab
-![Radar Example](/media/2021-09-06-082636_1804x1062_scrot.png)
-
-#### Coverage Tab
-![Coverage Example](/media/2021-10-12-194028_1077x998_scrot.png)
-
-#### Aircraft Tab
+![Radar Example](/media/peek_2021_10_31.gif)
