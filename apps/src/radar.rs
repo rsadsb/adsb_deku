@@ -159,9 +159,30 @@ fn main() {
             // decode
             if let Ok((_, frame)) = Frame::from_bytes((&bytes, 0)) {
                 if let DF::ADSB(ref adsb) = frame.df {
-                    if let ME::AirbornePositionBaroAltitude(_) = adsb.me {
-                        adsb_airplanes.add_extended_quitter_ap(adsb.icao, frame.clone());
-                    }
+                    adsb_airplanes.incr_messages(adsb.icao);
+                    match &adsb.me {
+                        ME::NoPosition(_) => {},
+                        ME::AircraftIdentification(identification) => {
+                            adsb_airplanes.add_identification(adsb.icao, identification);
+                        },
+                        ME::SurfacePosition(_) => {},
+                        ME::AirbornePositionBaroAltitude(altitude) => {
+                            adsb_airplanes.add_altitude(adsb.icao, altitude);
+                        },
+                        ME::AirborneVelocity(vel) => {
+                            adsb_airplanes.add_airborne_velocity(adsb.icao, vel);
+                        },
+                        ME::AirbornePositionGNSSAltitude(altitude) => {
+                            adsb_airplanes.add_altitude(adsb.icao, altitude);
+                        },
+                        ME::Reserved0(_) => {},
+                        ME::SurfaceSystemStatus(_) => {},
+                        ME::Reserved1(_) => {},
+                        ME::AircraftStatus(_) => {},
+                        ME::TargetStateAndStatusInformation(_) => {},
+                        ME::AircraftOperationalCoordination(_) => {},
+                        ME::AircraftOperationStatus(_) => {},
+                    };
                 }
             }
         }
@@ -290,16 +311,36 @@ fn main() {
                         let mut rows = vec![];
                         // make a vec of all strings to get a total amount of airplanes with
                         // position information
+                        let empty = "".to_string();
                         for key in adsb_airplanes.0.keys() {
-                            let value = adsb_airplanes.lat_long_altitude(*key);
-                            if let Some((position, altitude)) = value {
-                                rows.push(Row::new(vec![
-                                    format!("{}", key),
-                                    format!("{}", position.latitude),
-                                    format!("{}", position.longitude),
-                                    format!("{}", altitude),
-                                ]))
+                            let state = adsb_airplanes.0.get(key).unwrap();
+                            let pos = adsb_airplanes.lat_long_altitude(*key);
+                            let mut lat = empty.clone();
+                            let mut lon = empty.clone();
+                            let mut alt = empty.clone();
+                            if let Some((position, altitude)) = pos {
+                                lat = format!("{}", position.latitude);
+                                lon = format!("{}", position.longitude);
+                                alt = format!("{}", altitude);
                             }
+                            rows.push(Row::new(vec![
+                                format!("{}", key),
+                                state.callsign.as_ref().unwrap_or(&empty).clone(),
+                                lat,
+                                lon,
+                                format!("{:>8}", alt),
+                                if let Some(vert_speed) = state.vert_speed {
+                                    format!("{:>6}", vert_speed)
+                                } else {
+                                    empty.clone()
+                                },
+                                if let Some(speed) = state.speed {
+                                    format!("{:>5.0}", speed)
+                                } else {
+                                    empty.clone()
+                                },
+                                format!("{:>8}", state.num_messages),
+                            ]));
                         }
 
                         let rows_len = rows.len();
@@ -315,8 +356,17 @@ fn main() {
                         let table = Table::new(rows)
                             .style(Style::default().fg(Color::White))
                             .header(
-                                Row::new(vec!["ICAO Address", "Longitude", "Latitude", "Altitude"])
-                                    .bottom_margin(1),
+                                Row::new(vec![
+                                    "ICAO",
+                                    "Call sign",
+                                    "Longitude",
+                                    "Latitude",
+                                    "Altitude",
+                                    "   FPM",
+                                    "Speed",
+                                    "    Msgs",
+                                ])
+                                .bottom_margin(1),
                             )
                             .block(
                                 Block::default()
@@ -324,10 +374,14 @@ fn main() {
                                     .borders(Borders::ALL),
                             )
                             .widths(&[
+                                Constraint::Length(6),
                                 Constraint::Length(15),
                                 Constraint::Length(15),
                                 Constraint::Length(15),
-                                Constraint::Length(15),
+                                Constraint::Length(8),
+                                Constraint::Length(6),
+                                Constraint::Length(5),
+                                Constraint::Length(8),
                             ])
                             .column_spacing(1)
                             .highlight_style(Style::default().add_modifier(Modifier::BOLD))

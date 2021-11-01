@@ -2,8 +2,35 @@ use std::collections::HashMap;
 use std::fmt;
 use std::time::SystemTime;
 
-use adsb_deku::adsb::ME;
-use adsb_deku::{cpr, Altitude, CPRFormat, Frame, DF, ICAO};
+use adsb_deku::adsb::{AirborneVelocity, Identification};
+use adsb_deku::{cpr, Altitude, CPRFormat, ICAO};
+
+#[derive(Debug)]
+pub struct AirplaneState {
+    pub coords: AirplaneCoor,
+    pub squawk: Option<u32>,
+    pub callsign: Option<String>,
+    pub speed: Option<f64>,
+    pub vert_speed: Option<i16>,
+    pub on_ground: Option<bool>,
+    pub num_messages: u64,
+    pub last_time: SystemTime,
+}
+
+impl Default for AirplaneState {
+    fn default() -> Self {
+        Self {
+            coords: AirplaneCoor::default(),
+            squawk: None,
+            callsign: None,
+            speed: None,
+            vert_speed: None,
+            on_ground: None,
+            num_messages: 0,
+            last_time: SystemTime::now(),
+        }
+    }
+}
 
 #[derive(Debug)]
 pub struct AirplaneCoor {
@@ -23,7 +50,7 @@ impl Default for AirplaneCoor {
 }
 
 #[derive(Debug, Default)]
-pub struct Airplanes(pub HashMap<ICAO, AirplaneCoor>);
+pub struct Airplanes(pub HashMap<ICAO, AirplaneState>);
 
 impl fmt::Display for Airplanes {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -42,35 +69,56 @@ impl Airplanes {
         Self(HashMap::new())
     }
 
+    pub fn incr_messages(&mut self, icao: ICAO) {
+        let mut state = self.0.entry(icao).or_insert_with(AirplaneState::default);
+        state.num_messages += 1;
+        state.last_time = SystemTime::now();
+    }
+
+    pub fn add_identification(&mut self, icao: ICAO, identification: &Identification) {
+        let mut state = self.0.entry(icao).or_insert_with(AirplaneState::default);
+        state.callsign = Some(identification.cn.clone());
+    }
+
+    pub fn add_airborne_velocity(&mut self, icao: ICAO, vel: &AirborneVelocity) {
+        let mut state = self.0.entry(icao).or_insert_with(AirplaneState::default);
+        if let Some((_, ground_speed, vert_speed)) = vel.calculate() {
+            state.speed = Some(ground_speed);
+            state.vert_speed = Some(vert_speed);
+        }
+    }
+
+    pub fn add_squawk(&mut self, icao: ICAO, squawk: u32) {
+        let mut state = self.0.entry(icao).or_insert_with(AirplaneState::default);
+        state.squawk = Some(squawk);
+    }
+
     /// Add `Altitude` from adsb frame
-    pub fn add_extended_quitter_ap(&mut self, icao: ICAO, frame: Frame) {
-        let airplane_coor = self.0.entry(icao).or_insert_with(AirplaneCoor::default);
-        if let DF::ADSB(adsb) = frame.df {
-            if let ME::AirbornePositionBaroAltitude(altitude) = adsb.me {
-                match altitude.odd_flag {
-                    CPRFormat::Odd => {
-                        *airplane_coor = AirplaneCoor {
-                            altitudes: [airplane_coor.altitudes[0], Some(altitude)],
-                            last_time: SystemTime::now(),
-                        };
-                    },
-                    CPRFormat::Even => {
-                        *airplane_coor = AirplaneCoor {
-                            altitudes: [Some(altitude), airplane_coor.altitudes[1]],
-                            last_time: SystemTime::now(),
-                        };
-                    },
-                }
-            }
+    pub fn add_altitude(&mut self, icao: ICAO, altitude: &Altitude) {
+        let state = self.0.entry(icao).or_insert_with(AirplaneState::default);
+        let now = SystemTime::now();
+        match altitude.odd_flag {
+            CPRFormat::Odd => {
+                state.coords = AirplaneCoor {
+                    altitudes: [state.coords.altitudes[0], Some(*altitude)],
+                    last_time: SystemTime::now(),
+                };
+            },
+            CPRFormat::Even => {
+                state.coords = AirplaneCoor {
+                    altitudes: [Some(*altitude), state.coords.altitudes[1]],
+                    last_time: now,
+                };
+            },
         }
     }
 
     /// Calculate latitude, longitude and altitude
     pub fn lat_long_altitude(&self, icao: ICAO) -> Option<(cpr::Position, u32)> {
         match self.0.get(&icao) {
-            Some(altitudes) => {
+            Some(state) => {
                 if let (Some(first_altitude), Some(second_altitude)) =
-                    (altitudes.altitudes[0], altitudes.altitudes[1])
+                    (state.coords.altitudes[0], state.coords.altitudes[1])
                 {
                     cpr::get_position((&first_altitude, &second_altitude))
                         .map(|position| (position, first_altitude.alt))
@@ -85,9 +133,9 @@ impl Airplanes {
     /// Calculate all latitude/longitude from Hashmap of current "seen" aircrafts
     pub fn all_lat_long_altitude(&self) -> Vec<cpr::Position> {
         let mut all_lat_long = vec![];
-        for altitudes in self.0.values() {
+        for state in self.0.values() {
             if let (Some(first_altitude), Some(second_altitude)) =
-                (altitudes.altitudes[0], altitudes.altitudes[1])
+                (state.coords.altitudes[0], state.coords.altitudes[1])
             {
                 if let Some(position) = cpr::get_position((&first_altitude, &second_altitude))
                     .map(|position| (position, first_altitude.alt))
