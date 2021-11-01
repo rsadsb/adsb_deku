@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 `adsb_deku` follows semvar when versioning, but apps are not required to follow the semvar convention.
 
 ## [Unreleased]
+### adsb_deku
+### Apps
+- [radar] Use TAB key to change tabs ([@wiseman](https://github.com/wiseman)) ([!26](https://github.com/wcampbell0x2a/adsb_deku/pull/26))
 
 ## [v0.3.0] 2021-10-31
 ### adsb_deku
