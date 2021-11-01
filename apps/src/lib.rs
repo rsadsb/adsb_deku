@@ -101,7 +101,7 @@ impl Airplanes {
             CPRFormat::Odd => {
                 state.coords = AirplaneCoor {
                     altitudes: [state.coords.altitudes[0], Some(*altitude)],
-                    last_time: SystemTime::now(),
+                    last_time: now,
                 };
             },
             CPRFormat::Even => {

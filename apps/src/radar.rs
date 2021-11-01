@@ -161,11 +161,9 @@ fn main() {
                 if let DF::ADSB(ref adsb) = frame.df {
                     adsb_airplanes.incr_messages(adsb.icao);
                     match &adsb.me {
-                        ME::NoPosition(_) => {},
                         ME::AircraftIdentification(identification) => {
                             adsb_airplanes.add_identification(adsb.icao, identification);
                         },
-                        ME::SurfacePosition(_) => {},
                         ME::AirbornePositionBaroAltitude(altitude) => {
                             adsb_airplanes.add_altitude(adsb.icao, altitude);
                         },
@@ -175,13 +173,7 @@ fn main() {
                         ME::AirbornePositionGNSSAltitude(altitude) => {
                             adsb_airplanes.add_altitude(adsb.icao, altitude);
                         },
-                        ME::Reserved0(_) => {},
-                        ME::SurfaceSystemStatus(_) => {},
-                        ME::Reserved1(_) => {},
-                        ME::AircraftStatus(_) => {},
-                        ME::TargetStateAndStatusInformation(_) => {},
-                        ME::AircraftOperationalCoordination(_) => {},
-                        ME::AircraftOperationStatus(_) => {},
+                        _ => {},
                     };
                 }
             }
@@ -329,16 +321,12 @@ fn main() {
                                 lat,
                                 lon,
                                 format!("{:>8}", alt),
-                                if let Some(vert_speed) = state.vert_speed {
-                                    format!("{:>6}", vert_speed)
-                                } else {
-                                    empty.clone()
-                                },
-                                if let Some(speed) = state.speed {
-                                    format!("{:>5.0}", speed)
-                                } else {
-                                    empty.clone()
-                                },
+                                state
+                                    .vert_speed
+                                    .map_or_else(|| "".to_string(), |v| format!("{:>6}", v)),
+                                state
+                                    .speed
+                                    .map_or_else(|| "".to_string(), |v| format!("{:>5.0}", v)),
                                 format!("{:>8}", state.num_messages),
                             ]));
                         }
