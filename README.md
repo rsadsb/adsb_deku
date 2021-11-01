@@ -9,7 +9,7 @@
 Decoder for [ADS-B(Automatic Dependent Surveillance-Broadcast)](https://en.wikipedia.org/wiki/Automatic_Dependent_Surveillance%E2%80%93Broadcast) Downlink Format protocol packets from 1090mhz.
 Derived from Aeronautical Telecommunications Volume IV: Surveillance and Collision Avoidance Systems, Fifth Edition and ICAO 9871.
 
-This library uses [deku](https://github.com/sharksforarms/deku) for serialization/deserialization of protocol.
+This library uses [deku](https://github.com/sharksforarms/deku) for deserialization of protocol.
 
 ## Downlink Format support
 |  DF  |  Name                           |  Section    |
