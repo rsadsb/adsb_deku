@@ -103,11 +103,11 @@ enum Tab {
 }
 
 impl Tab {
-    pub fn next_tab(&self) -> Tab {
+    pub fn next_tab(self) -> Self {
         match self {
-            Tab::Map => Tab::Coverage,
-            Tab::Coverage => Tab::Airplanes,
-            Tab::Airplanes => Tab::Map,
+            Self::Map => Self::Coverage,
+            Self::Coverage => Self::Airplanes,
+            Self::Airplanes => Self::Map,
         }
     }
 }
@@ -174,13 +174,11 @@ fn main() {
                         ME::AircraftIdentification(identification) => {
                             adsb_airplanes.add_identification(adsb.icao, identification);
                         },
-                        ME::AirbornePositionBaroAltitude(altitude) => {
-                            adsb_airplanes.add_altitude(adsb.icao, altitude);
-                        },
                         ME::AirborneVelocity(vel) => {
                             adsb_airplanes.add_airborne_velocity(adsb.icao, vel);
                         },
-                        ME::AirbornePositionGNSSAltitude(altitude) => {
+                        ME::AirbornePositionGNSSAltitude(altitude)
+                        | ME::AirbornePositionBaroAltitude(altitude) => {
                             adsb_airplanes.add_altitude(adsb.icao, altitude);
                         },
                         _ => {},
