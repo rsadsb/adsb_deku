@@ -107,18 +107,19 @@ This library is also fuzzed, ensuring no panic when parsing from demodulated byt
 This library contains logic for decoding a message, you must use a server for demodulating the message
 from 1090mhz into bytes usable by this library. These are called `Server` applications.
 
+### (Rust) [dump1090_rs](https://github.com/wcampbell0x2a/dump1090_rs.git)
+This is a fork of [dump1090_rs](https://github.com/johnwstanford/dump1090_rs) with only demodulation
+and data forwarding functions. I recommend this for the _full_ Rust experience. In my testing
+this has the same performance as the C demodulator.
+```text
+> cargo r --release
+```
+
 ### (C) [dump1090_fa](https://github.com/flightaware/dump1090.git)
-This is the most tested application/implementation of 2400 sample rate demodulation used by flightaware.
+This is the more tested application/implementation of 2400 sample rate demodulation used by flightaware.
 
 ```text
 > ./dump1090 --net --quiet
-```
-
-### (Rust) [dump1090_rs](https://github.com/wcampbell0x2a/dump1090_rs.git)
-This is a fork of [dump1090_rs](https://github.com/johnwstanford/dump1090_rs) with only demodulation
-and data forwarding functions.
-```text
-> cargo r --release
 ```
 
 ## Client Applications
