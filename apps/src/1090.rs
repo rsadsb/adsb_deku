@@ -90,8 +90,8 @@ fn main() {
                         }
                     }
                     if let DF::ADSB(ref adsb) = frame.df {
-                        if let ME::AirbornePositionBaroAltitude(_) = adsb.me {
-                            airplanes.add_extended_quitter_ap(adsb.icao, frame.clone());
+                        if let ME::AirbornePositionBaroAltitude(altitude) = adsb.me {
+                            airplanes.add_altitude(adsb.icao, &altitude);
                         }
                     }
                     if (frame.to_string() == "") && options.panic_display {
