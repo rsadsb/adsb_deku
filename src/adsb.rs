@@ -972,9 +972,8 @@ pub struct TargetStateAndStatusInformation {
 /// [`ME::AirborneVelocity`]
 #[derive(Debug, PartialEq, DekuRead, Clone)]
 pub struct AirborneVelocity {
-    //TODO: assert 1..=4, other values are reserved
     #[deku(bits = "3")]
-    pub sub_type: u8,
+    pub st: u8,
     #[deku(bits = "5")]
     pub nac_v: u8,
     #[deku(ctx = "*st")]
