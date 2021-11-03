@@ -135,9 +135,8 @@ impl ME {
                 writeln!(f, "  Air/Ground:    {}", capability)?;
                 write!(f, "{}", altitude)?;
             },
-            ME::AirborneVelocity(airborne_velocity) => {
-                if let AirborneVelocitySubType::GroundSpeedDecoding(_) = &airborne_velocity.sub_type
-                {
+            ME::AirborneVelocity(airborne_velocity) => match &airborne_velocity.sub_type {
+                AirborneVelocitySubType::GroundSpeedDecoding(_) => {
                     writeln!(
                         f,
                         " Extended Squitter{}Airborne velocity over ground, subsonic",
@@ -167,10 +166,8 @@ impl ME {
                     } else {
                         writeln!(f, "  Invalid packet")?;
                     }
-                }
-                if let AirborneVelocitySubType::AirspeedDecoding(airspeed_decoding) =
-                    &airborne_velocity.sub_type
-                {
+                },
+                AirborneVelocitySubType::AirspeedDecoding(airspeed_decoding) => {
                     writeln!(
                         f,
                         " Extended Squitter{}Airspeed and heading, subsonic",
@@ -188,7 +185,15 @@ impl ME {
                         )?;
                     }
                     writeln!(f, "  NACv:          {}", airborne_velocity.nac_v)?;
-                }
+                },
+                AirborneVelocitySubType::Reserved0(_) | AirborneVelocitySubType::Reserved1(_) => {
+                    writeln!(
+                        f,
+                        " Extended Squitter{}Airborne Velocity status (reserved)",
+                        transponder
+                    )?;
+                    writeln!(f, "  Address:       {} {}", icao, address_type)?;
+                },
             },
             ME::AirbornePositionGNSSAltitude(altitude) => {
                 writeln!(
@@ -1015,14 +1020,21 @@ impl AirborneVelocity {
     }
 }
 
-/// [`ME::AirborneVelocity`]
+/// Airborne Velocity Message “Subtype” Code Field Encoding
 #[derive(Debug, PartialEq, DekuRead, Clone)]
 #[deku(ctx = "st: u8", id = "st")]
 pub enum AirborneVelocitySubType {
+    #[deku(id = "0")]
+    Reserved0(#[deku(bits = "22")] u32),
+
     #[deku(id_pat = "1..=2")]
     GroundSpeedDecoding(GroundSpeedDecoding),
+
     #[deku(id_pat = "3..=4")]
     AirspeedDecoding(AirspeedDecoding),
+
+    #[deku(id_pat = "5..=7")]
+    Reserved1(#[deku(bits = "22")] u32),
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, DekuRead)]

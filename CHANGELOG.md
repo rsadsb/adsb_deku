@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### adsb_deku
 - Add `AircraftStatusType::ACASRaBroadcast`
 - Add `OperationStatus::Reserved`
+- Add `AirborneVelocityMessage::{Reserved0(1), Reserved1(5..=7)}`
 - Assert `TargetStateAndStatus.subtype` == 1
 
 ### Apps

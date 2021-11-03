@@ -932,3 +932,16 @@ fn test_issue_25() {
         resulting_string
     );
 }
+
+#[test]
+fn test_issue_22() {
+    let bytes = hex!("911c059d9805a452cf109f64924f");
+    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let resulting_string = format!("{}", frame);
+    assert_eq!(
+        r#" Extended Squitter (Non-Transponder) Airborne Velocity status (reserved)
+  Address:       1c059d (ADS-B)
+"#,
+        resulting_string
+    );
+}
