@@ -279,9 +279,9 @@ impl ME {
                     " Extended Squitter{}Aircraft operational status (airborne)",
                     transponder
                 )?;
-                writeln!(f, " Address:       {} {}", icao, address_type)?;
-                writeln!(f, " Air/Ground:    {}", capability)?;
-                write!(f, " Aircraft Operational Status:\n{}", opstatus_airborne)?;
+                writeln!(f, "  Address:       {} {}", icao, address_type)?;
+                writeln!(f, "  Air/Ground:    {}", capability)?;
+                write!(f, "  Aircraft Operational Status:\n{}", opstatus_airborne)?;
             },
             ME::AircraftOperationStatus(OperationStatus::Surface(opstatus_surface)) => {
                 writeln!(
@@ -289,9 +289,17 @@ impl ME {
                     " Extended Squitter{}Aircraft operational status (surface)",
                     transponder
                 )?;
-                writeln!(f, " Address:       {} {}", icao, address_type)?;
-                writeln!(f, " Air/Ground:    {}", capability)?;
-                write!(f, " Aircraft Operational Status:\n {}", opstatus_surface)?;
+                writeln!(f, "  Address:       {} {}", icao, address_type)?;
+                writeln!(f, "  Air/Ground:    {}", capability)?;
+                write!(f, "  Aircraft Operational Status:\n {}", opstatus_surface)?;
+            },
+            ME::AircraftOperationStatus(OperationStatus::Reserved(..)) => {
+                writeln!(
+                    f,
+                    " Extended Squitter{}Aircraft operational status (reserved)",
+                    transponder
+                )?;
+                writeln!(f, "  Address:       {} {}", icao, address_type)?;
             },
         }
         Ok(f)
@@ -332,8 +340,12 @@ pub struct AirspeedDecoding {
 pub enum OperationStatus {
     #[deku(id = "0")]
     Airborne(OperationStatusAirborne),
+
     #[deku(id = "1")]
     Surface(OperationStatusSurface),
+
+    #[deku(id_pat = "2..=7")]
+    Reserved(#[deku(bits = "5")] u8, [u8; 5]),
 }
 
 /// [`ME::AircraftOperationStatus`] && [`OperationStatus`] == 0

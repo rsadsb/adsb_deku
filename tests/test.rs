@@ -280,9 +280,9 @@ fn testing_df_extendedsquitteraircraftopstatus() {
     let resulting_string = format!("{}", frame);
     assert_eq!(
         r#" Extended Squitter Aircraft operational status (airborne)
- Address:       0d097e (Mode S / ADS-B)
- Air/Ground:    airborne
- Aircraft Operational Status:
+  Address:       0d097e (Mode S / ADS-B)
+  Air/Ground:    airborne
+  Aircraft Operational Status:
    Version:            2
    Capability classes: ACAS ARV TS
    Operational modes:  SAF SDA=3
@@ -301,9 +301,9 @@ fn testing_df_extendedsquitteraircraftopstatus() {
     let resulting_string = format!("{}", frame);
     assert_eq!(
         r#" Extended Squitter Aircraft operational status (airborne)
- Address:       a1a8da (Mode S / ADS-B)
- Air/Ground:    airborne
- Aircraft Operational Status:
+  Address:       a1a8da (Mode S / ADS-B)
+  Air/Ground:    airborne
+  Aircraft Operational Status:
    Version:            2
    Capability classes: ACAS ARV TS
    Operational modes:  SAF SDA=2
@@ -659,9 +659,9 @@ fn testing_df_18() {
     let resulting_string = format!("{}", frame);
     assert_eq!(
         r#" Extended Squitter (Non-Transponder) Aircraft operational status (surface)
- Address:       a4d01f (ADS-R)
- Air/Ground:    airborne?
- Aircraft Operational Status:
+  Address:       a4d01f (ADS-R)
+  Air/Ground:    airborne?
+  Aircraft Operational Status:
    Version:            2
    NIC-A:              0
    NIC-C:              0
@@ -915,6 +915,19 @@ fn test_operational_coordination() {
     assert_eq!(
         r#" Extended Squitter (Non-Transponder) Aircraft Operational Coordination
   Address:       43e8ee (ADS-B)
+"#,
+        resulting_string
+    );
+}
+
+#[test]
+fn test_issue_25() {
+    let bytes = hex!("92479249fcb22e16fbdc3bac5b56");
+    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let resulting_string = format!("{}", frame);
+    assert_eq!(
+        r#" Extended Squitter (Non-Transponder) Aircraft operational status (reserved)
+  Address:       479249 (TIS-B)
 "#,
         resulting_string
     );
