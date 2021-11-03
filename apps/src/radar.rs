@@ -443,61 +443,61 @@ fn main() {
         if quit {
             break;
         }
-
-        /// Draw vertical and horizontal lines
-        fn draw_lines(ctx: &mut tui::widgets::canvas::Context<'_>) {
-            ctx.draw(&Line {
-                x1: MAX_PLOT_HIGH,
-                y1: 0.0,
-                x2: MAX_PLOT_LOW,
-                y2: 0.0,
-                color: Color::White,
-            });
-            ctx.draw(&Line {
-                x1: 0.0,
-                y1: MAX_PLOT_HIGH,
-                x2: 0.0,
-                y2: MAX_PLOT_LOW,
-                color: Color::White,
-            });
-        }
-
-        /// Draw cities on the map
-        fn draw_cities(
-            ctx: &mut tui::widgets::canvas::Context<'_>,
-            cities: &[City],
-            local_lat: f64,
-            local_long: f64,
-            lat_diff: f64,
-            long_diff: f64,
-        ) {
-            for city in cities {
-                let lat = ((city.lat - local_lat) / lat_diff) * MAX_PLOT_HIGH;
-                let long = ((city.long - local_long) / long_diff) * MAX_PLOT_HIGH;
-
-                // draw city coor
-                ctx.draw(&Points {
-                    coords: &[(long, lat)],
-                    color: Color::Green,
-                });
-
-                // draw city name
-                ctx.print(
-                    long + 3.0,
-                    lat,
-                    Box::leak(city.name.to_string().into_boxed_str()),
-                    Color::Green,
-                );
-            }
-        }
-
-        fn scale_lat_long(scale: f64) -> (f64, f64) {
-            // Difference between each lat point
-            let lat_diff = scale;
-            // Difference between each long point
-            let long_diff = lat_diff * 3.0;
-
-            (lat_diff, long_diff)
-        }
     }
+}
+
+/// Draw vertical and horizontal lines
+fn draw_lines(ctx: &mut tui::widgets::canvas::Context<'_>) {
+    ctx.draw(&Line {
+        x1: MAX_PLOT_HIGH,
+        y1: 0.0,
+        x2: MAX_PLOT_LOW,
+        y2: 0.0,
+        color: Color::White,
+    });
+    ctx.draw(&Line {
+        x1: 0.0,
+        y1: MAX_PLOT_HIGH,
+        x2: 0.0,
+        y2: MAX_PLOT_LOW,
+        color: Color::White,
+    });
+}
+
+/// Draw cities on the map
+fn draw_cities(
+    ctx: &mut tui::widgets::canvas::Context<'_>,
+    cities: &[City],
+    local_lat: f64,
+    local_long: f64,
+    lat_diff: f64,
+    long_diff: f64,
+) {
+    for city in cities {
+        let lat = ((city.lat - local_lat) / lat_diff) * MAX_PLOT_HIGH;
+        let long = ((city.long - local_long) / long_diff) * MAX_PLOT_HIGH;
+
+        // draw city coor
+        ctx.draw(&Points {
+            coords: &[(long, lat)],
+            color: Color::Green,
+        });
+
+        // draw city name
+        ctx.print(
+            long + 3.0,
+            lat,
+            Box::leak(city.name.to_string().into_boxed_str()),
+            Color::Green,
+        );
+    }
+}
+
+fn scale_lat_long(scale: f64) -> (f64, f64) {
+    // Difference between each lat point
+    let lat_diff = scale;
+    // Difference between each long point
+    let long_diff = lat_diff * 3.0;
+
+    (lat_diff, long_diff)
 }
