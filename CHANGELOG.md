@@ -8,8 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### adsb_deku
+- Add `AircraftStatusType::ACASRaBroadcast`
+- Add `OperationStatus::Reserved`
+- Assert `TargetStateAndStatus.subtype` == 1
+
 ### Apps
 - [radar] Use TAB key to change tabs ([@wiseman](https://github.com/wiseman)) ([!26](https://github.com/wcampbell0x2a/adsb_deku/pull/26))
+- [radar] Add Call sign, Speed, Vertical Speed, Number of messages to Table view. ([@wiseman](https://github.com/wiseman)) ([!29](https://github.com/wcampbell0x2a/adsb_deku/pull/29))
 
 ## [v0.3.0] 2021-10-31
 ### adsb_deku
