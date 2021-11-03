@@ -831,6 +831,8 @@ pub enum AircraftStatusType {
     NoInformation,
     #[deku(id = "1")]
     EmergencyPriorityStatus,
+    #[deku(id = "2")]
+    ACASRaBroadcast,
     #[deku(id_pat = "_")]
     Reserved,
 }
