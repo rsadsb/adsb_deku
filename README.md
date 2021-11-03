@@ -60,12 +60,11 @@ let bytes = hex!("8da2c1bd587ba2adb31799cb802b");
 let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
 assert_eq!(
         r#" Extended Squitter Airborne position (barometric altitude)
-  ICAO Address:  a2c1bd (Mode S / ADS-B)
+  Address:       a2c1bd (Mode S / ADS-B)
   Air/Ground:    airborne
   Altitude:      23650 ft barometric
   CPR type:      Airborne
   CPR odd flag:  even
-  CPR NUCp/NIC:  ?
   CPR latitude:  (87769)
   CPR longitude: (71577)
 "#,
