@@ -125,9 +125,7 @@ fn main() {
     let opts = Opts::parse();
 
     // Setup non-blocking TcpStream
-    let host = opts.host.clone();
-    let port = opts.port.clone();
-    let stream = TcpStream::connect((host, port)).unwrap();
+    let stream = TcpStream::connect((opts.host.clone(), opts.port)).unwrap();
     stream
         .set_read_timeout(Some(std::time::Duration::from_millis(50)))
         .unwrap();
