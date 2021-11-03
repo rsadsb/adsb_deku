@@ -123,7 +123,6 @@ struct Settings {
 
 fn main() {
     let opts = Opts::parse();
-    let cities = opts.cities.clone();
 
     // Setup non-blocking TcpStream
     let host = opts.host.clone();
@@ -211,12 +210,14 @@ fn main() {
 
         terminal
             .draw(|f| {
+                // create layout
                 let chunks = Layout::default()
                     .direction(Direction::Vertical)
                     .margin(1)
                     .constraints([Constraint::Min(3), Constraint::Percentage(100)].as_ref())
                     .split(f.size());
 
+                // render tabs
                 let titles = ["Map", "Coverage", "Airplanes"]
                     .iter()
                     .copied()
@@ -235,24 +236,15 @@ fn main() {
 
                 f.render_widget(tab, chunks[0]);
 
+                // render the tab depending on the selection
                 match tab_selection {
                     Tab::Map => build_tab_map(f, chunks, &settings, &opts, &adsb_airplanes),
-                    Tab::Coverage => build_tab_coverage(
-                        f,
-                        chunks,
-                        &settings,
-                        &opts,
-                        &adsb_airplanes,
-                        &coverage_airplanes,
-                    ),
-                    Tab::Airplanes => build_tab_airplanes(
-                        f,
-                        chunks,
-                        &settings,
-                        &opts,
-                        &adsb_airplanes,
-                        &mut airplanes_state,
-                    ),
+                    Tab::Coverage => {
+                        build_tab_coverage(f, chunks, &settings, &opts, &coverage_airplanes)
+                    },
+                    Tab::Airplanes => {
+                        build_tab_airplanes(f, chunks, &adsb_airplanes, &mut airplanes_state)
+                    },
                 }
             })
             .unwrap();
@@ -382,7 +374,6 @@ fn build_tab_coverage<A: tui::backend::Backend>(
     chunks: Vec<Rect>,
     settings: &Settings,
     opts: &Opts,
-    adsb_airplanes: &Airplanes,
     coverage_airplanes: &[Position],
 ) {
     let canvas = Canvas::default()
@@ -425,8 +416,6 @@ fn build_tab_coverage<A: tui::backend::Backend>(
 fn build_tab_airplanes<A: tui::backend::Backend>(
     f: &mut tui::Frame<A>,
     chunks: Vec<Rect>,
-    settings: &Settings,
-    opts: &Opts,
     adsb_airplanes: &Airplanes,
     airplanes_state: &mut TableState,
 ) {
