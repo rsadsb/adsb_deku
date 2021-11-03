@@ -48,28 +48,40 @@ impl ADSB {
 pub enum ME {
     #[deku(id = "0")]
     NoPosition([u8; 6]),
+
     #[deku(id_pat = "1..=4")]
     AircraftIdentification(Identification),
+
     #[deku(id_pat = "5..=8")]
     SurfacePosition(SurfacePosition),
+
     #[deku(id_pat = "9..=18")]
     AirbornePositionBaroAltitude(Altitude),
+
     #[deku(id = "19")]
     AirborneVelocity(AirborneVelocity),
+
     #[deku(id_pat = "20..=22")]
     AirbornePositionGNSSAltitude(Altitude),
+
     #[deku(id = "23")]
     Reserved0([u8; 6]),
+
     #[deku(id_pat = "24")]
     SurfaceSystemStatus([u8; 6]),
+
     #[deku(id_pat = "25..=27")]
     Reserved1([u8; 6]),
+
     #[deku(id = "28")]
     AircraftStatus(AircraftStatus),
+
     #[deku(id = "29")]
     TargetStateAndStatusInformation(TargetStateAndStatusInformation),
+
     #[deku(id = "30")]
     AircraftOperationalCoordination([u8; 6]),
+
     #[deku(id = "31")]
     AircraftOperationStatus(OperationStatus),
 }
