@@ -15,6 +15,10 @@
 //! Instead of using a `HashMap` for only storing an aircraft position for each aircraft, store
 //! all aircrafts and only display a dot where detection at the lat/long position. This is for
 //! testing the reach of your antenna.
+//!
+//! ## Airplanes
+//!
+//! Display all information gathered from observed aircraft
 
 use std::io::{self, BufRead, BufReader};
 use std::net::TcpStream;
