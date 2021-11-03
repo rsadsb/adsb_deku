@@ -888,10 +888,12 @@ impl std::fmt::Display for TypeCoding {
     }
 }
 
+/// Target State and Status (§2.2.3.2.7.1)
 #[derive(Copy, Clone, Debug, PartialEq, DekuRead)]
 pub struct TargetStateAndStatusInformation {
-    // TODO Support V1
-    #[deku(bits = "2")]
+    // TODO Support Target State and Status defined in DO-260A, ADS-B Version=1
+    // TODO Support reserved 2..=3
+    #[deku(bits = "2", assert_eq = "1")]
     pub subtype: u8,
     #[deku(bits = "1")]
     pub is_fms: bool,
