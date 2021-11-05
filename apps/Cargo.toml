@@ -16,7 +16,9 @@ path = "src/1090.rs"
 [dependencies]
 adsb_deku = { path = "../", version = "0.3" }
 hex = "0.4"
-tui = {version = "0.16", default-features = false, features = ["crossterm"]}
 crossterm = "0.21"
 clap = {version = "3.0.0-beta.5", features = ["color"]}
 rayon = "1.5"
+# CHANGE WHEN https://github.com/fdehau/tui-rs/issues/529 is released
+#tui = {version = "0.16", default-features = false, features = ["crossterm"]}
+tui = { git = "https://github.com/fdehau/tui-rs.git", branch = "master", features = ["crossterm"] }

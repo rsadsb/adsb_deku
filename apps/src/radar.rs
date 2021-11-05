@@ -39,7 +39,7 @@ use tui::backend::{Backend, CrosstermBackend};
 use tui::layout::{Constraint, Direction, Layout, Rect};
 use tui::style::{Color, Modifier, Style};
 use tui::symbols::DOT;
-use tui::text::Spans;
+use tui::text::{Span, Spans};
 use tui::widgets::canvas::{Canvas, Line, Points};
 use tui::widgets::{Block, Borders, Row, Table, TableState, Tabs};
 use tui::Terminal;
@@ -361,7 +361,11 @@ fn build_tab_map<A: tui::backend::Backend>(
                     };
 
                     // draw plane ICAO name
-                    ctx.print(long + 3.0, lat, Box::leak(name), Color::White);
+                    ctx.print(
+                        long + 3.0,
+                        lat,
+                        Span::styled(name.to_string(), Style::default().fg(Color::White)),
+                    );
                 }
             }
 
@@ -539,8 +543,7 @@ fn draw_cities(
         ctx.print(
             long + 3.0,
             lat,
-            Box::leak(city.name.to_string().into_boxed_str()),
-            Color::Green,
+            Span::styled(city.name.to_string(), Style::default().fg(Color::Green)),
         );
     }
 }
