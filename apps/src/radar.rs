@@ -149,7 +149,7 @@ fn main() {
 
     // setup tui variables
     let mut tab_selection = Tab::Map;
-    let mut quit = false;
+    let mut quit = None;
     let original_scale = 1.2;
     let mut airplanes_state = TableState::default();
 
@@ -160,9 +160,17 @@ fn main() {
     };
 
     loop {
+        if let Some(reason) = quit {
+            terminal.clear().unwrap();
+            println!("{}", reason);
+            break;
+        }
         input.clear();
+
         if let Ok(len) = reader.read_line(&mut input) {
+            // a length of 0 would indicate a broken pipe/input, quit program
             if len == 0 {
+                quit = Some("TCP connection aborted, quitting radar tui");
                 continue;
             }
             // convert from string hex -> bytes
@@ -198,6 +206,8 @@ fn main() {
                 }
             }
         }
+
+        // tui drawing
 
         // add lat_long to coverage vector
         //
@@ -260,7 +270,7 @@ fn main() {
                     (KeyCode::F(2), _) => tab_selection = Tab::Coverage,
                     (KeyCode::F(3), _) => tab_selection = Tab::Airplanes,
                     (KeyCode::Tab, _) => tab_selection = tab_selection.next_tab(),
-                    (KeyCode::Char('q'), _) => quit = true,
+                    (KeyCode::Char('q'), _) => quit = Some("user requested quit"),
                     (KeyCode::Char('-'), Tab::Map | Tab::Coverage) => settings.scale += 0.1,
                     (KeyCode::Char('+'), Tab::Map | Tab::Coverage) => {
                         if settings.scale > 0.2 {
@@ -306,9 +316,6 @@ fn main() {
                     _ => (),
                 }
             }
-        }
-        if quit {
-            break;
         }
     }
 }
