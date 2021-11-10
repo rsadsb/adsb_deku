@@ -455,10 +455,10 @@ fn build_tab_airplanes<A: tui::backend::Backend>(
             format!("{:>8}", alt),
             state
                 .vert_speed
-                .map_or_else(|| "".to_string(), |v| format!("{:>6}", v)),
+                .map_or_else(|| "".into(), |v| format!("{:>6}", v)),
             state
                 .speed
-                .map_or_else(|| "".to_string(), |v| format!("{:>5.0}", v)),
+                .map_or_else(|| "".into(), |v| format!("{:>5.0}", v)),
             format!("{:>8}", state.num_messages),
         ]));
     }
