@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [radar] Use TAB key to change tabs ([@wiseman](https://github.com/wiseman)) ([!26](https://github.com/wcampbell0x2a/adsb_deku/pull/26))
 - [radar] Add Call sign, Speed, Vertical Speed, Number of messages to Table view. ([@wiseman](https://github.com/wiseman)) ([!29](https://github.com/wcampbell0x2a/adsb_deku/pull/29))
 - [radar] fix broken TCP pipe to ADS-B server, exiting correctly
+- [radar] Optimize render of Coverage tab by reducing the size of Vec
 
 ## [v0.3.0] 2021-10-31
 ### adsb_deku

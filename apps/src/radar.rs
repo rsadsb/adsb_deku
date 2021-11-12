@@ -207,14 +207,19 @@ fn main() {
             }
         }
 
-        // tui drawing
 
-        // add lat_long to coverage vector
-        //
-        // TODO: use this data for all display of all airplanes current data instead of recomputing
-        // this multiple times
+        // add lat and long to coverage vector if not existing
         let all_lat_long = adsb_airplanes.all_lat_long_altitude();
-        coverage_airplanes.extend(all_lat_long.clone());
+        for Position {
+            latitude,
+            longitude,
+            ..
+        } in all_lat_long
+        {
+            if !coverage_airplanes.contains(&(latitude, longitude)) {
+                coverage_airplanes.push((latitude, longitude));
+            }
+        }
 
         input.clear();
         // remove airplanes that timed-out
@@ -387,7 +392,7 @@ fn build_tab_coverage<A: tui::backend::Backend>(
     chunks: Vec<Rect>,
     settings: &Settings,
     opts: &Opts,
-    coverage_airplanes: &[Position],
+    coverage_airplanes: &[(f64, f64)],
 ) {
     let canvas = Canvas::default()
         .block(Block::default().title("Coverage").borders(Borders::ALL))
@@ -409,9 +414,9 @@ fn build_tab_coverage<A: tui::backend::Backend>(
             );
 
             // draw ADSB tab airplanes
-            for position in coverage_airplanes.iter() {
-                let lat = ((position.latitude - settings.lat) / lat_diff) * MAX_PLOT_HIGH;
-                let long = ((position.longitude - settings.long) / long_diff) * MAX_PLOT_HIGH;
+            for (lat, long) in coverage_airplanes.iter() {
+                let lat = ((lat - settings.lat) / lat_diff) * MAX_PLOT_HIGH;
+                let long = ((long - settings.long) / long_diff) * MAX_PLOT_HIGH;
 
                 // draw dot on location
                 ctx.draw(&Points {
