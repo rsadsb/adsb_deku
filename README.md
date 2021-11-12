@@ -9,31 +9,14 @@
 
 Decoder for [ADS-B(Automatic Dependent Surveillance-Broadcast)](https://en.wikipedia.org/wiki/Automatic_Dependent_Surveillance%E2%80%93Broadcast) Downlink Format protocol packets from 1090mhz.
 
-![Radar Example](/media/peek_2021_10_31.gif)
-See [apps/radar-tui](#radar-tui) to run this example!
-
 This library uses [deku](https://github.com/sharksforarms/deku) for deserialization of protocol.
 
 ## Applications
 ### Client Applications
 
-Client applications use this library to display the data accumulated in various ways.
-
-#### 1090
-
-Display protocol data structures and currently tracked planes using this library in the same fashion as `dump1090-fa`
-to a terminal stdout. Optionally panic on missing implementation or `fmt::Display`, see `> ./1090 -h`.
-
-```text
-# Startup 1090 decode chain using this library
-> cd apps
-> cargo r --bin 1090 --release -- --debug
-```
-
-![1090 Example](/media/2021-10-31-093905_676x659_scrot.png)
+Client applications use this library to display the data accumulated from an ADS-B demodulation server in various ways.
 
 #### radar tui
-
 An ADS-B client for the terminal written in Rust. `Radar` connects to a demodulation server and
 displays the latitude/longitude output into a Map that is controllable by an operator. The binary
 also has the Coverage display which shows a history of aircraft locations and an Aircraft table
@@ -47,6 +30,18 @@ This application uses [tui-rs](https://github.com/fdehau/tui-rs) for generating 
 ```
 
 ![Radar Example](/media/peek_2021_10_31.gif)
+
+#### 1090
+Display protocol data structures and currently tracked planes using this library in the same fashion as `dump1090-fa`
+to a terminal stdout. Optionally panic on missing implementation or `fmt::Display`, see `> ./1090 -h`.
+
+```text
+# Startup 1090 decode chain using this library
+> cd apps
+> cargo r --bin 1090 --release -- --debug
+```
+
+![1090 Example](/media/2021-10-31-093905_676x659_scrot.png)
 
 ### Server/Demodulation(External) Applications
 
