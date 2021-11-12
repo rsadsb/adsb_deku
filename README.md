@@ -8,7 +8,6 @@
 
 
 Decoder for [ADS-B(Automatic Dependent Surveillance-Broadcast)](https://en.wikipedia.org/wiki/Automatic_Dependent_Surveillance%E2%80%93Broadcast) Downlink Format protocol packets from 1090mhz.
-Derived from Aeronautical Telecommunications Volume IV: Surveillance and Collision Avoidance Systems, Fifth Edition and ICAO 9871.
 
 ![Radar Example](/media/peek_2021_10_31.gif)
 See [apps/radar-tui](#radar-tui) to run this example!
@@ -161,3 +160,6 @@ This is the more tested application/implementation of 2400 sample rate demodulat
 ```text
 > ./dump1090 --net --quiet
 ```
+
+## Derivation
+Derived from Aeronautical Telecommunications Volume IV: Surveillance and Collision Avoidance Systems, Fifth Edition and ICAO 9871.
