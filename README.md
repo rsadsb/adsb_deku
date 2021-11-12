@@ -17,7 +17,7 @@ This library uses [deku](https://github.com/sharksforarms/deku) for deserializat
 Client applications use this library to display the data accumulated from an ADS-B demodulation server in various ways.
 
 #### radar tui
-An ADS-B client for the terminal written in Rust. `Radar` connects to an ADS-B demodulation server
+An ADS-B client for the terminal written in Rust. Radar connects to an ADS-B demodulation server
 and stores this info, allowing an operator to control the display of the data.
 
 - **Map** - Plot currently detected aircraft on lat/long grid.
