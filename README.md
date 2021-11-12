@@ -69,6 +69,11 @@ This is the more tested application/implementation of 2400 sample rate demodulat
 ```
 
 ## adsb_deku library
+Add the following lines to your Cargo.toml file:
+```text
+adsb_deku = "*"
+```
+
 ### Downlink Format support
 |  DF  |  Name                           |  Section    |
 | ---- | ------------------------------- | ----------- |
