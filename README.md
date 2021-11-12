@@ -29,7 +29,7 @@ See [apps/README.md](https://github.com/wcampbell0x2a/adsb_deku/tree/update-read
 This application uses [tui-rs](https://github.com/fdehau/tui-rs) for generating the display to terminal.
 
 ```text
-# Startup "radar" display in tui relative to your sdr position
+# Startup "radar" display in tui relative to your antenna position
 > cd apps
 > cargo r --bin radar --release -- --lat="50.0" --long="50.0" --cities "(name,lat,long)" "(name,lat,long)"
 ```
