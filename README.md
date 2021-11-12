@@ -14,6 +14,63 @@ See [apps/radar-tui](#radar-tui) to run this example!
 
 This library uses [deku](https://github.com/sharksforarms/deku) for deserialization of protocol.
 
+## Applications
+### Client Applications
+
+Client applications use this library to display the data accumulated in various ways.
+
+#### 1090
+
+Display protocol data structures and currently tracked planes using this library in the same fashion as `dump1090-fa`
+to a terminal stdout. Optionally panic on missing implementation or `fmt::Display`, see `> ./1090 -h`.
+
+```text
+# Startup 1090 decode chain using this library
+> cd apps
+> cargo r --bin 1090 --release -- --debug
+```
+
+![1090 Example](/media/2021-10-31-093905_676x659_scrot.png)
+
+#### radar tui
+
+An ADS-B client for the terminal written in Rust. `Radar` connects to a demodulation server and
+displays the latitude/longitude output into a Map that is controllable by an operator. The binary
+also has the Coverage display which shows a history of aircraft locations and an Aircraft table
+for quickly zooming into a Aircraft on a map.
+This application uses [tui-rs](https://github.com/fdehau/tui-rs) for generating the display to terminal.
+
+```text
+# Startup "radar" display in tui relative to your sdr position
+> cd apps
+> cargo r --bin radar --release -- --lat="50.0" --long="50.0" --cities "(name,lat,long)" "(name,lat,long)"
+```
+
+![Radar Example](/media/peek_2021_10_31.gif)
+
+### Server/Demodulation(External) Applications
+
+This library contains logic for decoding a message, you must use a server for demodulating the message
+from 1090mhz into bytes usable by this library. These are called `Server` applications.
+
+### (Rust) [dump1090_rs](https://github.com/wcampbell0x2a/dump1090_rs.git)
+This is a fork of [dump1090_rs](https://github.com/johnwstanford/dump1090_rs) with only demodulation
+and data forwarding functions. I recommend this for the _full_ Rust experience. In my testing
+this has the same performance as the C demodulator.
+```text
+> cargo r --release
+```
+
+#### (C) [dump1090_fa](https://github.com/flightaware/dump1090.git)
+This is the more tested application/implementation of 2400 sample rate demodulation used by flightaware.
+
+```text
+> ./dump1090 --net --quiet
+```
+
+## Derivation
+Derived from Aeronautical Telecommunications Volume IV: Surveillance and Collision Avoidance Systems, Fifth Edition and ICAO 9871.
+
 ## adsb_deku library
 ### Downlink Format support
 |  DF  |  Name                           |  Section    |
@@ -81,7 +138,7 @@ assert_eq!(
 
 Build the docs(`> cargo doc`), or see [docs.rs](https://docs.rs/adsb_deku) for complete public API documentation.
 
-### testing and development
+### Contributing
 
 #### testing
 
@@ -106,60 +163,3 @@ This library is also fuzzed, ensuring no panic when parsing from demodulated byt
 > cargo +nightly fmt
 ```
 
-## Applications
-
-### Client Applications
-
-Client applications use this library to display the data accumulated in various ways.
-
-#### 1090
-
-Display protocol data structures and currently tracked planes using this library in the same fashion as `dump1090-fa`
-to a terminal stdout. Optionally panic on missing implementation or `fmt::Display`, see `> ./1090 -h`.
-
-```text
-# Startup 1090 decode chain using this library
-> cd apps
-> cargo r --bin 1090 --release -- --debug
-```
-
-![1090 Example](/media/2021-10-31-093905_676x659_scrot.png)
-
-#### radar tui
-
-An ADS-B client for the terminal written in Rust. `Radar` connects to a demodulation server and
-displays the latitude/longitude output into a Map that is controllable by an operator. The binary
-also has the Coverage display which shows a history of aircraft locations and an Aircraft table
-for quickly zooming into a Aircraft on a map.
-This application uses [tui-rs](https://github.com/fdehau/tui-rs) for generating the display to terminal.
-
-```text
-# Startup "radar" display in tui relative to your sdr position
-> cd apps
-> cargo r --bin radar --release -- --lat="50.0" --long="50.0" --cities "(name,lat,long)" "(name,lat,long)"
-```
-
-![Radar Example](/media/peek_2021_10_31.gif)
-
-### Server/Demodulation(External) Applications
-
-This library contains logic for decoding a message, you must use a server for demodulating the message
-from 1090mhz into bytes usable by this library. These are called `Server` applications.
-
-### (Rust) [dump1090_rs](https://github.com/wcampbell0x2a/dump1090_rs.git)
-This is a fork of [dump1090_rs](https://github.com/johnwstanford/dump1090_rs) with only demodulation
-and data forwarding functions. I recommend this for the _full_ Rust experience. In my testing
-this has the same performance as the C demodulator.
-```text
-> cargo r --release
-```
-
-#### (C) [dump1090_fa](https://github.com/flightaware/dump1090.git)
-This is the more tested application/implementation of 2400 sample rate demodulation used by flightaware.
-
-```text
-> ./dump1090 --net --quiet
-```
-
-## Derivation
-Derived from Aeronautical Telecommunications Volume IV: Surveillance and Collision Avoidance Systems, Fifth Edition and ICAO 9871.
