@@ -18,8 +18,7 @@ pub struct ADSB {
     /// Message, extended Squitter
     pub me: ME,
     /// Parity/Interrogator ID
-    #[deku(bits = "24")]
-    pub pi: u32,
+    pub pi: ICAO,
 }
 
 impl ADSB {
@@ -924,7 +923,7 @@ impl std::fmt::Display for TypeCoding {
 pub struct TargetStateAndStatusInformation {
     // TODO Support Target State and Status defined in DO-260A, ADS-B Version=1
     // TODO Support reserved 2..=3
-    #[deku(bits = "2", assert_eq = "1")]
+    #[deku(bits = "2")]
     pub subtype: u8,
     #[deku(bits = "1")]
     pub is_fms: bool,
