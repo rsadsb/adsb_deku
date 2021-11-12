@@ -53,7 +53,7 @@ This application uses [tui-rs](https://github.com/fdehau/tui-rs) for generating 
 This library contains logic for decoding a message, you must use a server for demodulating the message
 from 1090mhz into bytes usable by this library. These are called `Server` applications.
 
-### (Rust) [dump1090_rs](https://github.com/wcampbell0x2a/dump1090_rs.git)
+#### (Rust) [dump1090_rs](https://github.com/wcampbell0x2a/dump1090_rs.git)
 This is a fork of [dump1090_rs](https://github.com/johnwstanford/dump1090_rs) with only demodulation
 and data forwarding functions. I recommend this for the _full_ Rust experience. In my testing
 this has the same performance as the C demodulator.
