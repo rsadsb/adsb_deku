@@ -68,9 +68,6 @@ This is the more tested application/implementation of 2400 sample rate demodulat
 > ./dump1090 --net --quiet
 ```
 
-## Derivation
-Derived from Aeronautical Telecommunications Volume IV: Surveillance and Collision Avoidance Systems, Fifth Edition and ICAO 9871.
-
 ## adsb_deku library
 ### Downlink Format support
 |  DF  |  Name                           |  Section    |
@@ -162,4 +159,7 @@ This library is also fuzzed, ensuring no panic when parsing from demodulated byt
 ```text
 > cargo +nightly fmt
 ```
+
+## Derivation
+Derived from Aeronautical Telecommunications Volume IV: Surveillance and Collision Avoidance Systems, Fifth Edition and ICAO 9871.
 
