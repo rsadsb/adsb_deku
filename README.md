@@ -17,10 +17,15 @@ This library uses [deku](https://github.com/sharksforarms/deku) for deserializat
 Client applications use this library to display the data accumulated from an ADS-B demodulation server in various ways.
 
 #### radar tui
-An ADS-B client for the terminal written in Rust. `Radar` connects to a demodulation server and
-displays the latitude/longitude output into a Map that is controllable by an operator. The binary
-also has the Coverage display which shows a history of aircraft locations and an Aircraft table
-for quickly zooming into a Aircraft on a map.
+An ADS-B client for the terminal written in Rust. `Radar` connects to an ADS-B demodulation server
+and stores this info, allowing an operator to control the display of the data.
+
+- **Map** - Plot aircraft on lat/long grid
+- **Coverage** - Plot all detected aircraft lat/long positions since starting radar.
+- **Aircraft** - Show detailed table of information about all aircraft detected.
+
+See [apps/README.md](https://github.com/wcampbell0x2a/adsb_deku/tree/update-readme/apps) for keybindings.
+
 This application uses [tui-rs](https://github.com/fdehau/tui-rs) for generating the display to terminal.
 
 ```text
