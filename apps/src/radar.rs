@@ -207,7 +207,6 @@ fn main() {
             }
         }
 
-
         // add lat and long to coverage vector if not existing
         let all_lat_long = adsb_airplanes.all_lat_long_altitude();
         for Position {
@@ -225,6 +224,7 @@ fn main() {
         // remove airplanes that timed-out
         adsb_airplanes.prune();
 
+        // tui drawing
         terminal
             .draw(|f| {
                 // create layout
