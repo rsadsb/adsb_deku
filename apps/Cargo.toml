@@ -22,3 +22,4 @@ rayon = "1.5"
 # CHANGE WHEN https://github.com/fdehau/tui-rs/issues/529 is released
 #tui = {version = "0.16", default-features = false, features = ["crossterm"]}
 tui = { git = "https://github.com/fdehau/tui-rs.git", branch = "master", features = ["crossterm"] }
+gpsd_proto = "0.7.0"

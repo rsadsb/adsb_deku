@@ -20,10 +20,11 @@
 //!
 //! Display all information gathered from observed aircraft
 
-use std::io::{self, BufRead, BufReader};
+use std::io::{self, BufRead, BufReader, BufWriter};
 use std::net::TcpStream;
 use std::num::ParseFloatError;
 use std::str::FromStr;
+use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use adsb_deku::adsb::ME;
@@ -34,6 +35,7 @@ use apps::Airplanes;
 use clap::Parser;
 use crossterm::event::{poll, read, Event, KeyCode, KeyEvent};
 use crossterm::terminal::enable_raw_mode;
+use gpsd_proto::{get_data, handshake, ResponseData};
 use rayon::prelude::*;
 use tui::backend::{Backend, CrosstermBackend};
 use tui::layout::{Constraint, Direction, Layout, Rect};
@@ -99,6 +101,12 @@ struct Opts {
     /// Disable output of latitude and longitude on display
     #[clap(long)]
     disable_lat_long: bool,
+    /// Enable automatic updating of lat/lon from gpsd
+    #[clap(long)]
+    gpsd: bool,
+    /// Ip address of gpsd
+    #[clap(long, default_value = "localhost")]
+    gpsd_ip: String,
 }
 
 #[derive(Copy, Clone)]
@@ -129,11 +137,43 @@ fn main() {
     let opts = Opts::parse();
 
     // Setup non-blocking TcpStream
-    let stream = TcpStream::connect((opts.host.clone(), opts.port)).unwrap();
+    let stream = TcpStream::connect((opts.host.clone(), opts.port))
+        .expect("Could not open port to ADS-B daemon");
     stream
         .set_read_timeout(Some(std::time::Duration::from_millis(50)))
         .unwrap();
     let mut reader = BufReader::new(stream);
+
+    // This next group of functions and variables handle if `gpsd_ip` is set from the command
+    // line.
+    //
+    // When set, read from the gpsd daemon at (gpsd_ip, 2947) and update the lat/long Arc<Mutex<T>
+    // accordingly
+    let gps_lat_long = Arc::new(Mutex::new(None));
+    let gpsd = opts.gpsd;
+    let gpsd_ip = opts.gpsd_ip.clone();
+    if gpsd {
+        // clone locally
+        let cloned_gps_lat_long = Arc::clone(&gps_lat_long);
+
+        // start thread
+        std::thread::spawn(move || {
+            let stream = TcpStream::connect((gpsd_ip, 2947)).unwrap();
+            let mut reader = BufReader::new(&stream);
+            let mut writer = BufWriter::new(&stream);
+
+            handshake(&mut reader, &mut writer).unwrap();
+
+            // keep looping while reading new messages looking for GGA messages which are the
+            // normal GPS messages from the NMEA messages.
+            loop {
+                if let Ok(ResponseData::Tpv(data)) = get_data(&mut reader) {
+                    let mut lat_long = cloned_gps_lat_long.lock().unwrap();
+                    *lat_long = Some((data.lat.unwrap(), data.lon.unwrap()));
+                }
+            }
+        });
+    }
 
     // empty containers
     let mut input = String::new();
@@ -166,6 +206,15 @@ fn main() {
             break;
         }
         input.clear();
+
+        // if `gpsd_ip` is selected, check if there is an update from that thread
+        if opts.gpsd {
+            let lat_long = gps_lat_long.lock().unwrap();
+            if let Some((lat, long)) = *lat_long {
+                settings.lat = lat as f64;
+                settings.long = long as f64;
+            }
+        }
 
         if let Ok(len) = reader.read_line(&mut input) {
             // a length of 0 would indicate a broken pipe/input, quit program
