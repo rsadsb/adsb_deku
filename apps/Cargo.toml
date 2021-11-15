@@ -1,6 +1,6 @@
 [package]
 name = "apps"
-version = "0.3.0"
+version = "0.4.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -14,7 +14,7 @@ name = "1090"
 path = "src/1090.rs"
 
 [dependencies]
-adsb_deku = { path = "../", version = "0.3" }
+adsb_deku = { path = "../", version = "0.4" }
 hex = "0.4"
 crossterm = "0.21"
 clap = {version = "3.0.0-beta.5", features = ["color"]}
