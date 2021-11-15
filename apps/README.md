@@ -4,7 +4,7 @@ See main README.md for app sample images.
 
 ## 1090
 ```
-1090 0.3.0
+1090 0.4.0
 
 wcampbell0x2a
 
@@ -26,7 +26,7 @@ OPTIONS:
 
 ## radar
 ```
-radar 0.3.0
+radar 0.4.0
 
 wcampbell0x2a
 
@@ -38,6 +38,8 @@ USAGE:
 OPTIONS:
         --cities <CITIES>...    Vector of cities [(name, lat, long),..]
         --disable-lat-long      Disable output of latitude and longitude on display
+        --gpsd                  Enable automatic updating of lat/lon from gpsd
+        --gpsd-ip <GPSD_IP>     Ip address of gpsd [default: localhost]
     -h, --help                  Print help information
         --host <HOST>           [default: localhost]
         --lat <LAT>             Antenna location latitude
