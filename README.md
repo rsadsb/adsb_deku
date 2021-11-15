@@ -20,11 +20,12 @@ Client applications use this library to display the data accumulated from an ADS
 An ADS-B client for the terminal written in Rust. Radar connects to an ADS-B demodulation server
 and stores this info, allowing an operator to control the display of the data.
 
-- **Map** - Plot currently detected aircraft on lat/long grid.
-- **Coverage** - Plot all detected aircraft lat/long positions since starting radar.
-- **Aircraft** - Show detailed table of information about currently detected aircraft.
+- **Map Tab** - Plot currently detected aircraft on lat/long grid. Add known locations with `--cities` option.
+- **Coverage Tab** - Plot all detected aircraft lat/long positions since starting radar.
+- **Aircraft Tab** - Show detailed table of information about currently detected aircraft.
+- **gpsd** - Derive lat/long from a gpsd instance using `--gpsd` flag.
 
-See [apps/README.md](https://github.com/wcampbell0x2a/adsb_deku/tree/update-readme/apps) for keybindings.
+See [apps/README.md](https://github.com/wcampbell0x2a/adsb_deku/tree/update-readme/apps) for map control keybindings.
 
 This application uses [tui-rs](https://github.com/fdehau/tui-rs) for generating the display to terminal.
 
