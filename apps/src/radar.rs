@@ -291,7 +291,8 @@ fn main() {
                     .split(f.size());
 
                 // render tabs
-                let titles = ["Map", "Coverage", "Airplanes"]
+                let airplane_len = format!("Airplanes({})", adsb_airplanes.0.len());
+                let titles = ["Map", "Coverage", &airplane_len]
                     .iter()
                     .copied()
                     .map(Spans::from)
