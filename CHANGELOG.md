@@ -18,7 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [radar] Add Call sign, Speed, Vertical Speed, Number of messages to Table view. ([@wiseman](https://github.com/wiseman)) ([!29](https://github.com/wcampbell0x2a/adsb_deku/pull/29))
 - [radar] fix broken TCP pipe to ADS-B server, exiting correctly
 - [radar] Optimize render of Coverage tab by reducing the size of Vec
-- [radar] Add `gpsd` and `gpsd-ip` for automatic updating of lat/long position from a gpsd daemon on port: 2947.
+- [radar] Add `--gpsd` and `--gpsd-ip` for automatic updating of lat/long position from a gpsd daemon on port: 2947.
+- [radar] Add `--scale` to control scale of Radar and Coverage. Closes: [#36](https://github.com/wcampbell0x2a/adsb_deku/issues/36)
+- [radar] Show Airplanes (amount) in tui Titles. Closes: [#31](https://github.com/wcampbell0x2a/adsb_deku/issues/31)
 
 ## [v0.3.0] 2021-10-31
 ### adsb_deku
