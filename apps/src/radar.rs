@@ -168,8 +168,11 @@ fn main() {
             // normal GPS messages from the NMEA messages.
             loop {
                 if let Ok(ResponseData::Tpv(data)) = get_data(&mut reader) {
-                    let mut lat_long = cloned_gps_lat_long.lock().unwrap();
-                    *lat_long = Some((data.lat.unwrap(), data.lon.unwrap()));
+                    if let Ok(mut lat_long) = cloned_gps_lat_long.lock() {
+                        if let (Some(lat), Some(lon)) = (data.lat, data.lon) {
+                            *lat_long = Some((lat, lon));
+                        }
+                    }
                 }
             }
         });
@@ -209,10 +212,11 @@ fn main() {
 
         // if `gpsd_ip` is selected, check if there is an update from that thread
         if opts.gpsd {
-            let lat_long = gps_lat_long.lock().unwrap();
-            if let Some((lat, long)) = *lat_long {
-                settings.lat = lat as f64;
-                settings.long = long as f64;
+            if let Ok(lat_long) = gps_lat_long.lock() {
+                if let Some((lat, long)) = *lat_long {
+                    settings.lat = lat as f64;
+                    settings.long = long as f64;
+                }
             }
         }
 
