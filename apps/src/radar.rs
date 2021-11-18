@@ -101,6 +101,9 @@ struct Opts {
     /// Disable output of latitude and longitude on display
     #[clap(long)]
     disable_lat_long: bool,
+    /// Zoom level of Radar and Coverage
+    #[clap(long, default_value = "1.2")]
+    scale: f64,
     /// Enable automatic updating of lat/lon from gpsd
     #[clap(long)]
     gpsd: bool,
@@ -193,11 +196,11 @@ fn main() {
     // setup tui variables
     let mut tab_selection = Tab::Map;
     let mut quit = None;
-    let original_scale = 1.2;
+    let original_scale = opts.scale;
     let mut airplanes_state = TableState::default();
 
     let mut settings = Settings {
-        scale: original_scale,
+        scale: opts.scale,
         lat: opts.lat,
         long: opts.long,
     };
