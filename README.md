@@ -166,6 +166,14 @@ This library is also fuzzed, ensuring no panic when parsing from demodulated byt
 > cargo +nightly fmt
 ```
 
+## Benchmark
+Benchmarking is done against a file containing 215606 ADS-B messages: `lax-messages.txt`.
+Quick math `(215606 / 6006.80)` says the average speed of decoding is around `35.89 ms` a message
+(with some variance from reading a file).
+```text
+lax_messsages           time:   [605.73 ms 606.80 ms 607.89 ms]
+```
+
 ## Derivation
 Derived from Aeronautical Telecommunications Volume IV: Surveillance and Collision Avoidance Systems, Fifth Edition and ICAO 9871.
 

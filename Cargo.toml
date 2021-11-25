@@ -21,3 +21,8 @@ deku = "0.12"
 hex = "0.4"
 hexlit = "0.5"
 assert_hex = "0.2"
+criterion = "0.3"
+
+[[bench]]
+name = "decoding"
+harness = false
