@@ -36,7 +36,6 @@ use clap::Parser;
 use crossterm::event::{poll, read, Event, KeyCode, KeyEvent};
 use crossterm::terminal::enable_raw_mode;
 use gpsd_proto::{get_data, handshake, ResponseData};
-use rayon::prelude::*;
 use tui::backend::{Backend, CrosstermBackend};
 use tui::layout::{Constraint, Direction, Layout, Rect};
 use tui::style::{Color, Modifier, Style};
@@ -238,7 +237,7 @@ fn main() {
             };
 
             // check for all 0's
-            if bytes.par_iter().all(|&b| b == 0) {
+            if bytes.iter().all(|&b| b == 0) {
                 continue;
             }
 

@@ -6,7 +6,6 @@ use adsb_deku::deku::DekuContainerRead;
 use adsb_deku::{Frame, DF};
 use apps::Airplanes;
 use clap::Parser;
-use rayon::prelude::*;
 
 #[derive(Debug, Parser)]
 #[clap(
@@ -62,7 +61,7 @@ fn main() {
             };
 
             // check for all 0's
-            if bytes.par_iter().all(|&b| b == 0) {
+            if bytes.iter().all(|&b| b == 0) {
                 continue;
             }
 
