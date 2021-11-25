@@ -11,6 +11,8 @@ use crate::{Altitude, CPRFormat};
 const NZ: f64 = 15.0;
 const D_LAT_EVEN: f64 = 360.0 / (4.0 * NZ);
 const D_LAT_ODD: f64 = 360.0 / (4.0 * NZ - 1.0);
+
+/// 2^17 (Max of 17 bits)
 const CPR_MAX: f64 = 131_072.0;
 
 /// Post-processing of CPR into Latitude/Longitude
@@ -20,8 +22,8 @@ pub struct Position {
     pub longitude: f64,
 }
 
-// The NL function uses the precomputed table from 1090-WP-9-14
-// This code is translated from https://github.com/wiedehopf/readsb/blob/dev/cpr.c
+/// The NL function uses the precomputed table from 1090-WP-9-14
+/// This code is translated from https://github.com/wiedehopf/readsb/blob/dev/cpr.c
 pub(crate) fn cpr_nl(lat: f64) -> u64 {
     let mut lat = lat;
     if lat < 0.0 {
