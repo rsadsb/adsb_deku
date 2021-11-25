@@ -482,7 +482,7 @@ fn testing_issue_01() {
     Target altitude:   MCP, 36000 ft
     Altimeter setting: 1013.6 millibars
     Target heading:    315
-    ACAS:              operational
+    ACAS:              operational 
     NACp:              8
     NICbaro:           1
     SIL:               3 (per sample)
@@ -941,6 +941,28 @@ fn test_issue_22() {
     assert_eq!(
         r#" Extended Squitter (Non-Transponder) Airborne Velocity status (reserved)
   Address:       1c059d (ADS-B)
+"#,
+        resulting_string
+    );
+}
+
+#[test]
+fn test_df17_error() {
+    let bytes = hex!("8da04e60ea3ab860015f889746a9");
+    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let resulting_string = format!("{}", frame);
+    assert_eq!(
+        r#" Extended Squitter Target state and status (V2)
+  Address:       a04e60 (Mode S / ADS-B)
+  Air/Ground:    airborne
+  Target State and Status:
+    Target altitude:   MCP, 30016 ft
+    Altimeter setting: 1013.6 millibars
+    ACAS:              operational autopilot vnav 
+    NACp:              10
+    NICbaro:           1
+    SIL:               3 (per sample)
+    QNH:               1013.6 millibars
 "#,
         resulting_string
     );

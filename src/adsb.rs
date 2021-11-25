@@ -247,18 +247,18 @@ impl ME {
                     writeln!(f, "    Target heading:    {}", target_info.heading)?;
                 }
                 if target_info.tcas {
-                    write!(f, "    ACAS:              operational")?;
+                    write!(f, "    ACAS:              operational ")?;
                     if target_info.autopilot {
-                        write!(f, " autopilot ")?;
+                        write!(f, "autopilot ")?;
                     }
-                    if target_info.vnav {
-                        write!(f, " VNAC ")?;
+                    if target_info.vnac {
+                        write!(f, "vnav ")?;
                     }
                     if target_info.alt_hold {
                         write!(f, "altitude-hold ")?;
                     }
                     if target_info.approach {
-                        write!(f, "approach")?;
+                        write!(f, " approach")?;
                     }
                     writeln!(f)?;
                 } else {
@@ -958,7 +958,7 @@ pub struct TargetStateAndStatusInformation {
     #[deku(bits = "1")]
     pub autopilot: bool,
     #[deku(bits = "1")]
-    pub vnav: bool,
+    pub vnac: bool,
     #[deku(bits = "1")]
     pub alt_hold: bool,
     #[deku(bits = "1")]

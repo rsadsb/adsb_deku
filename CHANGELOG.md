@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add `OperationStatus::Reserved`
 - Add `AirborneVelocityMessage::{Reserved0(1), Reserved1(5..=7)}`
 - Assert `TargetStateAndStatus.subtype` == 1. This is currently tracked by: [#30](https://github.com/wcampbell0x2a/adsb_deku/issues/30)
+- Rename `TargetStateAndStatusInformation.vnac` to `vnav`
 
 ### Apps
 - [radar] Use TAB key to change tabs ([@wiseman](https://github.com/wiseman)) ([!26](https://github.com/wcampbell0x2a/adsb_deku/pull/26))
