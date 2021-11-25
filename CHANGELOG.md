@@ -22,6 +22,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [radar] Add `--scale` to control scale of Radar and Coverage. Closes: [#36](https://github.com/wcampbell0x2a/adsb_deku/issues/36)
 - [radar] Show Airplanes (amount) in tui Titles. Closes: [#31](https://github.com/wcampbell0x2a/adsb_deku/issues/31)
 
+### Other
+- Add Benchmarks
+- Rework README.md file
+
 ## [v0.3.0] 2021-10-31
 ### adsb_deku
 - Fix [#8](https://github.com/wcampbell0x2a/adsb_deku/issues/8) - Support `ME::AircraftOperationStatus` Surface Status message parsing
