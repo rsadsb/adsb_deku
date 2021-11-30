@@ -9,6 +9,8 @@ Decoder for [ADS-B(Automatic Dependent Surveillance-Broadcast)](https://en.wikip
 
 This library uses [deku](https://github.com/sharksforarms/deku) for deserialization of protocol.
 
+![Radar Example](/media/peek_2021_10_31.gif)
+
 ## Applications
 ### Client Applications
 
@@ -32,8 +34,6 @@ This application uses [tui-rs](https://github.com/fdehau/tui-rs) for generating 
 > cd apps
 > cargo r --bin radar --release -- --lat="50.0" --long="50.0" --cities "(name,lat,long)" "(name,lat,long)"
 ```
-
-![Radar Example](/media/peek_2021_10_31.gif)
 
 #### 1090
 Display protocol data structures and currently tracked planes using this library in the same fashion as `dump1090-fa`
