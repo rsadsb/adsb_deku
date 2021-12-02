@@ -1,10 +1,8 @@
 use std::io::{BufRead, BufReader};
 use std::net::TcpStream;
 
-use adsb_deku::adsb::ME;
 use adsb_deku::deku::DekuContainerRead;
-use adsb_deku::{Frame, DF};
-use apps::Airplanes;
+use adsb_deku::Frame;
 use clap::Parser;
 
 #[derive(Debug, Parser)]
@@ -30,9 +28,6 @@ struct Options {
     /// Display debug of adsb::Frame
     #[clap(long)]
     debug: bool,
-    /// Disable display of currently tracked airplanes lat/long/altitude
-    #[clap(long)]
-    disable_airplanes: bool,
 }
 
 fn main() {
@@ -43,7 +38,6 @@ fn main() {
         .unwrap();
     let mut reader = BufReader::new(stream);
     let mut input = String::new();
-    let mut airplanes = Airplanes::new();
 
     loop {
         input.clear();
@@ -72,27 +66,6 @@ fn main() {
                         println!("{:#?}", frame);
                     }
                     println!("{}", frame);
-                    if !options.disable_airplanes {
-                        // make a vec of all strings to get a total amount of airplanes with
-                        // position information
-                        let mut fmt_airplanes_positions = vec![];
-                        for key in airplanes.0.keys() {
-                            let value = airplanes.lat_long_altitude(*key);
-                            if let Some(value) = value {
-                                fmt_airplanes_positions.push(format!("{}: {:?}", key, value));
-                            }
-                        }
-
-                        println!("Airplanes({})", fmt_airplanes_positions.len());
-                        for a in fmt_airplanes_positions {
-                            println!("{}", a);
-                        }
-                    }
-                    if let DF::ADSB(ref adsb) = frame.df {
-                        if let ME::AirbornePositionBaroAltitude(altitude) = adsb.me {
-                            airplanes.add_altitude(adsb.icao, &altitude);
-                        }
-                    }
                     if (frame.to_string() == "") && options.panic_display {
                         panic!("[E] fmt::Display not implemented");
                     }
@@ -104,7 +77,6 @@ fn main() {
                 },
             }
             input.clear();
-            airplanes.prune();
         }
     }
 }
