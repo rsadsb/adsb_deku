@@ -30,7 +30,7 @@ use std::time::Duration;
 use adsb_deku::adsb::ME;
 use adsb_deku::cpr::Position;
 use adsb_deku::deku::DekuContainerRead;
-use adsb_deku::{Frame, DF};
+use adsb_deku::{Frame, DF, ICAO};
 use apps::Airplanes;
 use clap::Parser;
 use crossterm::event::{poll, read, Event, KeyCode, KeyEvent};
@@ -48,6 +48,12 @@ use tui::Terminal;
 /// Amount of zoom out from your original lat/long position
 const MAX_PLOT_HIGH: f64 = 400.0;
 const MAX_PLOT_LOW: f64 = MAX_PLOT_HIGH * -1.0;
+
+/// Accuracy of latitude/longitude is affected by this variable.
+///
+/// ie: 83.912345 -> 83.91. This is specifically so we get more results hitting in the same
+/// position for the sake of an usable heatmap
+const DIFF: f64 = 100.0;
 
 #[derive(Clone)]
 pub struct City {
@@ -185,7 +191,7 @@ fn main() {
 
     // empty containers
     let mut input = String::new();
-    let mut coverage_airplanes = vec![];
+    let mut coverage_airplanes: Vec<(f64, f64, u8, ICAO)> = Vec::new();
     let mut adsb_airplanes = Airplanes::new();
 
     // setup tui params
@@ -268,14 +274,48 @@ fn main() {
 
         // add lat and long to coverage vector if not existing
         let all_lat_long = adsb_airplanes.all_lat_long_altitude();
-        for Position {
-            latitude,
-            longitude,
-            ..
-        } in all_lat_long
+        for (
+            Position {
+                latitude,
+                longitude,
+                ..
+            },
+            all_icao,
+        ) in all_lat_long
         {
-            if !coverage_airplanes.contains(&(latitude, longitude)) {
-                coverage_airplanes.push((latitude, longitude));
+            let latitude = (latitude * DIFF).round() / DIFF;
+            let longitude = (longitude * DIFF).round() / DIFF;
+
+            // Add number to seen number if found already
+            let mut found = false;
+            for coverage in &mut coverage_airplanes {
+                // Reduce the precision of the coverage/heatmap display (XX.XX)
+                //
+                // This is so that more airplanes are seen as being in the same spot and are
+                // colored so that is made clear to the user. If this is to accurate you will never
+                // see airplanes in the "same" spot
+                let (lat, long, seen_number, icao) = coverage;
+                let lat = (*lat * DIFF).round() / DIFF;
+                let long = (*long * DIFF).round() / DIFF;
+
+                // Found already, but it is a diff icao? if so, update to new icao and add to
+                // seen_number for the color to be more "white" later on
+                if (latitude, longitude) == (lat, long) && (all_icao != *icao) {
+                    *seen_number += 1;
+                    *icao = all_icao;
+                    found = true;
+                    break;
+                }
+
+                if (latitude, longitude) == (lat, long) {
+                    found = true;
+                    break;
+                }
+            }
+
+            // If an airplane wasn't seen in this position, add a new entry
+            if !found {
+                coverage_airplanes.push((latitude, longitude, 0, all_icao));
             }
         }
 
@@ -452,7 +492,7 @@ fn build_tab_coverage<A: tui::backend::Backend>(
     chunks: Vec<Rect>,
     settings: &Settings,
     opts: &Opts,
-    coverage_airplanes: &[(f64, f64)],
+    coverage_airplanes: &[(f64, f64, u8, ICAO)],
 ) {
     let canvas = Canvas::default()
         .block(Block::default().title("Coverage").borders(Borders::ALL))
@@ -474,18 +514,25 @@ fn build_tab_coverage<A: tui::backend::Backend>(
             );
 
             // draw ADSB tab airplanes
-            for (lat, long) in coverage_airplanes.iter() {
+            for (lat, long, seen_number, _) in coverage_airplanes.iter() {
                 let lat = ((lat - settings.lat) / lat_diff) * MAX_PLOT_HIGH;
                 let long = ((long - settings.long) / long_diff) * MAX_PLOT_HIGH;
+
+                let number: u16 = 100_u16 + (*seen_number as u16 * 100);
+                let color_number: u8 = if number > u8::MAX as u16 {
+                    u8::MAX
+                } else {
+                    number as u8
+                };
 
                 // draw dot on location
                 ctx.draw(&Points {
                     coords: &[(long, lat)],
-                    color: Color::White,
+                    color: Color::Rgb(color_number, color_number, color_number),
                 });
             }
 
-            draw_lines(ctx);
+            //draw_lines(ctx);
         });
     f.render_widget(canvas, chunks[1]);
 }
