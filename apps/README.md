@@ -36,17 +36,19 @@ USAGE:
     radar [OPTIONS] --lat <LAT> --long <LONG>
 
 OPTIONS:
-        --cities <CITIES>...    Vector of cities [(name, lat, long),..]
-        --disable-lat-long      Disable output of latitude and longitude on display
-        --gpsd                  Enable automatic updating of lat/lon from gpsd
-        --gpsd-ip <GPSD_IP>     Ip address of gpsd [default: localhost]
-    -h, --help                  Print help information
-        --host <HOST>           [default: localhost]
-        --lat <LAT>             Antenna location latitude
-        --long <LONG>           Antenna location longitude
-        --port <PORT>           [default: 30002]
-        --scale <SCALE>         Zoom level of Radar and Coverage [default: 1.2]
-    -V, --version               Print version information
+        --cities <CITIES>...           Vector of cities [(name, lat, long),..]
+        --disable-lat-long             Disable output of latitude and longitude on display
+        --filter-time <FILTER_TIME>    Seconds since last message from airplane, triggers removal of
+                                       airplane after time is up [default: 10]
+        --gpsd                         Enable automatic updating of lat/lon from gpsd
+        --gpsd-ip <GPSD_IP>            Ip address of gpsd [default: localhost]
+    -h, --help                         Print help information
+        --host <HOST>                  [default: localhost]
+        --lat <LAT>                    Antenna location latitude
+        --long <LONG>                  Antenna location longitude
+        --port <PORT>                  [default: 30002]
+        --scale <SCALE>                Zoom level of Radar and Coverage [default: 1.2]
+    -V, --version                      Print version information
 ```
 
 ### Key Bindings

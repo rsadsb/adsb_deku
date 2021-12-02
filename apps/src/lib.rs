@@ -36,15 +36,12 @@ impl Default for AirplaneState {
 pub struct AirplaneCoor {
     /// [odd, even]
     pub altitudes: [Option<Altitude>; 2],
-    /// last time of frame Rx
-    pub last_time: SystemTime,
 }
 
 impl Default for AirplaneCoor {
     fn default() -> Self {
         Self {
             altitudes: [None, None],
-            last_time: SystemTime::now(),
         }
     }
 }
@@ -96,18 +93,15 @@ impl Airplanes {
     /// Add `Altitude` from adsb frame
     pub fn add_altitude(&mut self, icao: ICAO, altitude: &Altitude) {
         let state = self.0.entry(icao).or_insert_with(AirplaneState::default);
-        let now = SystemTime::now();
         match altitude.odd_flag {
             CPRFormat::Odd => {
                 state.coords = AirplaneCoor {
                     altitudes: [state.coords.altitudes[0], Some(*altitude)],
-                    last_time: now,
                 };
             },
             CPRFormat::Even => {
                 state.coords = AirplaneCoor {
                     altitudes: [Some(*altitude), state.coords.altitudes[1]],
-                    last_time: now,
                 };
             },
         }
@@ -149,8 +143,9 @@ impl Airplanes {
     }
 
     /// Remove airplane after not active for a time
-    pub fn prune(&mut self) {
-        self.0
-            .retain(|_, v| v.last_time.elapsed().unwrap() < std::time::Duration::from_secs(60));
+    pub fn prune(&mut self, filter_time: u64) {
+        self.0.retain(|_, v| {
+            v.last_time.elapsed().unwrap() < std::time::Duration::from_secs(filter_time)
+        });
     }
 }

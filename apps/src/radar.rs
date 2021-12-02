@@ -109,6 +109,9 @@ struct Opts {
     /// Ip address of gpsd
     #[clap(long, default_value = "localhost")]
     gpsd_ip: String,
+    /// Seconds since last message from airplane, triggers removal of airplane after time is up
+    #[clap(long, default_value = "10")]
+    filter_time: u64,
 }
 
 #[derive(Copy, Clone)]
@@ -197,6 +200,7 @@ fn main() {
     let mut quit = None;
     let original_scale = opts.scale;
     let mut airplanes_state = TableState::default();
+    let filter_time = opts.filter_time;
 
     let mut settings = Settings {
         scale: opts.scale,
@@ -277,7 +281,7 @@ fn main() {
 
         input.clear();
         // remove airplanes that timed-out
-        adsb_airplanes.prune();
+        adsb_airplanes.prune(filter_time);
 
         // tui drawing
         terminal
