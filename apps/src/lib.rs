@@ -32,18 +32,10 @@ impl Default for AirplaneState {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct AirplaneCoor {
     /// [odd, even]
     pub altitudes: [Option<Altitude>; 2],
-}
-
-impl Default for AirplaneCoor {
-    fn default() -> Self {
-        Self {
-            altitudes: [None, None],
-        }
-    }
 }
 
 #[derive(Debug, Default)]
