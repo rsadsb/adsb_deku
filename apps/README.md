@@ -52,7 +52,10 @@ OPTIONS:
     -V, --version                      Print version information
 ```
 
-### Key Bindings
+### Logging
+`radar` is enabled with logging. Use the `RUST_LOG=?` environment variable to control trace level and `--log-folder` to control log base folder location.
+
+## Key Bindings
 
 ### Any Tab
 |  Key  |  Action                    |
