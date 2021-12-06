@@ -21,7 +21,7 @@ An ADS-B client for the terminal written in Rust. Radar connects to an ADS-B dem
 and stores this info, allowing an operator to control the display of the data.
 
 - **Map Tab** - Plot currently detected aircraft on lat/long grid. Add known locations with `--cities` option.
-- **Coverage Tab** - Plot all detected aircraft lat/long positions since starting radar.
+- **Coverage Tab** - Plot all detected aircraft lat/long positions since starting radar. Features grayscale heatmap.
 - **Aircraft Tab** - Show detailed table of information about currently detected aircraft. Set aircraft position as center lat/long.
 - **gpsd** - Derive lat/long from a gpsd instance using `--gpsd` flag.
 
