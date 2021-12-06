@@ -20,6 +20,8 @@
 //!
 //! Display all information gathered from observed aircraft
 
+mod tui_tracing;
+
 use std::io::{self, BufRead, BufReader, BufWriter};
 use std::net::TcpStream;
 use std::num::ParseFloatError;
@@ -36,6 +38,8 @@ use clap::Parser;
 use crossterm::event::{poll, read, Event, KeyCode, KeyEvent};
 use crossterm::terminal::enable_raw_mode;
 use gpsd_proto::{get_data, handshake, ResponseData};
+use tracing::{info, trace};
+use tracing_subscriber::EnvFilter;
 use tui::backend::{Backend, CrosstermBackend};
 use tui::layout::{Constraint, Direction, Layout, Rect};
 use tui::style::{Color, Modifier, Style};
@@ -118,6 +122,8 @@ struct Opts {
     /// Seconds since last message from airplane, triggers removal of airplane after time is up
     #[clap(long, default_value = "10")]
     filter_time: u64,
+    #[clap(long, default_value = "logs")]
+    log_folder: String,
 }
 
 #[derive(Copy, Clone)]
@@ -147,6 +153,17 @@ struct Settings {
 fn main() {
     let opts = Opts::parse();
 
+    let file_appender = tracing_appender::rolling::hourly(&opts.log_folder, "radar.log");
+    let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
+
+    let env = EnvFilter::from_default_env();
+
+    let _ = tracing_subscriber::fmt()
+        .with_env_filter(env)
+        .with_ansi(true)
+        .with_writer(non_blocking)
+        .init();
+
     // Setup non-blocking TcpStream
     let stream = TcpStream::connect((opts.host.clone(), opts.port))
         .expect("Could not open port to ADS-B daemon");
@@ -172,8 +189,8 @@ fn main() {
             let stream = TcpStream::connect((gpsd_ip, 2947)).unwrap();
             let mut reader = BufReader::new(&stream);
             let mut writer = BufWriter::new(&stream);
-
             handshake(&mut reader, &mut writer).unwrap();
+            info!("[gpsd] connected");
 
             // keep looping while reading new messages looking for GGA messages which are the
             // normal GPS messages from the NMEA messages.
@@ -181,6 +198,7 @@ fn main() {
                 if let Ok(ResponseData::Tpv(data)) = get_data(&mut reader) {
                     if let Ok(mut lat_long) = cloned_gps_lat_long.lock() {
                         if let (Some(lat), Some(lon)) = (data.lat, data.lon) {
+                            info!("[gpsd] lat: {},  long:{}", lat, lon);
                             *lat_long = Some((lat, lon));
                         }
                     }
@@ -214,6 +232,7 @@ fn main() {
         long: opts.long,
     };
 
+    info!("tui setup");
     loop {
         if let Some(reason) = quit {
             terminal.clear().unwrap();
@@ -240,6 +259,7 @@ fn main() {
             }
             // convert from string hex -> bytes
             let hex = &mut input.to_string()[1..len - 2].to_string();
+            trace!("new msg: {}", hex);
             let bytes = if let Ok(bytes) = hex::decode(&hex) {
                 bytes
             } else {
@@ -423,6 +443,7 @@ fn main() {
             }
         }
     }
+    info!("quitting");
 }
 
 /// Render Map tab for tui display

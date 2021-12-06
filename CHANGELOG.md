@@ -22,9 +22,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [radar] Add `--gpsd` and `--gpsd-ip` for automatic updating of lat/long position from a gpsd daemon on port: 2947.
 - [radar] Add `--scale` to control scale of Radar and Coverage. Closes: [#36](https://github.com/wcampbell0x2a/adsb_deku/issues/36)
 - [radar] Show Airplanes (amount) in tui Titles. Closes: [#31](https://github.com/wcampbell0x2a/adsb_deku/issues/31)
-- [radar] Add `--filter_time` for reducing the amount of mis-decodes. Reduces the default max time between messages from 60 to 10 seconds.
+- [radar] Add `--filter-time` for reducing the amount of mis-decodes. Reduces the default max time between messages from 60 to 10 seconds.
 - [1090] Remove `--disable-airplanes`. This feature differs from the radar implementation, and thus is outdated.
 - [radar] *Coverage* Add gradient of whitespace gray->white to denote how often an aircraft was seen. This functions as a heatmap of sorts.
+- [radar] Tracing / Logging
+    - Add *tracing* for logging to a default `./logs` directory information about ADS-B information.
+    - Control base folder using the `log-folder` option.
+    - We use the environment variable `RUST_LOG` for controlling the level of verbosity. The default is info.
+    - The following is an example of using the debug level.
+```text
+> RUST_LOG=debug cargo r -- ...
+```
 
 ### Other
 - Add Benchmark tools and readme information

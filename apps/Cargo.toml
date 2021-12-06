@@ -22,3 +22,6 @@ clap = {version = "3.0.0-beta.5", features = ["color"]}
 #tui = {version = "0.16", default-features = false, features = ["crossterm"]}
 tui = { git = "https://github.com/fdehau/tui-rs.git", branch = "master", features = ["crossterm"] }
 gpsd_proto = "0.7.0"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing-appender = "0.2"

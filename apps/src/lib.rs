@@ -4,6 +4,7 @@ use std::time::SystemTime;
 
 use adsb_deku::adsb::{AirborneVelocity, Identification};
 use adsb_deku::{cpr, Altitude, CPRFormat, ICAO};
+use tracing::info;
 
 #[derive(Debug)]
 pub struct AirplaneState {
@@ -58,6 +59,7 @@ impl Airplanes {
         Self(HashMap::new())
     }
 
+    /// Increment message count and update last time seen
     pub fn incr_messages(&mut self, icao: ICAO) {
         let mut state = self.0.entry(icao).or_insert_with(AirplaneState::default);
         state.num_messages += 1;
@@ -67,11 +69,16 @@ impl Airplanes {
     pub fn add_identification(&mut self, icao: ICAO, identification: &Identification) {
         let mut state = self.0.entry(icao).or_insert_with(AirplaneState::default);
         state.callsign = Some(identification.cn.clone());
+        info!("[{}] with identification: {}", icao, identification.cn);
     }
 
     pub fn add_airborne_velocity(&mut self, icao: ICAO, vel: &AirborneVelocity) {
         let mut state = self.0.entry(icao).or_insert_with(AirplaneState::default);
         if let Some((_, ground_speed, vert_speed)) = vel.calculate() {
+            info!(
+                "[{}] with airborne velocity: speed: {}, vertical speed: {}",
+                icao, ground_speed, vert_speed
+            );
             state.speed = Some(ground_speed);
             state.vert_speed = Some(vert_speed);
         }
@@ -80,11 +87,16 @@ impl Airplanes {
     pub fn add_squawk(&mut self, icao: ICAO, squawk: u32) {
         let mut state = self.0.entry(icao).or_insert_with(AirplaneState::default);
         state.squawk = Some(squawk);
+        info!("[{}] with squawk: {}", icao, squawk);
     }
 
     /// Add `Altitude` from adsb frame
     pub fn add_altitude(&mut self, icao: ICAO, altitude: &Altitude) {
         let state = self.0.entry(icao).or_insert_with(AirplaneState::default);
+        info!(
+            "[{}] with altitude: {}, cpr lat: {}, cpr long: {}",
+            icao, altitude.alt, altitude.lat_cpr, altitude.lon_cpr
+        );
         match altitude.odd_flag {
             CPRFormat::Odd => {
                 state.coords = AirplaneCoor {
@@ -99,7 +111,7 @@ impl Airplanes {
         }
     }
 
-    /// Calculate latitude, longitude and altitude
+    /// Calculate latitude, longitude and altitude of specific ICAO for airplane
     pub fn lat_long_altitude(&self, icao: ICAO) -> Option<(cpr::Position, u32)> {
         match self.0.get(&icao) {
             Some(state) => {
@@ -136,8 +148,13 @@ impl Airplanes {
 
     /// Remove airplane after not active for a time
     pub fn prune(&mut self, filter_time: u64) {
-        self.0.retain(|_, v| {
-            v.last_time.elapsed().unwrap() < std::time::Duration::from_secs(filter_time)
+        self.0.retain(|k, v| {
+            if v.last_time.elapsed().unwrap() < std::time::Duration::from_secs(filter_time) {
+                true
+            } else {
+                info!("[{}] non-active, removing", k);
+                false
+            }
         });
     }
 }
