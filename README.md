@@ -53,9 +53,9 @@ This library contains logic for decoding a message, you must use a server for de
 from 1090mhz into bytes usable by this library. These are called `Server` applications.
 
 #### (Rust) [dump1090_rs](https://github.com/wcampbell0x2a/dump1090_rs.git)
-This is a fork of [dump1090_rs](https://github.com/johnwstanford/dump1090_rs) with only demodulation
-and data forwarding functions. I recommend this for the _full_ Rust experience. In my testing
-this has the same performance as the C demodulator.
+Rust translation of the popular C `dump1090` tools, with only demodulation and data forwarding functions.
+I recommend this for the _full_ Rust experience.
+In my testing this has the same reliability as the C demodulator.
 ```text
 > cargo r --release
 ```
