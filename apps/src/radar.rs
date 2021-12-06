@@ -20,8 +20,6 @@
 //!
 //! Display all information gathered from observed aircraft
 
-mod tui_tracing;
-
 use std::io::{self, BufRead, BufReader, BufWriter};
 use std::net::TcpStream;
 use std::num::ParseFloatError;
