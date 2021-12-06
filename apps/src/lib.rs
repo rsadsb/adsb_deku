@@ -117,16 +117,16 @@ impl Airplanes {
     }
 
     /// Calculate all latitude/longitude from Hashmap of current "seen" aircrafts
-    pub fn all_lat_long_altitude(&self) -> Vec<cpr::Position> {
+    pub fn all_lat_long_altitude(&self) -> Vec<(cpr::Position, ICAO)> {
         let mut all_lat_long = vec![];
-        for state in self.0.values() {
+        for (key, state) in self.0.iter() {
             if let (Some(first_altitude), Some(second_altitude)) =
                 (state.coords.altitudes[0], state.coords.altitudes[1])
             {
                 if let Some(position) = cpr::get_position((&first_altitude, &second_altitude))
                     .map(|position| (position, first_altitude.alt))
                 {
-                    all_lat_long.push(position.0);
+                    all_lat_long.push((position.0, *key));
                 }
             }
         }
