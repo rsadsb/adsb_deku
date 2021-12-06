@@ -27,7 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [radar] *Coverage* Add gradient of whitespace gray->white to denote how often an aircraft was seen. This functions as a heatmap of sorts.
 - [radar] Tracing / Logging
     - Add *tracing* for logging to a default `./logs` directory information about ADS-B information.
-    - Control base folder using the `log-folder` option.
+    - Control base folder using the `--log-folder` option.
     - We use the environment variable `RUST_LOG` for controlling the level of verbosity. The default is info.
     - The following is an example of using the debug level.
 ```text
