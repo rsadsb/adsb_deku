@@ -1,4 +1,7 @@
-//! All data structures needed for parsing only [`crate::DF::ADSB`] or [`crate::DF::TisB`]
+//! All data structures needed for parsing [`DF::ADSB`] or [`DF::TisB`] messages
+//!
+//! [`DF::ADSB`]: crate::DF::ADSB
+//! [`DF::TisB`]: crate::DF::TisB
 
 use std::fmt::Write;
 

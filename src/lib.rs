@@ -1,10 +1,8 @@
-#![doc(
-    html_logo_url = "https://raw.githubusercontent.com/wcampbell0x2a/adsb_deku/master/media/logo.png"
-)]
+#![doc(html_logo_url = "https://raw.githubusercontent.com/rsadsb/adsb_deku/master/media/logo.png")]
 /*!
 `adsb_deku` provides decoding for the [`ADS-B`] Downlink protocol by using the [`deku`] crate.
 
-## Downlink Format support
+# Downlink Format Support
 |  [`DF`]  |  Name                               |  Section    |
 | -------- | ----------------------------------- | ----------- |
 | 0        | [`Short Air-Air Surveillance`]      | 3.1.2.8.2   |
@@ -27,7 +25,7 @@
 | (1,0)     | [`Data Link Capability`]                | A-2-16      |
 | (2,0)     | [`Aircraft Identification`]             | A-2-32      |
 
-# [`Extended Squitter(ADS-B)`] and [`Extended Squitter(TIS-B)`] Type Code support
+# [`Extended Squitter(ADS-B)`] and [`Extended Squitter(TIS-B)`] Type Code Support
 
 |  [`ME`](Type Code)  |  Name                                  |
 | ------------------- | -----------------------------------    |
@@ -110,11 +108,11 @@ different `adsb_deku` uses. See the [`README.md`] for examples of use.
 [`apps`]: crate::Frame
 [`Frame`]: crate::Frame
 [`deku::DekuContainerRead`]: crate::deku::DekuContainerRead
-[`README.md`]: https://github.com/wcampbell0x2a/adsb_deku/blob/master/README.md
-[`apps/`]: https://github.com/wcampbell0x2a/adsb_deku/tree/master/apps
+[`README.md`]: https://github.com/rsadsb/adsb_deku/blob/master/README.md
+[`apps/`]: https://github.com/rsadsb/adsb_deku/tree/master/apps
 [`ADS-B`]: https://en.wikipedia.org/wiki/Automatic_Dependent_Surveillance%E2%80%93Broadcast
 [`deku`]: https://github.com/sharksforarms/deku
-!*/
+*/
 
 // good reference: http://www.anteni.net/adsb/Doc/1090-WP30-18-DRAFT_DO-260B-V42.pdf
 //
@@ -431,7 +429,7 @@ pub enum DF {
     },
 }
 
-/// [`DF::CommBAltitudeReply`] || ([`DF::ADSB`] && ([`adsb::ME::AirbornePositionBaroAltitude`] || [`adsb::ME::AirbornePositionGNSSAltitude`])
+/// Latitude, Longitude and Altitude information
 #[derive(Debug, PartialEq, DekuRead, Default, Copy, Clone)]
 pub struct Altitude {
     #[deku(bits = "5")]
@@ -490,6 +488,7 @@ impl Altitude {
     }
 }
 
+/// SPI Condition
 #[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
 #[deku(type = "u8", bits = "2")]
 pub enum SurveillanceStatus {
@@ -633,6 +632,7 @@ pub struct UtilityMessage {
     pub ids: UtilityMessageType,
 }
 
+/// Message Type
 #[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
 #[deku(type = "u8", bits = "2")]
 pub enum UtilityMessageType {
