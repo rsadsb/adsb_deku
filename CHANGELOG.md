@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 `adsb_deku` follows semvar when versioning, but apps are not required to follow the semvar convention.
 
 ## [Unreleased]
+
+## [v0.4.0] 2021-12-08
 ### adsb_deku
 - Add `AircraftStatusType::ACASRaBroadcast`
 - Add `OperationStatus::Reserved`
