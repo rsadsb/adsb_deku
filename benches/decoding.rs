@@ -2,7 +2,7 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::io::BufReader;
 
-use adsb_deku::cpr::{get_position, Position};
+use adsb_deku::cpr::get_position;
 use adsb_deku::deku::prelude::*;
 use adsb_deku::{Altitude, CPRFormat, Frame};
 use criterion::{criterion_group, criterion_main, Criterion};
@@ -53,13 +53,13 @@ fn lax_message() {
         let hex = &mut line.to_string()[1..len - 1].to_string();
         let bytes = hex::decode(&hex).unwrap();
         // test non panic decode
-        let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+        let _frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
     }
 }
 
 fn criterion_benchmark(c: &mut Criterion) {
-    c.bench_function("lax_messsages", |b| b.iter(|| lax_message()));
-    c.bench_function("get_position", |b| b.iter(|| b_get_position()));
+    c.bench_function("lax_messsages", |b| b.iter(lax_message));
+    c.bench_function("get_position", |b| b.iter(b_get_position));
 }
 
 criterion_group!(benches, criterion_benchmark);

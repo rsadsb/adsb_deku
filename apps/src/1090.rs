@@ -66,14 +66,13 @@ fn main() {
                         println!("{:#?}", frame);
                     }
                     println!("{}", frame);
-                    if (frame.to_string() == "") && options.panic_display {
-                        panic!("[E] fmt::Display not implemented");
-                    }
+                    assert!(
+                        !((frame.to_string() == "") && options.panic_display),
+                        "[E] fmt::Display not implemented"
+                    );
                 },
                 Err(e) => {
-                    if options.panic_decode {
-                        panic!("[E] {}", e);
-                    }
+                    assert!(!options.panic_decode, "[E] {}", e);
                 },
             }
             input.clear();

@@ -156,7 +156,7 @@ fn main() {
 
     let env = EnvFilter::from_default_env();
 
-    let _ = tracing_subscriber::fmt()
+    tracing_subscriber::fmt()
         .with_env_filter(env)
         .with_ansi(true)
         .with_writer(non_blocking)
@@ -537,8 +537,8 @@ fn build_tab_coverage<A: tui::backend::Backend>(
                 let lat = ((lat - settings.lat) / lat_diff) * MAX_PLOT_HIGH;
                 let long = ((long - settings.long) / long_diff) * MAX_PLOT_HIGH;
 
-                let number: u16 = 100_u16 + (*seen_number as u16 * 100);
-                let color_number: u8 = if number > u8::MAX as u16 {
+                let number: u16 = 100_u16 + (u16::from(*seen_number) * 100);
+                let color_number: u8 = if number > u16::from(u8::MAX) {
                     u8::MAX
                 } else {
                     number as u8
