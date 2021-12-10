@@ -103,7 +103,7 @@ struct Opts {
     #[clap(long)]
     long: f64,
     /// Vector of cities [(name, lat, long),..]
-    #[clap(long)]
+    #[clap(long, multiple_values(true))]
     cities: Vec<City>,
     /// Disable output of latitude and longitude on display
     #[clap(long)]

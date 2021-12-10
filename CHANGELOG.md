@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### adsb_deku
+
+### apps/radar
+- [radar] fix breaking clap change, same syntax as before for `--cities`.
+
+### apps/1090
+
+### Other
+
 ## [v0.4.0] 2021-12-08
 ### adsb_deku
 - Add `AircraftStatusType::ACASRaBroadcast`
