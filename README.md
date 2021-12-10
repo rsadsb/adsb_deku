@@ -7,8 +7,9 @@
 
 Decoder for [ADS-B(Automatic Dependent Surveillance-Broadcast)](https://en.wikipedia.org/wiki/Automatic_Dependent_Surveillance%E2%80%93Broadcast) Downlink Format protocol packets from 1090mhz. See [dump1090_rs](https://github.com/wcampbell0x2a/dump1090_rs.git) for a Rust demodulator. View planes in the sky around you, with only a [rtl-sdr](https://www.rtl-sdr.com/)!
 
+See [rsadsb-blog](https://rsadsb.github.io/) for release details.
+
 This library uses [deku](https://github.com/sharksforarms/deku) for deserialization of protocol.
-The apps are created with [tui-rs](https://github.com/fdehau/tui-rs).
 
 ![Radar Example](/media/2021_12_08.gif)
 
