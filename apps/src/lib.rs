@@ -149,10 +149,14 @@ impl Airplanes {
     /// Remove airplane after not active for a time
     pub fn prune(&mut self, filter_time: u64) {
         self.0.retain(|k, v| {
-            if v.last_time.elapsed().unwrap() < std::time::Duration::from_secs(filter_time) {
-                true
+            if let Ok(time) = v.last_time.elapsed() {
+                if time < std::time::Duration::from_secs(filter_time) {
+                    true
+                } else {
+                    info!("[{}] non-active, removing", k);
+                    false
+                }
             } else {
-                info!("[{}] non-active, removing", k);
                 false
             }
         });
