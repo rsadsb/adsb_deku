@@ -157,6 +157,7 @@ impl Airplanes {
                     false
                 }
             } else {
+                info!("[{}] non-active(time error), removing", k);
                 false
             }
         });
