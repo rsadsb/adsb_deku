@@ -36,7 +36,7 @@ use clap::Parser;
 use crossterm::event::{poll, read, Event, KeyCode, KeyEvent};
 use crossterm::terminal::enable_raw_mode;
 use gpsd_proto::{get_data, handshake, ResponseData};
-use tracing::{info, trace};
+use tracing::{debug, info, trace};
 use tracing_subscriber::EnvFilter;
 use tui::backend::{Backend, CrosstermBackend};
 use tui::layout::{Constraint, Direction, Layout, Rect};
@@ -255,9 +255,10 @@ fn main() {
                 quit = Some("TCP connection aborted, quitting radar tui");
                 continue;
             }
+
             // convert from string hex -> bytes
             let hex = &mut input.to_string()[1..len - 2].to_string();
-            trace!("new msg: {}", hex);
+            debug!("bytes: {}", hex);
             let bytes = if let Ok(bytes) = hex::decode(&hex) {
                 bytes
             } else {
@@ -271,6 +272,7 @@ fn main() {
 
             // decode
             if let Ok((_, frame)) = Frame::from_bytes((&bytes, 0)) {
+                debug!("message: {:#?}", frame);
                 if let DF::ADSB(ref adsb) = frame.df {
                     adsb_airplanes.incr_messages(adsb.icao);
                     match &adsb.me {

@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix breaking clap change, same syntax as before for `--cities`.
 - fix time related unwrap(). Thanks ([@Jachdich](https://github.com/Jachdich)) ([!57](https://github.com/rsadsb/adsb_deku/pull/57))
 - change logs to rotate daily instead of hourly
+- add debug tracing of bytes and `Frame`
 
 ### apps/1090
 
