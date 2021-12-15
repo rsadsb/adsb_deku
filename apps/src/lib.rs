@@ -4,7 +4,7 @@ use std::time::SystemTime;
 
 use adsb_deku::adsb::{AirborneVelocity, Identification};
 use adsb_deku::{cpr, Altitude, CPRFormat, ICAO};
-use tracing::{info, debug};
+use tracing::{debug, info};
 
 #[derive(Debug)]
 pub struct AirplaneState {
