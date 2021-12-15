@@ -151,7 +151,7 @@ struct Settings {
 fn main() {
     let opts = Opts::parse();
 
-    let file_appender = tracing_appender::rolling::hourly(&opts.log_folder, "radar.log");
+    let file_appender = tracing_appender::rolling::daily(&opts.log_folder, "radar.log");
     let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
 
     let env = EnvFilter::from_default_env();
