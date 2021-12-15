@@ -4,10 +4,11 @@ use std::time::SystemTime;
 
 use adsb_deku::adsb::{AirborneVelocity, Identification};
 use adsb_deku::{cpr, Altitude, CPRFormat, ICAO};
-use tracing::info;
+use tracing::{info, debug};
 
 #[derive(Debug)]
 pub struct AirplaneState {
+    // TODO: rename to coor
     pub coords: AirplaneCoor,
     pub squawk: Option<u32>,
     pub callsign: Option<String>,
@@ -37,6 +38,30 @@ impl Default for AirplaneState {
 pub struct AirplaneCoor {
     /// [odd, even]
     pub altitudes: [Option<Altitude>; 2],
+    /// lat/long
+    pub position: Option<cpr::Position>,
+}
+
+impl AirplaneCoor {
+    /// From Odd/Even Altitudes, update the position of aircraft
+    ///
+    /// TODO: verify position, such as speed_test
+    fn update_position(&mut self) {
+        if let [Some(odd), Some(even)] = &self.altitudes {
+            self.position = cpr::get_position((odd, even));
+            if let Some(position) = &self.position {
+                debug!("update_position: odd: (lat: {}, long: {}), even: (lat: {}, long: {}), position: {:?}", odd.lat_cpr, odd.lon_cpr, even.lat_cpr, even.lat_cpr, position);
+            }
+        }
+    }
+
+    /// Return altitude from Odd Altitude
+    fn altitude(&self) -> Option<u32> {
+        if let Some(odd) = self.altitudes[0] {
+            return Some(odd.alt);
+        }
+        None
+    }
 }
 
 #[derive(Debug, Default)]
@@ -101,25 +126,27 @@ impl Airplanes {
             CPRFormat::Odd => {
                 state.coords = AirplaneCoor {
                     altitudes: [state.coords.altitudes[0], Some(*altitude)],
+                    position: None,
                 };
             },
             CPRFormat::Even => {
                 state.coords = AirplaneCoor {
                     altitudes: [Some(*altitude), state.coords.altitudes[1]],
+                    position: None,
                 };
             },
         }
+        // updat the position from the new even/odd message
+        state.coords.update_position()
     }
 
-    /// Calculate latitude, longitude and altitude of specific ICAO for airplane
+    /// return latitude, longitude and altitude of specific ICAO for airplane
     pub fn lat_long_altitude(&self, icao: ICAO) -> Option<(cpr::Position, u32)> {
         match self.0.get(&icao) {
-            Some(state) => {
-                if let (Some(first_altitude), Some(second_altitude)) =
-                    (state.coords.altitudes[0], state.coords.altitudes[1])
-                {
-                    cpr::get_position((&first_altitude, &second_altitude))
-                        .map(|position| (position, first_altitude.alt))
+            Some(airplane_state) => {
+                let coor = &airplane_state.coords;
+                if let (Some(position), Some(altitude)) = (&coor.position, coor.altitude()) {
+                    Some((position.clone(), altitude))
                 } else {
                     None
                 }
@@ -128,18 +155,13 @@ impl Airplanes {
         }
     }
 
-    /// Calculate all latitude/longitude from Hashmap of current "seen" aircrafts
+    /// return all latitude/longitude from Hashmap of current "seen" aircrafts
     pub fn all_lat_long_altitude(&self) -> Vec<(cpr::Position, ICAO)> {
         let mut all_lat_long = vec![];
-        for (key, state) in &self.0 {
-            if let (Some(first_altitude), Some(second_altitude)) =
-                (state.coords.altitudes[0], state.coords.altitudes[1])
-            {
-                if let Some(position) = cpr::get_position((&first_altitude, &second_altitude))
-                    .map(|position| (position, first_altitude.alt))
-                {
-                    all_lat_long.push((position.0, *key));
-                }
+        for (key, airplane_state) in self.0.iter() {
+            let coor = &airplane_state.coords;
+            if let Some(position) = &coor.position {
+                all_lat_long.push((position.clone(), *key));
             }
         }
 
