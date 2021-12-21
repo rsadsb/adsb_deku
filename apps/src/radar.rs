@@ -33,8 +33,12 @@ use adsb_deku::deku::DekuContainerRead;
 use adsb_deku::{Frame, DF, ICAO};
 use apps::Airplanes;
 use clap::Parser;
-use crossterm::event::{poll, read, Event, KeyCode, KeyEvent};
+use crossterm::event::{
+    poll, read, EnableMouseCapture, Event, KeyCode, KeyEvent, MouseButton, MouseEvent,
+    MouseEventKind,
+};
 use crossterm::terminal::enable_raw_mode;
+use crossterm::ExecutableCommand;
 use gpsd_proto::{get_data, handshake, ResponseData};
 use tracing::{debug, info};
 use tracing_subscriber::EnvFilter;
@@ -211,7 +215,8 @@ fn main() {
     let mut adsb_airplanes = Airplanes::new();
 
     // setup tui params
-    let stdout = io::stdout();
+    let mut stdout = io::stdout();
+    stdout.execute(EnableMouseCapture).unwrap();
     let mut backend = CrosstermBackend::new(stdout);
     backend.clear().unwrap();
     let mut terminal = Terminal::new(backend).unwrap();
@@ -229,6 +234,8 @@ fn main() {
         lat: opts.lat,
         long: opts.long,
     };
+
+    let mut last_mouse_dragging = None;
 
     info!("tui setup");
     loop {
@@ -388,62 +395,135 @@ fn main() {
 
         // handle keyboard events
         if poll(Duration::from_millis(10)).unwrap() {
-            if let Event::Key(KeyEvent { code, .. }) = read().unwrap() {
-                match (code, tab_selection) {
-                    // All Tabs
-                    (KeyCode::F(1), _) => tab_selection = Tab::Map,
-                    (KeyCode::F(2), _) => tab_selection = Tab::Coverage,
-                    (KeyCode::F(3), _) => tab_selection = Tab::Airplanes,
-                    (KeyCode::Tab, _) => tab_selection = tab_selection.next_tab(),
-                    (KeyCode::Char('q'), _) => quit = Some("user requested quit"),
-                    (KeyCode::Char('-'), Tab::Map | Tab::Coverage) => settings.scale += 0.1,
-                    (KeyCode::Char('+'), Tab::Map | Tab::Coverage) => {
-                        if settings.scale > 0.2 {
-                            settings.scale -= 0.1;
-                        }
-                    },
-                    // Map and Coverage
-                    (KeyCode::Up, Tab::Map | Tab::Coverage) => settings.lat += 0.005,
-                    (KeyCode::Down, Tab::Map | Tab::Coverage) => settings.lat -= 0.005,
-                    (KeyCode::Left, Tab::Map | Tab::Coverage) => settings.long -= 0.03,
-                    (KeyCode::Right, Tab::Map | Tab::Coverage) => settings.long += 0.03,
-                    (KeyCode::Enter, Tab::Map | Tab::Coverage) => {
-                        settings.lat = opts.lat;
-                        settings.long = opts.long;
-                        settings.scale = original_scale;
-                    },
-                    // Airplanes
-                    (KeyCode::Up, Tab::Airplanes) => {
-                        if let Some(selected) = airplanes_state.selected() {
-                            airplanes_state.select(Some(selected - 1));
-                        } else {
-                            airplanes_state.select(Some(0));
-                        }
-                    },
-                    (KeyCode::Down, Tab::Airplanes) => {
-                        if let Some(selected) = airplanes_state.selected() {
-                            airplanes_state.select(Some(selected + 1));
-                        } else {
-                            airplanes_state.select(Some(0));
-                        }
-                    },
-                    (KeyCode::Enter, Tab::Airplanes) => {
-                        if let Some(selected) = airplanes_state.selected() {
-                            let key = adsb_airplanes.0.keys().nth(selected).unwrap();
-                            let pos = adsb_airplanes.lat_long_altitude(*key);
-                            if let Some((position, _)) = pos {
-                                settings.lat = position.latitude;
-                                settings.long = position.longitude;
-                                tab_selection = Tab::Map;
-                            }
-                        }
-                    },
-                    _ => (),
-                }
+            match read().unwrap() {
+                Event::Key(key_event) => handle_keyevent(
+                    key_event,
+                    &mut settings,
+                    &mut tab_selection,
+                    &mut quit,
+                    &adsb_airplanes,
+                    &opts,
+                    original_scale,
+                    &mut airplanes_state,
+                ),
+                Event::Mouse(mouse_event) => handle_mouseevent(
+                    mouse_event,
+                    &mut settings,
+                    &mut tab_selection,
+                    &mut last_mouse_dragging,
+                ),
+                _ => (),
             }
         }
     }
     info!("quitting");
+}
+
+/// Handle a KeyEvent
+fn handle_keyevent(
+    key_event: KeyEvent,
+    settings: &mut Settings,
+    tab_selection: &mut Tab,
+    quit: &mut Option<&str>,
+    adsb_airplanes: &Airplanes,
+    opts: &Opts,
+    original_scale: f64,
+    airplanes_state: &mut TableState,
+) {
+    let code = key_event.code;
+    // TODO: switch these
+    let current_selection = tab_selection.clone();
+    match (code, current_selection) {
+        // All Tabs
+        (KeyCode::F(1), _) => *tab_selection = Tab::Map,
+        (KeyCode::F(2), _) => *tab_selection = Tab::Coverage,
+        (KeyCode::F(3), _) => *tab_selection = Tab::Airplanes,
+        (KeyCode::Tab, _) => *tab_selection = tab_selection.next_tab(),
+        (KeyCode::Char('q'), _) => *quit = Some("user requested quit"),
+        (KeyCode::Char('-'), Tab::Map | Tab::Coverage) => settings.scale += 0.1,
+        (KeyCode::Char('+'), Tab::Map | Tab::Coverage) => {
+            if settings.scale > 0.2 {
+                settings.scale -= 0.1;
+            }
+        },
+        // Map and Coverage
+        (KeyCode::Up, Tab::Map | Tab::Coverage) => settings.lat += 0.005,
+        (KeyCode::Down, Tab::Map | Tab::Coverage) => settings.lat -= 0.005,
+        (KeyCode::Left, Tab::Map | Tab::Coverage) => settings.long -= 0.03,
+        (KeyCode::Right, Tab::Map | Tab::Coverage) => settings.long += 0.03,
+        (KeyCode::Enter, Tab::Map | Tab::Coverage) => {
+            settings.lat = opts.lat;
+            settings.long = opts.long;
+            settings.scale = original_scale;
+        },
+        // Airplanes
+        (KeyCode::Up, Tab::Airplanes) => {
+            if let Some(selected) = airplanes_state.selected() {
+                airplanes_state.select(Some(selected - 1));
+            } else {
+                airplanes_state.select(Some(0));
+            }
+        },
+        (KeyCode::Down, Tab::Airplanes) => {
+            if let Some(selected) = airplanes_state.selected() {
+                airplanes_state.select(Some(selected + 1));
+            } else {
+                airplanes_state.select(Some(0));
+            }
+        },
+        (KeyCode::Enter, Tab::Airplanes) => {
+            if let Some(selected) = airplanes_state.selected() {
+                let key = adsb_airplanes.0.keys().nth(selected).unwrap();
+                let pos = adsb_airplanes.lat_long_altitude(*key);
+                if let Some((position, _)) = pos {
+                    settings.lat = position.latitude;
+                    settings.long = position.longitude;
+                    *tab_selection = Tab::Map;
+                }
+            }
+        },
+        _ => (),
+    }
+}
+
+/// Handle a MouseEvent
+fn handle_mouseevent(
+    mouse_event: MouseEvent,
+    settings: &mut Settings,
+    tab_selection: &mut Tab,
+    last_mouse_dragging: &mut Option<(u16, u16)>,
+) {
+    match mouse_event.kind {
+        MouseEventKind::Down(MouseButton::Left) => match (mouse_event.column, mouse_event.row) {
+            (3..=6, 1..=3) => *tab_selection = Tab::Map,
+            (8..=16, 1..=3) => *tab_selection = Tab::Coverage,
+            (20..=32, 1..=3) => *tab_selection = Tab::Airplanes,
+            _ => (),
+        },
+        MouseEventKind::Drag(MouseButton::Left) => {
+            // if we have a previous mouse drag without a mouse lift, change the current position
+            if let Some((column, row)) = &last_mouse_dragging {
+                let up = (mouse_event.row as i32).wrapping_sub(*row as i32) as f64 * 0.020;
+                settings.lat += up;
+
+                let left = (mouse_event.column as i32).wrapping_sub(*column as i32) as f64 * 0.020;
+                settings.long -= left;
+            }
+            *last_mouse_dragging = Some((mouse_event.column, mouse_event.row));
+        },
+        MouseEventKind::Up(_) => {
+            *last_mouse_dragging = None;
+        },
+        MouseEventKind::ScrollDown => {
+            settings.scale += 0.1;
+        },
+        MouseEventKind::ScrollUp => {
+            if settings.scale > 0.1 {
+                settings.scale -= 0.1;
+            }
+        },
+        _ => (),
+    }
 }
 
 /// Render Map tab for tui display

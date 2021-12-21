@@ -55,6 +55,13 @@ OPTIONS:
 ### Logging
 `radar` is enabled with logging. Use the `RUST_LOG=?` environment variable to control trace level and `--log-folder` to control log base folder location.
 
+## Mouse Bindings
+### Tabs
+Control the current tab my clicking on the top-right text.
+
+### Map and Coverage
+Control the position of the lat/long center by dragging your mouse and scroll out/in to control zoom.
+
 ## Key Bindings
 
 ### Any Tab
