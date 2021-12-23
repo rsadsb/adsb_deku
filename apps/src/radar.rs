@@ -434,6 +434,7 @@ fn main() {
 }
 
 /// Handle a KeyEvent
+#[allow(clippy::too_many_arguments)]
 fn handle_keyevent(
     key_event: KeyEvent,
     settings: &mut Settings,
@@ -446,7 +447,7 @@ fn handle_keyevent(
 ) {
     let code = key_event.code;
     // TODO: switch these
-    let current_selection = tab_selection.clone();
+    let current_selection = *tab_selection;
     match (code, current_selection) {
         // All Tabs
         (KeyCode::F(1), _) => *tab_selection = Tab::Map,
