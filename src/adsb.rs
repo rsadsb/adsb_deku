@@ -857,7 +857,7 @@ pub struct OperationCodeSurface {
     #[deku(bits = "3")]
     pub lw: u8,
     #[deku(bits = "6")]
-    pub reserved: u16,
+    pub reserved: u8,
 }
 
 #[derive(Debug, PartialEq, DekuRead, Clone)]
