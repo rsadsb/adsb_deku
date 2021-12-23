@@ -64,6 +64,7 @@ const LAT_LONG_DIFF: f64 = 3.0;
 /// position for the sake of an usable heatmap
 const DIFF: f64 = 100.0;
 
+/// Parsing struct for the --cities clap parameter
 #[derive(Clone)]
 pub struct City {
     name: String,
@@ -101,32 +102,42 @@ impl FromStr for City {
 struct Opts {
     #[clap(long, default_value = "localhost")]
     host: String,
+
     #[clap(long, default_value = "30002")]
     port: u16,
+
     /// Antenna location latitude
     #[clap(long)]
     lat: f64,
+
     /// Antenna location longitude
     #[clap(long)]
     long: f64,
+
     /// Vector of cities [(name, lat, long),..]
     #[clap(long, multiple_values(true))]
     cities: Vec<City>,
+
     /// Disable output of latitude and longitude on display
     #[clap(long)]
     disable_lat_long: bool,
+
     /// Zoom level of Radar and Coverage
     #[clap(long, default_value = "1.2")]
     scale: f64,
+
     /// Enable automatic updating of lat/lon from gpsd
     #[clap(long)]
     gpsd: bool,
+
     /// Ip address of gpsd
     #[clap(long, default_value = "localhost")]
     gpsd_ip: String,
+
     /// Seconds since last message from airplane, triggers removal of airplane after time is up
     #[clap(long, default_value = "10")]
     filter_time: u64,
+
     #[clap(long, default_value = "logs")]
     log_folder: String,
 }
