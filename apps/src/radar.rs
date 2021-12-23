@@ -58,6 +58,12 @@ const MAX_PLOT_LOW: f64 = MAX_PLOT_HIGH * -1.0;
 /// Difference between 1.0 of lat and 1.0 of long when printing
 const LAT_LONG_DIFF: f64 = 3.0;
 
+/// Minimum scale an operator can set
+const SCALE_MINIMUM: f64 = 0.1;
+
+/// Diff between scale changes
+const SCALE_CHANGE: f64 = 0.1;
+
 /// Accuracy of latitude/longitude is affected by this variable.
 ///
 /// ie: 83.912345 -> 83.91. This is specifically so we get more results hitting in the same
@@ -455,10 +461,10 @@ fn handle_keyevent(
         (KeyCode::F(3), _) => *tab_selection = Tab::Airplanes,
         (KeyCode::Tab, _) => *tab_selection = tab_selection.next_tab(),
         (KeyCode::Char('q'), _) => *quit = Some("user requested quit"),
-        (KeyCode::Char('-'), Tab::Map | Tab::Coverage) => settings.scale += 0.1,
+        (KeyCode::Char('-'), Tab::Map | Tab::Coverage) => settings.scale += SCALE_CHANGE,
         (KeyCode::Char('+'), Tab::Map | Tab::Coverage) => {
-            if settings.scale > 0.2 {
-                settings.scale -= 0.1;
+            if settings.scale > SCALE_MINIMUM {
+                settings.scale -= SCALE_CHANGE;
             }
         },
         // Map and Coverage
@@ -530,11 +536,11 @@ fn handle_mouseevent(
             *last_mouse_dragging = None;
         },
         MouseEventKind::ScrollDown => {
-            settings.scale += 0.1;
+            settings.scale += SCALE_CHANGE;
         },
         MouseEventKind::ScrollUp => {
-            if settings.scale > 0.1 {
-                settings.scale -= 0.1;
+            if settings.scale > SCALE_MINIMUM {
+                settings.scale -= SCALE_CHANGE;
             }
         },
         _ => (),
