@@ -722,7 +722,9 @@ impl std::fmt::Display for ControlField {
                         .unwrap()
                 )?;
             },
-            Self::TISB_COARSE(adsb_icao) | Self::TISB_ADSB_RELAY(adsb_icao) | Self::TISB_FINE(adsb_icao) => {
+            Self::TISB_COARSE(adsb_icao)
+            | Self::TISB_ADSB_RELAY(adsb_icao)
+            | Self::TISB_FINE(adsb_icao) => {
                 write!(
                     f,
                     "{}",
