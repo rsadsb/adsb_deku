@@ -413,9 +413,10 @@ fn main() {
             })
             .unwrap();
 
-        // handle keyboard events
+        // handle crossterm events
         if poll(Duration::from_millis(10)).unwrap() {
             match read().unwrap() {
+                // handle keyboard events
                 Event::Key(key_event) => handle_keyevent(
                     key_event,
                     &mut settings,
@@ -426,6 +427,7 @@ fn main() {
                     original_scale,
                     &mut airplanes_state,
                 ),
+                // handle mouse events
                 Event::Mouse(mouse_event) => handle_mouseevent(
                     mouse_event,
                     &mut settings,
