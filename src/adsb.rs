@@ -712,7 +712,7 @@ pub enum ControlField {
 impl std::fmt::Display for ControlField {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::ADSB_ES_NT(adsb_icao) => {
+            Self::ADSB_ES_NT(adsb_icao) | Self::ADSB_ES_NT_ALT(adsb_icao) => {
                 write!(
                     f,
                     "{}",
@@ -722,27 +722,7 @@ impl std::fmt::Display for ControlField {
                         .unwrap()
                 )?;
             },
-            Self::ADSB_ES_NT_ALT(adsb_icao) => {
-                write!(
-                    f,
-                    "{}",
-                    adsb_icao
-                        .me
-                        .to_string(adsb_icao.aa, "(ADS-B)", Capability::AG_UNCERTAIN3, false,)
-                        .unwrap()
-                )?;
-            },
-            Self::TISB_FINE(adsb_icao) => {
-                write!(
-                    f,
-                    "{}",
-                    adsb_icao
-                        .me
-                        .to_string(adsb_icao.aa, "(TIS-B)", Capability::AG_UNCERTAIN3, false,)
-                        .unwrap()
-                )?;
-            },
-            Self::TISB_COARSE(adsb_icao) => {
+            Self::TISB_COARSE(adsb_icao) | Self::TISB_ADSB_RELAY(adsb_icao) | Self::TISB_FINE(adsb_icao) => {
                 write!(
                     f,
                     "{}",
@@ -754,16 +734,6 @@ impl std::fmt::Display for ControlField {
             },
             Self::TISB_MANAGE(tisb_manage) => {
                 write!(f, " Address:   {} (ADS-R)", tisb_manage.aa)?;
-            },
-            Self::TISB_ADSB_RELAY(adsb_icao) => {
-                write!(
-                    f,
-                    "{}",
-                    adsb_icao
-                        .me
-                        .to_string(adsb_icao.aa, "(TIS-B)", Capability::AG_UNCERTAIN3, false,)
-                        .unwrap()
-                )?;
             },
             Self::TISB_ADSB(tisb_adsb) => {
                 write!(

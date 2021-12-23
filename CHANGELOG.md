@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### adsb_deku
+- refactor: improve `fmt::Display` of `ControlField`
 
 ### apps/radar
 - fix: breaking clap change, same syntax as before for `--cities`.
