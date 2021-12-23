@@ -55,6 +55,9 @@ use tui::Terminal;
 const MAX_PLOT_HIGH: f64 = 400.0;
 const MAX_PLOT_LOW: f64 = MAX_PLOT_HIGH * -1.0;
 
+/// Difference between 1.0 of lat and 1.0 of long when printing
+const LAT_LONG_DIFF: f64 = 3.0;
+
 /// Accuracy of latitude/longitude is affected by this variable.
 ///
 /// ie: 83.912345 -> 83.91. This is specifically so we get more results hitting in the same
@@ -575,7 +578,7 @@ fn build_tab_map<A: tui::backend::Backend>(
 
                     // draw plane ICAO name
                     ctx.print(
-                        long + 3.0,
+                        long + LAT_LONG_DIFF,
                         lat,
                         Span::styled(name.to_string(), Style::default().fg(Color::White)),
                     );
@@ -761,7 +764,7 @@ fn draw_cities(
 
         // draw city name
         ctx.print(
-            long + 3.0,
+            long + LAT_LONG_DIFF,
             lat,
             Span::styled(city.name.to_string(), Style::default().fg(Color::Green)),
         );
@@ -772,7 +775,7 @@ fn scale_lat_long(scale: f64) -> (f64, f64) {
     // Difference between each lat point
     let lat_diff = scale;
     // Difference between each long point
-    let long_diff = lat_diff * 3.0;
+    let long_diff = lat_diff * LAT_LONG_DIFF;
 
     (lat_diff, long_diff)
 }
