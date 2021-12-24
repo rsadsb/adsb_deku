@@ -441,7 +441,7 @@ fn main() {
     info!("quitting");
 }
 
-/// Handle a KeyEvent
+/// Handle a `KeyEvent`
 #[allow(clippy::too_many_arguments)]
 fn handle_keyevent(
     key_event: KeyEvent,
@@ -509,7 +509,7 @@ fn handle_keyevent(
     }
 }
 
-/// Handle a MouseEvent
+/// Handle a `MouseEvent`
 fn handle_mouseevent(
     mouse_event: MouseEvent,
     settings: &mut Settings,
@@ -526,10 +526,10 @@ fn handle_mouseevent(
         MouseEventKind::Drag(MouseButton::Left) => {
             // if we have a previous mouse drag without a mouse lift, change the current position
             if let Some((column, row)) = &last_mouse_dragging {
-                let up = (mouse_event.row as i32).wrapping_sub(*row as i32) as f64 * 0.020;
+                let up = f64::from(i32::from(mouse_event.row).wrapping_sub(i32::from(*row))) * 0.020;
                 settings.lat += up;
 
-                let left = (mouse_event.column as i32).wrapping_sub(*column as i32) as f64 * 0.020;
+                let left = f64::from(i32::from(mouse_event.column).wrapping_sub(i32::from(*column))) * 0.020;
                 settings.long -= left;
             }
             *last_mouse_dragging = Some((mouse_event.column, mouse_event.row));
