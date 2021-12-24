@@ -45,7 +45,7 @@ pub struct AirplaneCoor {
 impl AirplaneCoor {
     /// From Odd/Even Altitudes, update the position of aircraft
     ///
-    /// TODO: verify position, such as speed_test
+    /// TODO: verify position, such as speed_test()
     fn update_position(&mut self) {
         if let [Some(odd), Some(even)] = &self.altitudes {
             self.position = cpr::get_position((odd, even));
