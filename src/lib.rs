@@ -462,7 +462,7 @@ impl std::fmt::Display for Altitude {
 }
 
 impl Altitude {
-    /// decodeAC12Field
+    /// `decodeAC12Field`
     fn read(rest: &BitSlice<Msb0, u8>) -> Result<(&BitSlice<Msb0, u8>, u32), DekuError> {
         let (rest, num) = u32::read(rest, (deku::ctx::Endian::Big, deku::ctx::Size::Bits(12)))?;
 
@@ -605,7 +605,7 @@ impl std::fmt::Display for ICAO {
     }
 }
 
-/// Type of DownlinkRequest
+/// Type of `DownlinkRequest`
 #[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
 #[deku(type = "u8", bits = "5")]
 pub enum DownlinkRequest {

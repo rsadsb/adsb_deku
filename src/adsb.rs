@@ -603,7 +603,7 @@ impl std::fmt::Display for CapabilityClassSurface {
     }
 }
 
-/// OperationMode field not including the last 8 bits that are different for Surface/Airborne
+/// `OperationMode` field not including the last 8 bits that are different for Surface/Airborne
 #[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
 pub struct OperationalMode {
     /// (0, 0) in Version 2, reserved for other values
