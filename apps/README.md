@@ -48,7 +48,8 @@ OPTIONS:
         --log-folder <LOG_FOLDER>      [default: logs]
         --long <LONG>                  Antenna location longitude
         --port <PORT>                  [default: 30002]
-        --scale <SCALE>                Zoom level of Radar and Coverage [default: 1.2]
+        --scale <SCALE>                Zoom level of Radar and Coverage (+=zoom out/-=zoom in)
+                                       [default: 1.4]
     -V, --version                      Print version information
 ```
 

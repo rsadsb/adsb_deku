@@ -128,8 +128,8 @@ struct Opts {
     #[clap(long)]
     disable_lat_long: bool,
 
-    /// Zoom level of Radar and Coverage
-    #[clap(long, default_value = "1.2")]
+    /// Zoom level of Radar and Coverage (+=zoom out/-=zoom in)
+    #[clap(long, default_value = "1.4")]
     scale: f64,
 
     /// Enable automatic updating of lat/lon from gpsd
