@@ -526,10 +526,13 @@ fn handle_mouseevent(
         MouseEventKind::Drag(MouseButton::Left) => {
             // if we have a previous mouse drag without a mouse lift, change the current position
             if let Some((column, row)) = &last_mouse_dragging {
-                let up = f64::from(i32::from(mouse_event.row).wrapping_sub(i32::from(*row))) * 0.020;
+                let up =
+                    f64::from(i32::from(mouse_event.row).wrapping_sub(i32::from(*row))) * 0.020;
                 settings.lat += up;
 
-                let left = f64::from(i32::from(mouse_event.column).wrapping_sub(i32::from(*column))) * 0.020;
+                let left =
+                    f64::from(i32::from(mouse_event.column).wrapping_sub(i32::from(*column)))
+                        * 0.020;
                 settings.long -= left;
             }
             *last_mouse_dragging = Some((mouse_event.column, mouse_event.row));
