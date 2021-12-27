@@ -70,6 +70,12 @@ const SCALE_CHANGE: f64 = 0.1;
 /// position for the sake of an usable heatmap
 const DIFF: f64 = 100.0;
 
+/// tui top bar margin
+const TUI_START_MARGIN: u16 = 1;
+
+/// width of tui top bar
+const TUI_BAR_WIDTH: u16 = 3;
+
 /// Parsing struct for the --cities clap parameter
 #[derive(Clone)]
 pub struct City {
@@ -535,9 +541,9 @@ fn handle_keyevent(
 fn handle_mouseevent(mouse_event: MouseEvent, settings: &mut Settings) {
     match mouse_event.kind {
         MouseEventKind::Down(MouseButton::Left) => match (mouse_event.column, mouse_event.row) {
-            (3..=6, 1..=3) => settings.tab_selection = Tab::Map,
-            (8..=16, 1..=3) => settings.tab_selection = Tab::Coverage,
-            (20..=32, 1..=3) => settings.tab_selection = Tab::Airplanes,
+            (3..=6, TUI_START_MARGIN..=TUI_BAR_WIDTH) => settings.tab_selection = Tab::Map,
+            (8..=16, TUI_START_MARGIN..=TUI_BAR_WIDTH) => settings.tab_selection = Tab::Coverage,
+            (20..=32, TUI_START_MARGIN..=TUI_BAR_WIDTH) => settings.tab_selection = Tab::Airplanes,
             _ => (),
         },
         MouseEventKind::Drag(MouseButton::Left) => {
