@@ -345,7 +345,11 @@ fn main() {
     loop {
         if let Some(reason) = settings.quit {
             terminal.clear().unwrap();
-            println!("{}", reason);
+            let mut stdout = io::stdout();
+            crossterm::execute!(stdout, crossterm::terminal::LeaveAlternateScreen).unwrap();
+            crossterm::terminal::disable_raw_mode().unwrap();
+            terminal.show_cursor().unwrap();
+            println!("radar: {}", reason);
             break;
         }
         input.clear();
