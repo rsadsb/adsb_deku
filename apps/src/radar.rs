@@ -105,6 +105,7 @@ impl FromStr for City {
     author = "wcampbell0x2a",
     about = "TUI Display of ADS-B protocol info from demodulator"
 )]
+#[derive(Clone)]
 struct Opts {
     #[clap(long, default_value = "localhost")]
     host: String,
@@ -167,15 +168,10 @@ impl Tab {
 
 /// After parsing from `Opts` contains more settings mutated in program
 struct Settings<'a> {
+    opts: Opts,
     quit: Option<&'a str>,
     /// mutable current map selection
     tab_selection: Tab,
-    /// const scale from cmd line
-    opts_scale: f64,
-    /// const lat from cmd line
-    opts_lat: f64,
-    /// const long from cmd line
-    opts_long: f64,
     /// current scale from operator
     scale: f64,
     /// current lat from operator
@@ -190,17 +186,16 @@ struct Settings<'a> {
 impl<'a> Settings<'a> {
     // TODO: the Mutex::new() can be replaced with AtomicBool
     #[allow(clippy::mutex_atomic)]
-    fn new(opts_scale: f64, opts_lat: f64, opts_long: f64) -> Self {
+    // TODO: make this just take in opt
+    fn new(opts: Opts) -> Self {
         Self {
             quit: None,
             tab_selection: Tab::Map,
-            opts_scale,
-            opts_lat,
-            opts_long,
-            scale: opts_scale,
-            lat: opts_lat,
-            long: opts_long,
+            scale: opts.scale,
+            lat: opts.lat,
+            long: opts.long,
             view_mutated: Arc::new(Mutex::new(false)),
+            opts,
         }
     }
 
@@ -243,9 +238,9 @@ impl<'a> Settings<'a> {
     }
 
     fn reset(&mut self) {
-        self.lat = self.opts_lat;
-        self.long = self.opts_long;
-        self.scale = self.opts_scale;
+        self.lat = self.opts.lat;
+        self.long = self.opts.long;
+        self.scale = self.opts.scale;
         if let Ok(mut view_mutated) = self.view_mutated.lock() {
             *view_mutated = false;
         }
@@ -291,7 +286,7 @@ fn main() {
     let mut airplanes_state = TableState::default();
     let filter_time = opts.filter_time;
 
-    let mut settings = Settings::new(opts.scale, opts.lat, opts.long);
+    let mut settings = Settings::new(opts.clone());
 
     let mut last_mouse_dragging = None;
 
@@ -448,62 +443,14 @@ fn main() {
         // remove airplanes that timed-out
         adsb_airplanes.prune(filter_time);
 
-        // tui drawing
-        terminal
-            .draw(|f| {
-                // create layout
-                let chunks = Layout::default()
-                    .direction(Direction::Vertical)
-                    .margin(1)
-                    .constraints([Constraint::Min(3), Constraint::Percentage(100)].as_ref())
-                    .split(f.size());
-
-                // render tabs
-                let airplane_len = format!("Airplanes({})", adsb_airplanes.0.len());
-                let titles = ["Map", "Coverage", &airplane_len]
-                    .iter()
-                    .copied()
-                    .map(Spans::from)
-                    .collect();
-
-                let view_type = if let Ok(view_mutated) = settings.view_mutated.lock() {
-                    if *view_mutated {
-                        "(CUSTOM)"
-                    } else {
-                        ""
-                    }
-                } else {
-                    ""
-                };
-
-                let tab = Tabs::new(titles)
-                    .block(
-                        Block::default()
-                            .title(format!(
-                                "({},{}) {}",
-                                settings.lat, settings.long, view_type
-                            ))
-                            .borders(Borders::ALL),
-                    )
-                    .style(Style::default().fg(Color::White))
-                    .highlight_style(Style::default().fg(Color::Green))
-                    .select(settings.tab_selection as usize)
-                    .divider(DOT);
-
-                f.render_widget(tab, chunks[0]);
-
-                // render the tab depending on the selection
-                match settings.tab_selection {
-                    Tab::Map => build_tab_map(f, chunks, &settings, &opts, &adsb_airplanes),
-                    Tab::Coverage => {
-                        build_tab_coverage(f, chunks, &settings, &opts, &coverage_airplanes)
-                    },
-                    Tab::Airplanes => {
-                        build_tab_airplanes(f, chunks, &adsb_airplanes, &mut airplanes_state)
-                    },
-                }
-            })
-            .unwrap();
+        // draw crossterm
+        draw(
+            &mut terminal,
+            &adsb_airplanes,
+            &settings,
+            &coverage_airplanes,
+            &mut airplanes_state,
+        );
 
         // handle crossterm events
         if poll(Duration::from_millis(10)).unwrap() {
@@ -524,6 +471,67 @@ fn main() {
         }
     }
     info!("quitting");
+}
+
+fn draw(
+    terminal: &mut Terminal<CrosstermBackend<std::io::Stdout>>,
+    adsb_airplanes: &Airplanes,
+    settings: &Settings,
+    coverage_airplanes: &[(f64, f64, u8, ICAO)],
+    airplanes_state: &mut TableState,
+) {
+    // tui drawing
+    terminal
+        .draw(|f| {
+            // create layout
+            let chunks = Layout::default()
+                .direction(Direction::Vertical)
+                .margin(1)
+                .constraints([Constraint::Min(3), Constraint::Percentage(100)].as_ref())
+                .split(f.size());
+
+            // render tabs
+            let airplane_len = format!("Airplanes({})", adsb_airplanes.0.len());
+            let titles = ["Map", "Coverage", &airplane_len]
+                .iter()
+                .copied()
+                .map(Spans::from)
+                .collect();
+
+            let view_type = if let Ok(view_mutated) = settings.view_mutated.lock() {
+                if *view_mutated {
+                    "(CUSTOM)"
+                } else {
+                    ""
+                }
+            } else {
+                ""
+            };
+
+            let tab = Tabs::new(titles)
+                .block(
+                    Block::default()
+                        .title(format!(
+                            "({},{}) {}",
+                            settings.lat, settings.long, view_type
+                        ))
+                        .borders(Borders::ALL),
+                )
+                .style(Style::default().fg(Color::White))
+                .highlight_style(Style::default().fg(Color::Green))
+                .select(settings.tab_selection as usize)
+                .divider(DOT);
+
+            f.render_widget(tab, chunks[0]);
+
+            // render the tab depending on the selection
+            match settings.tab_selection {
+                Tab::Map => build_tab_map(f, chunks, settings, adsb_airplanes),
+                Tab::Coverage => build_tab_coverage(f, chunks, settings, coverage_airplanes),
+                Tab::Airplanes => build_tab_airplanes(f, chunks, adsb_airplanes, airplanes_state),
+            }
+        })
+        .unwrap();
 }
 
 /// Handle a `KeyEvent`
@@ -624,7 +632,6 @@ fn build_tab_map<A: tui::backend::Backend>(
     f: &mut tui::Frame<A>,
     chunks: Vec<Rect>,
     settings: &Settings,
-    opts: &Opts,
     adsb_airplanes: &Airplanes,
 ) {
     let canvas = Canvas::default()
@@ -637,14 +644,7 @@ fn build_tab_map<A: tui::backend::Backend>(
             let (lat_diff, long_diff) = scale_lat_long(settings.scale);
 
             // draw cities
-            draw_cities(
-                ctx,
-                &opts.cities,
-                settings.lat,
-                settings.long,
-                lat_diff,
-                long_diff,
-            );
+            draw_cities(ctx, settings, lat_diff, long_diff);
 
             // draw ADSB tab airplanes
             for key in adsb_airplanes.0.keys() {
@@ -659,7 +659,7 @@ fn build_tab_map<A: tui::backend::Backend>(
                         color: Color::White,
                     });
 
-                    let name = if opts.disable_lat_long {
+                    let name = if settings.opts.disable_lat_long {
                         format!("{}", key).into_boxed_str()
                     } else {
                         format!("{} ({}, {})", key, position.latitude, position.longitude)
@@ -685,7 +685,6 @@ fn build_tab_coverage<A: tui::backend::Backend>(
     f: &mut tui::Frame<A>,
     chunks: Vec<Rect>,
     settings: &Settings,
-    opts: &Opts,
     coverage_airplanes: &[(f64, f64, u8, ICAO)],
 ) {
     let canvas = Canvas::default()
@@ -698,14 +697,7 @@ fn build_tab_coverage<A: tui::backend::Backend>(
             let (lat_diff, long_diff) = scale_lat_long(settings.scale);
 
             // draw cities
-            draw_cities(
-                ctx,
-                &opts.cities,
-                settings.lat,
-                settings.long,
-                lat_diff,
-                long_diff,
-            );
+            draw_cities(ctx, settings, lat_diff, long_diff);
 
             // draw ADSB tab airplanes
             for (lat, long, seen_number, _) in coverage_airplanes.iter() {
@@ -836,15 +828,13 @@ fn draw_lines(ctx: &mut tui::widgets::canvas::Context<'_>) {
 /// Draw cities on the map
 fn draw_cities(
     ctx: &mut tui::widgets::canvas::Context<'_>,
-    cities: &[City],
-    local_lat: f64,
-    local_long: f64,
+    settings: &Settings,
     lat_diff: f64,
     long_diff: f64,
 ) {
-    for city in cities {
-        let lat = ((city.lat - local_lat) / lat_diff) * MAX_PLOT_HIGH;
-        let long = ((city.long - local_long) / long_diff) * MAX_PLOT_HIGH;
+    for city in &settings.opts.cities {
+        let lat = ((city.lat - settings.lat) / lat_diff) * MAX_PLOT_HIGH;
+        let long = ((city.long - settings.long) / long_diff) * MAX_PLOT_HIGH;
 
         // draw city coor
         ctx.draw(&Points {
