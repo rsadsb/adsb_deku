@@ -520,7 +520,7 @@ fn handle_keyevent(
         (KeyCode::F(2), _) => settings.tab_selection = Tab::Coverage,
         (KeyCode::F(3), _) => settings.tab_selection = Tab::Airplanes,
         (KeyCode::Tab, _) => settings.tab_selection = settings.tab_selection.next_tab(),
-        (KeyCode::Char('q'), _) => settings.quit = Some("user requested quit"),
+        (KeyCode::Char('q'), _) => settings.quit = Some("user requested action: quit"),
         (KeyCode::Char('-'), Tab::Map | Tab::Coverage) => settings.scale_increase(),
         (KeyCode::Char('+'), Tab::Map | Tab::Coverage) => settings.scale_decrease(),
         // Map and Coverage
