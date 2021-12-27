@@ -468,18 +468,36 @@ fn main() {
         );
 
         // handle crossterm events
-        if poll(Duration::from_millis(10)).unwrap() {
-            match read().unwrap() {
-                // handle keyboard events
-                Event::Key(key_event) => handle_keyevent(
-                    key_event,
-                    &mut settings,
-                    &adsb_airplanes,
-                    &mut airplanes_state,
-                ),
-                // handle mouse events
-                Event::Mouse(mouse_event) => handle_mouseevent(mouse_event, &mut settings),
-                _ => (),
+        //
+        // Loop until all MouseEvents are read, if you don't do this it takes forever to read
+        // all the moved mouse signals
+        loop {
+            if poll(Duration::from_millis(10)).unwrap() {
+                match read().unwrap() {
+                    // handle keyboard events
+                    Event::Key(key_event) => {
+                        trace!("{:?}", key_event);
+                        handle_keyevent(
+                            key_event,
+                            &mut settings,
+                            &adsb_airplanes,
+                            &mut airplanes_state,
+                        );
+
+                        // there isn't another keyboard event likely, don't read anymore
+                        break;
+                    },
+                    // handle mouse events
+                    Event::Mouse(mouse_event) => {
+                        trace!("{:?}", mouse_event);
+                        handle_mouseevent(mouse_event, &mut settings);
+                        //there is most likely another mouse event, jump back to read it
+                    },
+                    _ => (),
+                }
+            } else {
+                // don't seen anything, don't read anymore
+                break;
             }
         }
     }
