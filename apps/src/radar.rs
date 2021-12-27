@@ -166,10 +166,90 @@ impl Tab {
 }
 
 /// After parsing from `Opts` contains more settings mutated in program
-struct Settings {
+struct Settings<'a> {
+    quit: Option<&'a str>,
+    /// mutable current map selection
+    tab_selection: Tab,
+    /// const scale from cmd line
+    opts_scale: f64,
+    /// const lat from cmd line
+    opts_lat: f64,
+    /// const long from cmd line
+    opts_long: f64,
+    /// current scale from operator
     scale: f64,
+    /// current lat from operator
     lat: f64,
+    /// current long from operator
     long: f64,
+    /// true: current lat/long/scale differs from gpsd/cmdline input
+    /// false: user has changed lat/long/scale with mouse/keyboard
+    view_mutated: Arc<Mutex<bool>>,
+}
+
+impl<'a> Settings<'a> {
+    // TODO: the Mutex::new() can be replaced with AtomicBool
+    #[allow(clippy::mutex_atomic)]
+    fn new(opts_scale: f64, opts_lat: f64, opts_long: f64) -> Self {
+        Self {
+            quit: None,
+            tab_selection: Tab::Map,
+            opts_scale,
+            opts_lat,
+            opts_long,
+            scale: opts_scale,
+            lat: opts_lat,
+            long: opts_long,
+            view_mutated: Arc::new(Mutex::new(false)),
+        }
+    }
+
+    fn scale_increase(&mut self) {
+        self.scale += SCALE_CHANGE;
+        self.mutated();
+    }
+
+    fn scale_decrease(&mut self) {
+        if self.scale > SCALE_MINIMUM {
+            self.scale -= SCALE_CHANGE;
+        }
+        self.mutated();
+    }
+
+    fn lat_increase(&mut self) {
+        self.lat += 0.005;
+        self.mutated();
+    }
+
+    fn lat_decrease(&mut self) {
+        self.lat -= 0.005;
+        self.mutated();
+    }
+
+    fn long_increase(&mut self) {
+        self.long -= 0.03;
+        self.mutated();
+    }
+
+    fn long_decrease(&mut self) {
+        self.long += 0.03;
+        self.mutated();
+    }
+
+    fn mutated(&mut self) {
+        if let Ok(mut view_mutated) = self.view_mutated.lock() {
+            *view_mutated = true;
+        }
+    }
+
+    fn reset(&mut self) {
+        self.lat = self.opts_lat;
+        self.long = self.opts_long;
+        self.scale = self.opts_scale;
+        if let Ok(mut view_mutated) = self.view_mutated.lock() {
+            *view_mutated = false;
+        }
+    }
 }
 
 fn main() {
@@ -194,41 +274,6 @@ fn main() {
         .unwrap();
     let mut reader = BufReader::new(stream);
 
-    // This next group of functions and variables handle if `gpsd_ip` is set from the command
-    // line.
-    //
-    // When set, read from the gpsd daemon at (gpsd_ip, 2947) and update the lat/long Arc<Mutex<T>
-    // accordingly
-    let gps_lat_long = Arc::new(Mutex::new(None));
-    let gpsd = opts.gpsd;
-    let gpsd_ip = opts.gpsd_ip.clone();
-    if gpsd {
-        // clone locally
-        let cloned_gps_lat_long = Arc::clone(&gps_lat_long);
-
-        // start thread
-        std::thread::spawn(move || {
-            let stream = TcpStream::connect((gpsd_ip, 2947)).unwrap();
-            let mut reader = BufReader::new(&stream);
-            let mut writer = BufWriter::new(&stream);
-            handshake(&mut reader, &mut writer).unwrap();
-            info!("[gpsd] connected");
-
-            // keep looping while reading new messages looking for GGA messages which are the
-            // normal GPS messages from the NMEA messages.
-            loop {
-                if let Ok(ResponseData::Tpv(data)) = get_data(&mut reader) {
-                    if let Ok(mut lat_long) = cloned_gps_lat_long.lock() {
-                        if let (Some(lat), Some(lon)) = (data.lat, data.lon) {
-                            info!("[gpsd] lat: {},  long:{}", lat, lon);
-                            *lat_long = Some((lat, lon));
-                        }
-                    }
-                }
-            }
-        });
-    }
-
     // empty containers
     let mut input = String::new();
     let mut coverage_airplanes: Vec<(f64, f64, u8, ICAO)> = Vec::new();
@@ -243,23 +288,56 @@ fn main() {
     enable_raw_mode().unwrap();
 
     // setup tui variables
-    let mut tab_selection = Tab::Map;
-    let mut quit = None;
-    let original_scale = opts.scale;
     let mut airplanes_state = TableState::default();
     let filter_time = opts.filter_time;
 
-    let mut settings = Settings {
-        scale: opts.scale,
-        lat: opts.lat,
-        long: opts.long,
-    };
+    let mut settings = Settings::new(opts.scale, opts.lat, opts.long);
 
     let mut last_mouse_dragging = None;
 
+    // This next group of functions and variables handle if `gpsd_ip` is set from the command
+    // line.
+    //
+    // When set, read from the gpsd daemon at (gpsd_ip, 2947) and update the lat/long Arc<Mutex<T>
+    // accordingly
+    let gps_lat_long = Arc::new(Mutex::new(None));
+    let gpsd = opts.gpsd;
+    let gpsd_ip = opts.gpsd_ip.clone();
+    if gpsd {
+        // clone locally
+        let cloned_gps_lat_long = Arc::clone(&gps_lat_long);
+        let view_mutated = Arc::clone(&settings.view_mutated);
+
+        // start thread
+        std::thread::spawn(move || {
+            let stream = TcpStream::connect((gpsd_ip, 2947)).unwrap();
+            let mut reader = BufReader::new(&stream);
+            let mut writer = BufWriter::new(&stream);
+            handshake(&mut reader, &mut writer).unwrap();
+            info!("[gpsd] connected");
+
+            // keep looping while reading new messages looking for GGA messages which are the
+            // normal GPS messages from the NMEA messages.
+            loop {
+                if let Ok(ResponseData::Tpv(data)) = get_data(&mut reader) {
+                    if let Ok(view_mutated) = view_mutated.lock() {
+                        if !*view_mutated {
+                            if let Ok(mut lat_long) = cloned_gps_lat_long.lock() {
+                                if let (Some(lat), Some(lon)) = (data.lat, data.lon) {
+                                    info!("[gpsd] lat: {},  long:{}", lat, lon);
+                                    *lat_long = Some((lat, lon));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
     info!("tui setup");
     loop {
-        if let Some(reason) = quit {
+        if let Some(reason) = settings.quit {
             terminal.clear().unwrap();
             println!("{}", reason);
             break;
@@ -279,7 +357,7 @@ fn main() {
         if let Ok(len) = reader.read_line(&mut input) {
             // a length of 0 would indicate a broken pipe/input, quit program
             if len == 0 {
-                quit = Some("TCP connection aborted, quitting radar tui");
+                settings.quit = Some("TCP connection aborted, quitting radar tui");
                 continue;
             }
 
@@ -387,21 +465,35 @@ fn main() {
                     .copied()
                     .map(Spans::from)
                     .collect();
+
+                let view_type = if let Ok(view_mutated) = settings.view_mutated.lock() {
+                    if *view_mutated {
+                        "(CUSTOM)"
+                    } else {
+                        ""
+                    }
+                } else {
+                    ""
+                };
+
                 let tab = Tabs::new(titles)
                     .block(
                         Block::default()
-                            .title(format!("({},{})", settings.lat, settings.long))
+                            .title(format!(
+                                "({},{}) {}",
+                                settings.lat, settings.long, view_type
+                            ))
                             .borders(Borders::ALL),
                     )
                     .style(Style::default().fg(Color::White))
                     .highlight_style(Style::default().fg(Color::Green))
-                    .select(tab_selection as usize)
+                    .select(settings.tab_selection as usize)
                     .divider(DOT);
 
                 f.render_widget(tab, chunks[0]);
 
                 // render the tab depending on the selection
-                match tab_selection {
+                match settings.tab_selection {
                     Tab::Map => build_tab_map(f, chunks, &settings, &opts, &adsb_airplanes),
                     Tab::Coverage => {
                         build_tab_coverage(f, chunks, &settings, &opts, &coverage_airplanes)
@@ -420,20 +512,13 @@ fn main() {
                 Event::Key(key_event) => handle_keyevent(
                     key_event,
                     &mut settings,
-                    &mut tab_selection,
-                    &mut quit,
                     &adsb_airplanes,
-                    &opts,
-                    original_scale,
                     &mut airplanes_state,
                 ),
                 // handle mouse events
-                Event::Mouse(mouse_event) => handle_mouseevent(
-                    mouse_event,
-                    &mut settings,
-                    &mut tab_selection,
-                    &mut last_mouse_dragging,
-                ),
+                Event::Mouse(mouse_event) => {
+                    handle_mouseevent(mouse_event, &mut settings, &mut last_mouse_dragging)
+                },
                 _ => (),
             }
         }
@@ -442,43 +527,30 @@ fn main() {
 }
 
 /// Handle a `KeyEvent`
-#[allow(clippy::too_many_arguments)]
 fn handle_keyevent(
     key_event: KeyEvent,
     settings: &mut Settings,
-    tab_selection: &mut Tab,
-    quit: &mut Option<&str>,
     adsb_airplanes: &Airplanes,
-    opts: &Opts,
-    original_scale: f64,
     airplanes_state: &mut TableState,
 ) {
     let code = key_event.code;
     // TODO: switch these
-    let current_selection = *tab_selection;
+    let current_selection = settings.tab_selection;
     match (code, current_selection) {
         // All Tabs
-        (KeyCode::F(1), _) => *tab_selection = Tab::Map,
-        (KeyCode::F(2), _) => *tab_selection = Tab::Coverage,
-        (KeyCode::F(3), _) => *tab_selection = Tab::Airplanes,
-        (KeyCode::Tab, _) => *tab_selection = tab_selection.next_tab(),
-        (KeyCode::Char('q'), _) => *quit = Some("user requested quit"),
-        (KeyCode::Char('-'), Tab::Map | Tab::Coverage) => settings.scale += SCALE_CHANGE,
-        (KeyCode::Char('+'), Tab::Map | Tab::Coverage) => {
-            if settings.scale > SCALE_MINIMUM {
-                settings.scale -= SCALE_CHANGE;
-            }
-        },
+        (KeyCode::F(1), _) => settings.tab_selection = Tab::Map,
+        (KeyCode::F(2), _) => settings.tab_selection = Tab::Coverage,
+        (KeyCode::F(3), _) => settings.tab_selection = Tab::Airplanes,
+        (KeyCode::Tab, _) => settings.tab_selection = settings.tab_selection.next_tab(),
+        (KeyCode::Char('q'), _) => settings.quit = Some("user requested quit"),
+        (KeyCode::Char('-'), Tab::Map | Tab::Coverage) => settings.scale_increase(),
+        (KeyCode::Char('+'), Tab::Map | Tab::Coverage) => settings.scale_decrease(),
         // Map and Coverage
-        (KeyCode::Up, Tab::Map | Tab::Coverage) => settings.lat += 0.005,
-        (KeyCode::Down, Tab::Map | Tab::Coverage) => settings.lat -= 0.005,
-        (KeyCode::Left, Tab::Map | Tab::Coverage) => settings.long -= 0.03,
-        (KeyCode::Right, Tab::Map | Tab::Coverage) => settings.long += 0.03,
-        (KeyCode::Enter, Tab::Map | Tab::Coverage) => {
-            settings.lat = opts.lat;
-            settings.long = opts.long;
-            settings.scale = original_scale;
-        },
+        (KeyCode::Up, Tab::Map | Tab::Coverage) => settings.lat_increase(),
+        (KeyCode::Down, Tab::Map | Tab::Coverage) => settings.lat_decrease(),
+        (KeyCode::Left, Tab::Map | Tab::Coverage) => settings.long_increase(),
+        (KeyCode::Right, Tab::Map | Tab::Coverage) => settings.long_decrease(),
+        (KeyCode::Enter, Tab::Map | Tab::Coverage) => settings.reset(),
         // Airplanes
         (KeyCode::Up, Tab::Airplanes) => {
             if let Some(selected) = airplanes_state.selected() {
@@ -501,7 +573,7 @@ fn handle_keyevent(
                 if let Some((position, _)) = pos {
                     settings.lat = position.latitude;
                     settings.long = position.longitude;
-                    *tab_selection = Tab::Map;
+                    settings.tab_selection = Tab::Map;
                 }
             }
         },
@@ -513,14 +585,13 @@ fn handle_keyevent(
 fn handle_mouseevent(
     mouse_event: MouseEvent,
     settings: &mut Settings,
-    tab_selection: &mut Tab,
     last_mouse_dragging: &mut Option<(u16, u16)>,
 ) {
     match mouse_event.kind {
         MouseEventKind::Down(MouseButton::Left) => match (mouse_event.column, mouse_event.row) {
-            (3..=6, 1..=3) => *tab_selection = Tab::Map,
-            (8..=16, 1..=3) => *tab_selection = Tab::Coverage,
-            (20..=32, 1..=3) => *tab_selection = Tab::Airplanes,
+            (3..=6, 1..=3) => settings.tab_selection = Tab::Map,
+            (8..=16, 1..=3) => settings.tab_selection = Tab::Coverage,
+            (20..=32, 1..=3) => settings.tab_selection = Tab::Airplanes,
             _ => (),
         },
         MouseEventKind::Drag(MouseButton::Left) => {
@@ -529,25 +600,21 @@ fn handle_mouseevent(
                 let up =
                     f64::from(i32::from(mouse_event.row).wrapping_sub(i32::from(*row))) * 0.020;
                 settings.lat += up;
+                settings.mutated();
 
                 let left =
                     f64::from(i32::from(mouse_event.column).wrapping_sub(i32::from(*column)))
                         * 0.020;
                 settings.long -= left;
+                settings.mutated();
             }
             *last_mouse_dragging = Some((mouse_event.column, mouse_event.row));
         },
         MouseEventKind::Up(_) => {
             *last_mouse_dragging = None;
         },
-        MouseEventKind::ScrollDown => {
-            settings.scale += SCALE_CHANGE;
-        },
-        MouseEventKind::ScrollUp => {
-            if settings.scale > SCALE_MINIMUM {
-                settings.scale -= SCALE_CHANGE;
-            }
-        },
+        MouseEventKind::ScrollDown => settings.scale_increase(),
+        MouseEventKind::ScrollUp => settings.scale_decrease(),
         _ => (),
     }
 }
