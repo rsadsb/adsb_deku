@@ -476,67 +476,6 @@ fn main() {
     info!("quitting");
 }
 
-fn draw(
-    terminal: &mut Terminal<CrosstermBackend<std::io::Stdout>>,
-    adsb_airplanes: &Airplanes,
-    settings: &Settings,
-    coverage_airplanes: &[(f64, f64, u8, ICAO)],
-    airplanes_state: &mut TableState,
-) {
-    // tui drawing
-    terminal
-        .draw(|f| {
-            // create layout
-            let chunks = Layout::default()
-                .direction(Direction::Vertical)
-                .margin(1)
-                .constraints([Constraint::Min(3), Constraint::Percentage(100)].as_ref())
-                .split(f.size());
-
-            // render tabs
-            let airplane_len = format!("Airplanes({})", adsb_airplanes.0.len());
-            let titles = ["Map", "Coverage", &airplane_len]
-                .iter()
-                .copied()
-                .map(Spans::from)
-                .collect();
-
-            let view_type = if let Ok(view_mutated) = settings.view_mutated.lock() {
-                if *view_mutated {
-                    "(CUSTOM)"
-                } else {
-                    ""
-                }
-            } else {
-                ""
-            };
-
-            let tab = Tabs::new(titles)
-                .block(
-                    Block::default()
-                        .title(format!(
-                            "({},{}) {}",
-                            settings.lat, settings.long, view_type
-                        ))
-                        .borders(Borders::ALL),
-                )
-                .style(Style::default().fg(Color::White))
-                .highlight_style(Style::default().fg(Color::Green))
-                .select(settings.tab_selection as usize)
-                .divider(DOT);
-
-            f.render_widget(tab, chunks[0]);
-
-            // render the tab depending on the selection
-            match settings.tab_selection {
-                Tab::Map => build_tab_map(f, chunks, settings, adsb_airplanes),
-                Tab::Coverage => build_tab_coverage(f, chunks, settings, coverage_airplanes),
-                Tab::Airplanes => build_tab_airplanes(f, chunks, adsb_airplanes, airplanes_state),
-            }
-        })
-        .unwrap();
-}
-
 /// Handle a `KeyEvent`
 fn handle_keyevent(
     key_event: KeyEvent,
@@ -623,6 +562,67 @@ fn handle_mouseevent(mouse_event: MouseEvent, settings: &mut Settings) {
         MouseEventKind::ScrollUp => settings.scale_decrease(),
         _ => (),
     }
+}
+
+fn draw(
+    terminal: &mut Terminal<CrosstermBackend<std::io::Stdout>>,
+    adsb_airplanes: &Airplanes,
+    settings: &Settings,
+    coverage_airplanes: &[(f64, f64, u8, ICAO)],
+    airplanes_state: &mut TableState,
+) {
+    // tui drawing
+    terminal
+        .draw(|f| {
+            // create layout
+            let chunks = Layout::default()
+                .direction(Direction::Vertical)
+                .margin(1)
+                .constraints([Constraint::Min(3), Constraint::Percentage(100)].as_ref())
+                .split(f.size());
+
+            // render tabs
+            let airplane_len = format!("Airplanes({})", adsb_airplanes.0.len());
+            let titles = ["Map", "Coverage", &airplane_len]
+                .iter()
+                .copied()
+                .map(Spans::from)
+                .collect();
+
+            let view_type = if let Ok(view_mutated) = settings.view_mutated.lock() {
+                if *view_mutated {
+                    "(CUSTOM)"
+                } else {
+                    ""
+                }
+            } else {
+                ""
+            };
+
+            let tab = Tabs::new(titles)
+                .block(
+                    Block::default()
+                        .title(format!(
+                            "({},{}) {}",
+                            settings.lat, settings.long, view_type
+                        ))
+                        .borders(Borders::ALL),
+                )
+                .style(Style::default().fg(Color::White))
+                .highlight_style(Style::default().fg(Color::Green))
+                .select(settings.tab_selection as usize)
+                .divider(DOT);
+
+            f.render_widget(tab, chunks[0]);
+
+            // render the tab depending on the selection
+            match settings.tab_selection {
+                Tab::Map => build_tab_map(f, chunks, settings, adsb_airplanes),
+                Tab::Coverage => build_tab_coverage(f, chunks, settings, coverage_airplanes),
+                Tab::Airplanes => build_tab_airplanes(f, chunks, adsb_airplanes, airplanes_state),
+            }
+        })
+        .unwrap();
 }
 
 /// Render Map tab for tui display
