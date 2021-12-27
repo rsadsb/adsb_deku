@@ -168,7 +168,9 @@ impl Tab {
 
 /// After parsing from `Opts` contains more settings mutated in program
 struct Settings<'a> {
+    /// opts from clap command line
     opts: Opts,
+    /// when Some(), imply quitting with msg
     quit: Option<&'a str>,
     /// mutable current map selection
     tab_selection: Tab,
@@ -181,6 +183,8 @@ struct Settings<'a> {
     /// true: current lat/long/scale differs from gpsd/cmdline input
     /// false: user has changed lat/long/scale with mouse/keyboard
     view_mutated: Arc<Mutex<bool>>,
+    /// last seen mouse clicking position
+    last_mouse_dragging: Option<(u16, u16)>,
 }
 
 impl<'a> Settings<'a> {
@@ -196,6 +200,7 @@ impl<'a> Settings<'a> {
             long: opts.long,
             view_mutated: Arc::new(Mutex::new(false)),
             opts,
+            last_mouse_dragging: None,
         }
     }
 
@@ -286,9 +291,9 @@ fn main() {
     let mut airplanes_state = TableState::default();
     let filter_time = opts.filter_time;
 
+    // create settings, dropping opts to prevent bad usage of variable
     let mut settings = Settings::new(opts.clone());
-
-    let mut last_mouse_dragging = None;
+    drop(opts);
 
     // This next group of functions and variables handle if `gpsd_ip` is set from the command
     // line.
@@ -296,8 +301,8 @@ fn main() {
     // When set, read from the gpsd daemon at (gpsd_ip, 2947) and update the lat/long Arc<Mutex<T>
     // accordingly
     let gps_lat_long = Arc::new(Mutex::new(None));
-    let gpsd = opts.gpsd;
-    let gpsd_ip = opts.gpsd_ip.clone();
+    let gpsd = settings.opts.gpsd;
+    let gpsd_ip = settings.opts.gpsd_ip.clone();
     if gpsd {
         // clone locally
         let cloned_gps_lat_long = Arc::clone(&gps_lat_long);
@@ -340,7 +345,7 @@ fn main() {
         input.clear();
 
         // if `gpsd_ip` is selected, check if there is an update from that thread
-        if opts.gpsd {
+        if settings.opts.gpsd {
             if let Ok(lat_long) = gps_lat_long.lock() {
                 if let Some((lat, long)) = *lat_long {
                     settings.lat = lat as f64;
@@ -463,9 +468,7 @@ fn main() {
                     &mut airplanes_state,
                 ),
                 // handle mouse events
-                Event::Mouse(mouse_event) => {
-                    handle_mouseevent(mouse_event, &mut settings, &mut last_mouse_dragging)
-                },
+                Event::Mouse(mouse_event) => handle_mouseevent(mouse_event, &mut settings),
                 _ => (),
             }
         }
@@ -590,11 +593,7 @@ fn handle_keyevent(
 }
 
 /// Handle a `MouseEvent`
-fn handle_mouseevent(
-    mouse_event: MouseEvent,
-    settings: &mut Settings,
-    last_mouse_dragging: &mut Option<(u16, u16)>,
-) {
+fn handle_mouseevent(mouse_event: MouseEvent, settings: &mut Settings) {
     match mouse_event.kind {
         MouseEventKind::Down(MouseButton::Left) => match (mouse_event.column, mouse_event.row) {
             (3..=6, 1..=3) => settings.tab_selection = Tab::Map,
@@ -604,22 +603,21 @@ fn handle_mouseevent(
         },
         MouseEventKind::Drag(MouseButton::Left) => {
             // if we have a previous mouse drag without a mouse lift, change the current position
-            if let Some((column, row)) = &last_mouse_dragging {
+            if let Some((column, row)) = &settings.last_mouse_dragging {
                 let up =
                     f64::from(i32::from(mouse_event.row).wrapping_sub(i32::from(*row))) * 0.020;
                 settings.lat += up;
-                settings.mutated();
 
                 let left =
                     f64::from(i32::from(mouse_event.column).wrapping_sub(i32::from(*column)))
                         * 0.020;
                 settings.long -= left;
-                settings.mutated();
             }
-            *last_mouse_dragging = Some((mouse_event.column, mouse_event.row));
+            settings.mutated();
+            settings.last_mouse_dragging = Some((mouse_event.column, mouse_event.row));
         },
         MouseEventKind::Up(_) => {
-            *last_mouse_dragging = None;
+            settings.last_mouse_dragging = None;
         },
         MouseEventKind::ScrollDown => settings.scale_increase(),
         MouseEventKind::ScrollUp => settings.scale_decrease(),
