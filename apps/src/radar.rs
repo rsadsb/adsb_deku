@@ -819,7 +819,7 @@ fn build_tab_airplanes<A: tui::backend::Backend>(
         )
         .widths(&[
             Constraint::Length(6),
-            Constraint::Length(15),
+            Constraint::Length(9),
             Constraint::Length(15),
             Constraint::Length(15),
             Constraint::Length(8),
