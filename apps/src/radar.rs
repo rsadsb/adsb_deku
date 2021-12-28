@@ -276,7 +276,8 @@ fn main() {
         .with_writer(non_blocking)
         .init();
 
-    info!("starting radar with options: {:?}", opts);
+    let version = env!("CARGO_PKG_VERSION");
+    info!("starting radar-v{} with options: {:?}", version, opts);
 
     // Setup non-blocking TcpStream
     let stream = TcpStream::connect((opts.host.clone(), opts.port))
