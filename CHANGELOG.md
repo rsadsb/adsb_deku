@@ -21,7 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix: breaking clap change, same syntax as before for `--cities`.
 - feat: Add Mouse control for Map/Coverage lat/long position.
 - feat: Add Mouse control for tab selection.
-- refactor: Add LAT_LONG_DIFF const
+- feat: Add --touchscreen, for adding three buttons for zoom out, zoom in, reset screen.
+- refactor: general code improvements and adding const usage.
 
 ### apps/1090
 

@@ -50,6 +50,8 @@ OPTIONS:
         --port <PORT>                  [default: 30002]
         --scale <SCALE>                Zoom level of Radar and Coverage (+=zoom out/-=zoom in)
                                        [default: 1.4]
+        --touchscreen                  Enable three tabs on left side of screen for zoom out/zoom
+                                       in/and reset
     -V, --version                      Print version information
 ```
 
@@ -58,10 +60,14 @@ OPTIONS:
 
 ## Mouse Bindings
 ### Tabs
-Control the current tab my clicking on the top-right text.
+Control the current tab by clicking on the top-right text.
 
 ### Map and Coverage
-Control the position of the lat/long center by dragging your mouse and scroll out/in to control zoom.
+Control the position of the lat/long center by dragging your mouse/finger and scroll out/in to control zoom.
+
+### Touchsreen
+Use the `--touchscreen` option for enabling three buttoms for Zoom In/Zoom Out/Reset screen.
+This enables those features for platforms without keyboard and mouse usage.
 
 ## Key Bindings
 

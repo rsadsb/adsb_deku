@@ -40,7 +40,7 @@ use crossterm::event::{
 use crossterm::terminal::enable_raw_mode;
 use crossterm::ExecutableCommand;
 use gpsd_proto::{get_data, handshake, ResponseData};
-use tracing::{debug, info};
+use tracing::{debug, info, trace};
 use tracing_subscriber::EnvFilter;
 use tui::backend::{Backend, CrosstermBackend};
 use tui::layout::{Constraint, Direction, Layout, Rect};
@@ -77,7 +77,7 @@ const TUI_START_MARGIN: u16 = 1;
 const TUI_BAR_WIDTH: u16 = 3;
 
 /// Parsing struct for the --cities clap parameter
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct City {
     name: String,
     lat: f64,
@@ -111,7 +111,7 @@ impl FromStr for City {
     author = "wcampbell0x2a",
     about = "TUI Display of ADS-B protocol info from demodulator"
 )]
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 struct Opts {
     #[clap(long, default_value = "localhost")]
     host: String,
@@ -153,6 +153,10 @@ struct Opts {
 
     #[clap(long, default_value = "logs")]
     log_folder: String,
+
+    /// Enable three tabs on left side of screen for zoom out/zoom in/and reset.
+    #[clap(long)]
+    touchscreen: bool,
 }
 
 #[derive(Copy, Clone)]
@@ -459,7 +463,7 @@ fn main() {
         adsb_airplanes.prune(filter_time);
 
         // draw crossterm
-        draw(
+        let bottom_touchscreen_rects = draw(
             &mut terminal,
             &adsb_airplanes,
             &settings,
@@ -490,7 +494,7 @@ fn main() {
                     // handle mouse events
                     Event::Mouse(mouse_event) => {
                         trace!("{:?}", mouse_event);
-                        handle_mouseevent(mouse_event, &mut settings);
+                        handle_mouseevent(mouse_event, &mut settings, &bottom_touchscreen_rects);
                         //there is most likely another mouse event, jump back to read it
                     },
                     _ => (),
@@ -512,7 +516,6 @@ fn handle_keyevent(
     airplanes_state: &mut TableState,
 ) {
     let code = key_event.code;
-    // TODO: switch these
     let current_selection = settings.tab_selection;
     match (code, current_selection) {
         // All Tabs
@@ -560,13 +563,50 @@ fn handle_keyevent(
 }
 
 /// Handle a `MouseEvent`
-fn handle_mouseevent(mouse_event: MouseEvent, settings: &mut Settings) {
+fn handle_mouseevent(
+    mouse_event: MouseEvent,
+    settings: &mut Settings,
+    bottom_touchscreen_rects: &Option<Vec<Rect>>,
+) {
     match mouse_event.kind {
-        MouseEventKind::Down(MouseButton::Left) => match (mouse_event.column, mouse_event.row) {
-            (3..=6, TUI_START_MARGIN..=TUI_BAR_WIDTH) => settings.tab_selection = Tab::Map,
-            (8..=16, TUI_START_MARGIN..=TUI_BAR_WIDTH) => settings.tab_selection = Tab::Coverage,
-            (20..=32, TUI_START_MARGIN..=TUI_BAR_WIDTH) => settings.tab_selection = Tab::Airplanes,
-            _ => (),
+        MouseEventKind::Down(MouseButton::Left) => {
+            // Tabs
+            match (mouse_event.column, mouse_event.row) {
+                (3..=6, TUI_START_MARGIN..=TUI_BAR_WIDTH) => settings.tab_selection = Tab::Map,
+                (8..=16, TUI_START_MARGIN..=TUI_BAR_WIDTH) => {
+                    settings.tab_selection = Tab::Coverage
+                },
+                (20..=32, TUI_START_MARGIN..=TUI_BAR_WIDTH) => {
+                    settings.tab_selection = Tab::Airplanes
+                },
+                _ => (),
+            }
+            // left touchscreen (if enabled)
+            if let Some(btr) = bottom_touchscreen_rects {
+                let scale_i_start = btr[0].y;
+                let scale_i_end = btr[0].y + btr[0].height;
+                let scale_o_start = btr[1].y;
+                let scale_o_end = btr[1].y + btr[0].height;
+                let reset_start = btr[2].y;
+                let reset_end = btr[2].y + btr[0].height;
+
+                // zoom out
+                if (1..=10_u16).contains(&mouse_event.column)
+                    && (scale_i_start..=scale_i_end).contains(&mouse_event.row)
+                {
+                    settings.scale_increase();
+                // zoom in
+                } else if (1..=10_u16).contains(&mouse_event.column)
+                    && (scale_o_start..=scale_o_end).contains(&mouse_event.row)
+                {
+                    settings.scale_decrease();
+                // reset
+                } else if (1..=10_u16).contains(&mouse_event.column)
+                    && (reset_start..=reset_end).contains(&mouse_event.row)
+                {
+                    settings.reset();
+                }
+            }
         },
         MouseEventKind::Drag(MouseButton::Left) => {
             // if we have a previous mouse drag without a mouse lift, change the current position
@@ -598,7 +638,9 @@ fn draw(
     settings: &Settings,
     coverage_airplanes: &[(f64, f64, u8, ICAO)],
     airplanes_state: &mut TableState,
-) {
+) -> Option<Vec<Rect>> {
+    let mut bottom_touchscreen_rects = None;
+
     // tui drawing
     terminal
         .draw(|f| {
@@ -641,16 +683,71 @@ fn draw(
                 .select(settings.tab_selection as usize)
                 .divider(DOT);
 
-            f.render_widget(tab, chunks[0]);
+            f.render_widget(tab.clone(), chunks[0]);
 
-            // render the tab depending on the selection
-            match settings.tab_selection {
-                Tab::Map => build_tab_map(f, chunks, settings, adsb_airplanes),
-                Tab::Coverage => build_tab_coverage(f, chunks, settings, coverage_airplanes),
-                Tab::Airplanes => build_tab_airplanes(f, chunks, adsb_airplanes, airplanes_state),
-            }
+            bottom_touchscreen_rects = draw_bottom_chunks(
+                f,
+                chunks,
+                settings,
+                adsb_airplanes,
+                coverage_airplanes,
+                airplanes_state,
+            );
         })
         .unwrap();
+
+    bottom_touchscreen_rects
+}
+
+fn draw_bottom_chunks<A: tui::backend::Backend>(
+    f: &mut tui::Frame<A>,
+    chunks: Vec<Rect>,
+    settings: &Settings,
+    adsb_airplanes: &Airplanes,
+    coverage_airplanes: &[(f64, f64, u8, ICAO)],
+    airplanes_state: &mut TableState,
+) -> Option<Vec<Rect>> {
+    // Create the bottom chunks, only adding the contraint for the left side if the --touchscreen
+    // option is chosen
+    let left_size = if settings.opts.touchscreen { 10 } else { 0 };
+    let bottom_chunks = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([Constraint::Min(left_size), Constraint::Percentage(100)].as_ref())
+        .split(chunks[1]);
+
+    // Optionally create the tui widgets for the touchscreen
+    let r_rects = if settings.opts.touchscreen {
+        let touchscreen_chunks = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([
+                Constraint::Percentage(33),
+                Constraint::Percentage(33),
+                Constraint::Percentage(33),
+            ])
+            .split(bottom_chunks[0]);
+
+        let block01 = Block::default().title("Zoom Out").borders(Borders::ALL);
+        f.render_widget(block01, touchscreen_chunks[0]);
+
+        let block02 = Block::default().title("Zoom In").borders(Borders::ALL);
+        f.render_widget(block02, touchscreen_chunks[1]);
+
+        let block03 = Block::default().title("Reset").borders(Borders::ALL);
+        f.render_widget(block03, touchscreen_chunks[2]);
+
+        Some(touchscreen_chunks)
+    } else {
+        None
+    };
+
+    // render the bottom cavas depending on the chosen tab
+    match settings.tab_selection {
+        Tab::Map => build_tab_map(f, bottom_chunks, settings, adsb_airplanes),
+        Tab::Coverage => build_tab_coverage(f, bottom_chunks, settings, coverage_airplanes),
+        Tab::Airplanes => build_tab_airplanes(f, bottom_chunks, adsb_airplanes, airplanes_state),
+    }
+
+    r_rects
 }
 
 /// Render Map tab for tui display
