@@ -1,0 +1,45 @@
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+  release:
+    types:
+      - created
+
+name: binaries
+
+jobs:
+  # release binaries
+  release-bins:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        targets:
+          - x86_64-unknown-linux-gnu
+          - armv7-unknown-linux-gnueabihf
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - uses: actions-rs/cargo@v1
+        with:
+          use-cross: true
+          command: build
+          args: --release --workspace --target ${{ matrix.targets }}
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: radar-${{ matrix.targets }}
+          path: target/${{ matrix.targets }}/release/radar
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: 1090-${{ matrix.targets }}
+          path: target/${{ matrix.targets }}/release/1090
