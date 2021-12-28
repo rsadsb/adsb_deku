@@ -201,7 +201,6 @@ struct Settings<'a> {
 impl<'a> Settings<'a> {
     // TODO: the Mutex::new() can be replaced with AtomicBool
     #[allow(clippy::mutex_atomic)]
-    // TODO: make this just take in opt
     fn new(opts: Opts) -> Self {
         Self {
             quit: None,
