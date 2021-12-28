@@ -105,9 +105,6 @@ different `adsb_deku` uses. See the [`README.md`] for examples of use.
 [`ME::AircraftOperationalCoordination`]: crate::adsb::ME::AircraftOperationalCoordination
 [`ME::AircraftOperationStatus`]: crate::adsb::ME::AircraftOperationStatus
 
-[`apps`]: crate::Frame
-[`Frame`]: crate::Frame
-[`deku::DekuContainerRead`]: crate::deku::DekuContainerRead
 [`README.md`]: https://github.com/rsadsb/adsb_deku/blob/master/README.md
 [`apps/`]: https://github.com/rsadsb/adsb_deku/tree/master/apps
 [`ADS-B`]: https://en.wikipedia.org/wiki/Automatic_Dependent_Surveillance%E2%80%93Broadcast
