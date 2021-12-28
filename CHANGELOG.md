@@ -13,20 +13,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(breaking): change `OperationalCodeSurface.reserved` from `u16` to `u8`
 
 ### apps/radar
-- fix: breaking clap change, same syntax as before for `--cities`.
+- fix: breaking clap change, same syntax as before for `--cities`
 - fix: time related unwrap(). Thanks ([@Jachdich](https://github.com/Jachdich)) ([!57](https://github.com/rsadsb/adsb_deku/pull/57))
 - feat: change logs to rotate daily instead of hourly
 - feat: add debug tracing of bytes and `Frame`
 - feat: improve performance of latitude/longitude calculation
-- fix: breaking clap change, same syntax as before for `--cities`.
-- feat: Add Mouse control for Map/Coverage lat/long position.
-- feat: Add Mouse control for tab selection.
-- feat: Add --touchscreen, for adding three buttons for zoom out, zoom in, reset screen.
-- refactor: general code improvements and adding const usage.
+- fix: breaking clap change, same syntax as before for `--cities`
+- feat: add Mouse control for Map/Coverage lat/long position
+- feat: add Mouse control for tab selection
+- feat: add `--touchscreen`, three left-side buttons for zoom out, zoom in, reset screen actions
+- refactor: general code improvements and adding const usage
+- feat: add version info to logging
+- feat: improve user facing errors
 
 ### apps/1090
 
 ### Other
+- feat: add test, check, and release binaries for x86_64-unknown-linux-gnu and armv7-unknown-linux-gnueabihf
 
 ## [v0.4.0] 2021-12-08
 ### adsb_deku
