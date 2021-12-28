@@ -31,6 +31,7 @@ use adsb_deku::adsb::ME;
 use adsb_deku::cpr::Position;
 use adsb_deku::deku::DekuContainerRead;
 use adsb_deku::{Frame, DF, ICAO};
+use anyhow::{Context, Result};
 use apps::Airplanes;
 use clap::Parser;
 use crossterm::event::{
@@ -262,7 +263,7 @@ impl<'a> Settings<'a> {
     }
 }
 
-fn main() {
+fn main() -> Result<()> {
     let opts = Opts::parse();
 
     let file_appender = tracing_appender::rolling::daily(&opts.log_folder, "radar.log");
@@ -280,8 +281,10 @@ fn main() {
     info!("starting radar-v{} with options: {:?}", version, opts);
 
     // Setup non-blocking TcpStream
-    let stream = TcpStream::connect((opts.host.clone(), opts.port))
-        .expect("Could not open port to ADS-B daemon");
+    let stream = TcpStream::connect((opts.host.clone(), opts.port)).with_context(|| {
+        r#"could not open port to ADS-B client, try running https://github.com/rsadsb/dump1090_rs.
+see https://github.com/rsadsb/adsb_deku#serverdemodulationexternal-applications for more details"#
+    })?;
     stream
         .set_read_timeout(Some(std::time::Duration::from_millis(50)))
         .unwrap();
@@ -323,7 +326,15 @@ fn main() {
 
         // start thread
         std::thread::spawn(move || {
-            let stream = TcpStream::connect((gpsd_ip, 2947)).unwrap();
+            let gpsd_port = 2947;
+            let stream = TcpStream::connect((gpsd_ip.clone(), gpsd_port))
+                .with_context(|| {
+                    format!(
+                        "unable to connect to gpsd server @ {}:{}",
+                        gpsd_ip, gpsd_port
+                    )
+                })
+                .unwrap();
             let mut reader = BufReader::new(&stream);
             let mut writer = BufWriter::new(&stream);
             handshake(&mut reader, &mut writer).unwrap();
@@ -351,11 +362,11 @@ fn main() {
     info!("tui setup");
     loop {
         if let Some(reason) = settings.quit {
-            terminal.clear().unwrap();
+            terminal.clear()?;
             let mut stdout = io::stdout();
-            crossterm::execute!(stdout, crossterm::terminal::LeaveAlternateScreen).unwrap();
-            crossterm::terminal::disable_raw_mode().unwrap();
-            terminal.show_cursor().unwrap();
+            crossterm::execute!(stdout, crossterm::terminal::LeaveAlternateScreen)?;
+            crossterm::terminal::disable_raw_mode()?;
+            terminal.show_cursor()?;
             println!("radar: {}", reason);
             break;
         }
@@ -479,8 +490,8 @@ fn main() {
         // Loop until all MouseEvents are read, if you don't do this it takes forever to read
         // all the moved mouse signals
         loop {
-            if poll(Duration::from_millis(10)).unwrap() {
-                match read().unwrap() {
+            if poll(Duration::from_millis(10))? {
+                match read()? {
                     // handle keyboard events
                     Event::Key(key_event) => {
                         trace!("{:?}", key_event);
@@ -509,6 +520,7 @@ fn main() {
         }
     }
     info!("quitting");
+    Ok(())
 }
 
 /// Handle a `KeyEvent`
