@@ -276,6 +276,8 @@ fn main() {
         .with_writer(non_blocking)
         .init();
 
+    info!("starting radar with options: {:?}", opts);
+
     // Setup non-blocking TcpStream
     let stream = TcpStream::connect((opts.host.clone(), opts.port))
         .expect("Could not open port to ADS-B daemon");
