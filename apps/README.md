@@ -36,7 +36,7 @@ OPTIONS:
         --gpsd                         Enable automatic updating of lat/lon from gpsd(https://gpsd.io/) server
         --gpsd-ip <GPSD_IP>            Ip address of gpsd [default: localhost]
     -h, --help                         Print help information
-        --host <HOST>                  ip address / hostname of ADS-B server / demodulator [default: localhost]
+        --host <HOST>                  ip address / hostname of ADS-B server / demodulator [default: 127.0.0.1]
         --lat <LAT>                    Antenna location latitude
         --locations <LOCATIONS>...     Vector of location [(name, lat, long),..]
         --log-folder <LOG_FOLDER>      [default: logs]
