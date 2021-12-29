@@ -114,9 +114,11 @@ impl FromStr for Location {
 )]
 #[derive(Debug, Clone)]
 struct Opts {
+    /// ip address / hostname of ADS-B server / demodulator
     #[clap(long, default_value = "localhost")]
     host: String,
 
+    /// port of ADS-B server / demodulator
     #[clap(long, default_value = "30002")]
     port: u16,
 

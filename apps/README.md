@@ -36,12 +36,12 @@ OPTIONS:
         --gpsd                         Enable automatic updating of lat/lon from gpsd(https://gpsd.io/) server
         --gpsd-ip <GPSD_IP>            Ip address of gpsd [default: localhost]
     -h, --help                         Print help information
-        --host <HOST>                  [default: localhost]
+        --host <HOST>                  ip address / hostname of ADS-B server / demodulator [default: localhost]
         --lat <LAT>                    Antenna location latitude
         --locations <LOCATIONS>...     Vector of location [(name, lat, long),..]
         --log-folder <LOG_FOLDER>      [default: logs]
         --long <LONG>                  Antenna location longitude
-        --port <PORT>                  [default: 30002]
+        --port <PORT>                  port of ADS-B server / demodulator [default: 30002]
         --scale <SCALE>                Zoom level of Radar and Coverage (+=zoom out/-=zoom in) [default: 1.4]
         --touchscreen                  Enable three tabs on left side of screen for zoom out/zoom in/and reset
     -V, --version                      Print version information
