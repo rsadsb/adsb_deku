@@ -53,26 +53,27 @@ OPTIONS:
 ### Logging
 `radar` is enabled with logging. Use the `RUST_LOG=?` environment variable to control trace level and `--log-folder` to control log base folder location.
 
-## Mouse Bindings
-### Tabs
+### Mouse Bindings
+#### Tabs
 Control the current tab by clicking on the top-right text.
 
-### Map and Coverage
+#### Map and Coverage
 Control the position of the lat/long center by dragging your mouse/finger and scroll out/in to control zoom.
 
-### Touchsreen
+#### Touchsreen
 Use the `--touchscreen` option for enabling three buttoms for Zoom In/Zoom Out/Reset screen.
 This enables those features for platforms without keyboard and mouse usage.
 
-## Key Bindings
+### Key Bindings
 
-### Any Tab
+#### Any Tab
 |  Key  |  Action                    |
 | ----- | -------------------------- |
 | F1    | Move to Radar screen       |
 | F2    | Move to Coverage screen    |
 | F2    | Move to Airplanes screen   |
 | TAB   | Move to next tab           |
+| q     | Quit the app               |
 
 
 ### Map or Coverage
