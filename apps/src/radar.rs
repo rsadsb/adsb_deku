@@ -77,15 +77,15 @@ const TUI_START_MARGIN: u16 = 1;
 /// width of tui top bar
 const TUI_BAR_WIDTH: u16 = 3;
 
-/// Parsing struct for the --cities clap parameter
+/// Parsing struct for the --locations clap parameter
 #[derive(Debug, Clone)]
-pub struct City {
+pub struct Location {
     name: String,
     lat: f64,
     long: f64,
 }
 
-impl FromStr for City {
+impl FromStr for Location {
     type Err = ParseFloatError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -128,9 +128,9 @@ struct Opts {
     #[clap(long)]
     long: f64,
 
-    /// Vector of cities [(name, lat, long),..]
+    /// Vector of location [(name, lat, long),..]
     #[clap(long, multiple_values(true))]
-    cities: Vec<City>,
+    locations: Vec<Location>,
 
     /// Disable output of latitude and longitude on display
     #[clap(long)]
@@ -780,8 +780,8 @@ fn build_tab_map<A: tui::backend::Backend>(
 
             let (lat_diff, long_diff) = scale_lat_long(settings.scale);
 
-            // draw cities
-            draw_cities(ctx, settings, lat_diff, long_diff);
+            // draw locations
+            draw_locations(ctx, settings, lat_diff, long_diff);
 
             // draw ADSB tab airplanes
             for key in adsb_airplanes.0.keys() {
@@ -833,8 +833,8 @@ fn build_tab_coverage<A: tui::backend::Backend>(
 
             let (lat_diff, long_diff) = scale_lat_long(settings.scale);
 
-            // draw cities
-            draw_cities(ctx, settings, lat_diff, long_diff);
+            // draw locations
+            draw_locations(ctx, settings, lat_diff, long_diff);
 
             // draw ADSB tab airplanes
             for (lat, long, seen_number, _) in coverage_airplanes.iter() {
@@ -962,14 +962,14 @@ fn draw_lines(ctx: &mut tui::widgets::canvas::Context<'_>) {
     });
 }
 
-/// Draw cities on the map
-fn draw_cities(
+/// Draw locations on the map
+fn draw_locations(
     ctx: &mut tui::widgets::canvas::Context<'_>,
     settings: &Settings,
     lat_diff: f64,
     long_diff: f64,
 ) {
-    for city in &settings.opts.cities {
+    for city in &settings.opts.locations {
         let lat = ((city.lat - settings.lat) / lat_diff) * MAX_PLOT_HIGH;
         let long = ((city.long - settings.long) / long_diff) * MAX_PLOT_HIGH;
 
