@@ -21,7 +21,7 @@
 //! Display all information gathered from observed aircraft
 
 use std::io::{self, BufRead, BufReader, BufWriter};
-use std::net::{IpAddr, Ipv4Addr, SocketAddr, TcpStream};
+use std::net::{Ipv4Addr, SocketAddr, TcpStream};
 use std::num::ParseFloatError;
 use std::str::FromStr;
 use std::sync::{Arc, Mutex};
