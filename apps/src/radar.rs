@@ -281,8 +281,8 @@ fn main() -> Result<()> {
 
     // Setup non-blocking TcpStream
     let stream = TcpStream::connect((opts.host.clone(), opts.port)).with_context(|| {
-        r#"could not open port to ADS-B client, try running https://github.com/rsadsb/dump1090_rs.
-see https://github.com/rsadsb/adsb_deku#serverdemodulationexternal-applications for more details"#
+        format!(r#"could not open port to ADS-B client at {}:{}, try running https://github.com/rsadsb/dump1090_rs.
+see https://github.com/rsadsb/adsb_deku#serverdemodulationexternal-applications for more details"#, opts.host.clone(), opts.port)
     })?;
     stream
         .set_read_timeout(Some(std::time::Duration::from_millis(50)))
