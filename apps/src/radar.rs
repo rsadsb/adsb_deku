@@ -140,7 +140,7 @@ struct Opts {
     #[clap(long, default_value = "1.4")]
     scale: f64,
 
-    /// Enable automatic updating of lat/lon from gpsd
+    /// Enable automatic updating of lat/lon from gpsd(https://gpsd.io/) server
     #[clap(long)]
     gpsd: bool,
 
