@@ -1,6 +1,6 @@
 [package]
 name = "apps"
-version = "0.4.0"
+version = "0.5.0"
 license = "MIT"
 edition = "2021"
 
@@ -15,7 +15,7 @@ name = "1090"
 path = "src/1090.rs"
 
 [dependencies]
-adsb_deku = { path = "../", version = "0.4" }
+adsb_deku = { path = "../", version = "0.5" }
 hex = "0.4"
 crossterm = "0.22"
 clap = {version = "3.0.0-rc.9", features = ["color", "derive"]}
