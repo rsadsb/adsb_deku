@@ -22,7 +22,7 @@ Client applications use this library to display the data accumulated from an ADS
 An ADS-B client for the terminal written in Rust. Radar connects to an ADS-B demodulation server
 and stores this info, allowing an operator to control the display of the data.
 
-- **Map Tab** - Plot currently detected aircraft on lat/long grid. Add known locations with `--cities` option.
+- **Map Tab** - Plot currently detected aircraft on lat/long grid. Add known locations with `--locations` option.
 - **Coverage Tab** - Plot all detected aircraft lat/long positions since starting radar. Features grayscale heatmap.
 - **Aircraft Tab** - Show detailed table of information about currently detected aircraft. Set aircraft position as center lat/long.
 - **gpsd** - Derive lat/long from a gpsd instance using `--gpsd` flag.
@@ -34,7 +34,7 @@ This application uses [tui-rs](https://github.com/fdehau/tui-rs) for generating 
 ```text
 # Startup "radar" display in tui relative to your antenna position
 > cd apps
-> cargo r --bin radar --release -- --lat="50.0" --long="50.0" --cities "(name,lat,long)" "(name,lat,long)"
+> cargo r --bin radar --release -- --lat="50.0" --long="50.0" --locations "(name,lat,long)" "(name,lat,long)"
 ```
 
 #### 1090
