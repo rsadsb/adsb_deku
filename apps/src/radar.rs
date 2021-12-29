@@ -21,7 +21,7 @@
 //! Display all information gathered from observed aircraft
 
 use std::io::{self, BufRead, BufReader, BufWriter};
-use std::net::TcpStream;
+use std::net::{Ipv4Addr, SocketAddr, TcpStream};
 use std::num::ParseFloatError;
 use std::str::FromStr;
 use std::sync::{Arc, Mutex};
@@ -115,8 +115,8 @@ impl FromStr for Location {
 #[derive(Debug, Clone)]
 struct Opts {
     /// ip address / hostname of ADS-B server / demodulator
-    #[clap(long, default_value = "localhost")]
-    host: String,
+    #[clap(long, default_value = "127.0.0.1")]
+    host: Ipv4Addr,
 
     /// port of ADS-B server / demodulator
     #[clap(long, default_value = "30002")]
@@ -282,7 +282,8 @@ fn main() -> Result<()> {
     info!("starting radar-v{} with options: {:?}", version, opts);
 
     // Setup non-blocking TcpStream
-    let stream = TcpStream::connect((opts.host.clone(), opts.port)).with_context(|| {
+    let socket = SocketAddr::from((opts.host, opts.port));
+    let stream = TcpStream::connect_timeout(&socket, Duration::from_secs(5)).with_context(|| {
         format!(r#"could not open port to ADS-B client at {}:{}, try running https://github.com/rsadsb/dump1090_rs.
 see https://github.com/rsadsb/adsb_deku#serverdemodulationexternal-applications for more details"#, opts.host.clone(), opts.port)
     })?;
