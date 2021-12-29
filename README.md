@@ -27,7 +27,7 @@ and stores this info, allowing an operator to control the display of the data.
 - **Aircraft Tab** - Show detailed table of information about currently detected aircraft. Set aircraft position as center lat/long.
 - **gpsd** - Derive lat/long from a gpsd instance using `--gpsd` flag.
 
-See [apps/README.md](https://github.com/wcampbell0x2a/adsb_deku/tree/update-readme/apps) for map control keybindings.
+See [apps/README.md](https://github.com/wcampbell0x2a/adsb_deku/tree/master/apps) for map control keybindings.
 
 This application uses [tui-rs](https://github.com/fdehau/tui-rs) for generating the display to terminal.
 
