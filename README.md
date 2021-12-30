@@ -3,6 +3,7 @@
 [![Latest Version](https://img.shields.io/crates/v/adsb_deku.svg)](https://crates.io/crates/adsb_deku)
 [![Rust Documentation](https://docs.rs/adsb_deku/badge.svg)](https://docs.rs/adsb_deku)
 [![Actions Status](https://github.com/wcampbell0x2a/adsb_deku/workflows/CI/badge.svg)](https://github.com/wcampbell0x2a/adsb_deku/actions)
+[![dependency status](https://deps.rs/repo/github/rsadsb/adsb_deku/status.svg)](https://deps.rs/repo/github/rsadsb/adsb_deku)
 
 
 Decoder for [ADS-B(Automatic Dependent Surveillance-Broadcast)](https://en.wikipedia.org/wiki/Automatic_Dependent_Surveillance%E2%80%93Broadcast) Downlink Format protocol packets from 1090mhz. See [dump1090_rs](https://github.com/wcampbell0x2a/dump1090_rs.git) for a Rust demodulator. View planes in the sky around you, with only a [rtl-sdr](https://www.rtl-sdr.com/)!
