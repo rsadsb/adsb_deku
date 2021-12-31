@@ -65,6 +65,9 @@ const SCALE_MINIMUM: f64 = 0.1;
 /// Diff between scale changes
 const SCALE_CHANGE: f64 = 0.1;
 
+/// Value used as mutiplier in map scaling for projection
+const SCALE_DEFAULT: f64 = 50000.0;
+
 /// Accuracy of latitude/longitude is affected by this variable.
 ///
 /// ie: 83.912345 -> 83.91. This is specifically so we get more results hitting in the same
@@ -139,7 +142,7 @@ struct Opts {
     disable_lat_long: bool,
 
     /// Zoom level of Radar and Coverage (+=zoom out/-=zoom in)
-    #[clap(long, default_value = "1.4")]
+    #[clap(long, default_value = "1.0")]
     scale: f64,
 
     /// Enable automatic updating of lat/lon from gpsd(https://gpsd.io/) server
@@ -216,15 +219,41 @@ impl<'a> Settings<'a> {
         }
     }
 
+    fn to_xy(&self, latitude: f64, longitude: f64) -> (f64, f64) {
+        // TODO save before, it's kinda costly
+        let (local_x, local_y) = self.local_lat_lon();
+        let (x, y) = self.to_mercator(latitude, longitude);
+        let (x, y) = (x - local_x, y - local_y);
+        (x, y * -1.0)
+    }
+
+    fn local_lat_lon(&self) -> (f64, f64) {
+        self.to_mercator(self.lat, self.long)
+    }
+
+    fn to_mercator(&self, lat: f64, long: f64) -> (f64, f64) {
+        let scale: f64 = self.scale * SCALE_DEFAULT;
+
+        let x = (long + 180.0) * (scale / 360.0);
+
+        let lat_rad = (lat * std::f64::consts::PI) / 180.0;
+
+        let merc_n = f64::ln(f64::tan((std::f64::consts::PI / 4.0) + (lat_rad / 2.0)));
+
+        let y = (scale / 2.0) - (scale * merc_n / (2.0 * std::f64::consts::PI));
+
+        (x, y)
+    }
+
     fn scale_increase(&mut self) {
-        self.scale += SCALE_CHANGE;
+        if self.scale > SCALE_MINIMUM {
+            self.scale -= SCALE_CHANGE;
+        }
         self.mutated();
     }
 
     fn scale_decrease(&mut self) {
-        if self.scale > SCALE_MINIMUM {
-            self.scale -= SCALE_CHANGE;
-        }
+        self.scale += SCALE_CHANGE;
         self.mutated();
     }
 
@@ -786,12 +815,11 @@ fn build_tab_map<A: tui::backend::Backend>(
             for key in adsb_airplanes.0.keys() {
                 let value = adsb_airplanes.lat_long_altitude(*key);
                 if let Some((position, _altitude)) = value {
-                    let lat = ((position.latitude - settings.lat) / lat_diff) * MAX_PLOT_HIGH;
-                    let long = ((position.longitude - settings.long) / long_diff) * MAX_PLOT_HIGH;
+                    let (x, y) = settings.to_xy(position.latitude, position.longitude);
 
                     // draw dot on location
                     ctx.draw(&Points {
-                        coords: &[(long, lat)],
+                        coords: &[(x, y)],
                         color: Color::White,
                     });
 
@@ -804,8 +832,8 @@ fn build_tab_map<A: tui::backend::Backend>(
 
                     // draw plane ICAO name
                     ctx.print(
-                        long + LAT_LONG_DIFF,
-                        lat,
+                        x,
+                        y,
                         Span::styled(name.to_string(), Style::default().fg(Color::White)),
                     );
                 }
@@ -837,8 +865,7 @@ fn build_tab_coverage<A: tui::backend::Backend>(
 
             // draw ADSB tab airplanes
             for (lat, long, seen_number, _) in coverage_airplanes.iter() {
-                let lat = ((lat - settings.lat) / lat_diff) * MAX_PLOT_HIGH;
-                let long = ((long - settings.long) / long_diff) * MAX_PLOT_HIGH;
+                let (x, y) = settings.to_xy(*lat, *long);
 
                 let number: u16 = 100_u16 + (u16::from(*seen_number) * 100);
                 let color_number: u8 = if number > u16::from(u8::MAX) {
@@ -849,7 +876,7 @@ fn build_tab_coverage<A: tui::backend::Backend>(
 
                 // draw dot on location
                 ctx.draw(&Points {
-                    coords: &[(long, lat)],
+                    coords: &[(x, y)],
                     color: Color::Rgb(color_number, color_number, color_number),
                 });
             }
@@ -969,19 +996,18 @@ fn draw_locations(
     long_diff: f64,
 ) {
     for city in &settings.opts.locations {
-        let lat = ((city.lat - settings.lat) / lat_diff) * MAX_PLOT_HIGH;
-        let long = ((city.long - settings.long) / long_diff) * MAX_PLOT_HIGH;
+        let (x, y) = settings.to_xy(city.lat, city.long);
 
         // draw city coor
         ctx.draw(&Points {
-            coords: &[(long, lat)],
+            coords: &[(x, y)],
             color: Color::Green,
         });
 
         // draw city name
         ctx.print(
-            long + LAT_LONG_DIFF,
-            lat,
+            x + LAT_LONG_DIFF,
+            y,
             Span::styled(city.name.to_string(), Style::default().fg(Color::Green)),
         );
     }
