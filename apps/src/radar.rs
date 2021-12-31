@@ -490,7 +490,7 @@ see https://github.com/rsadsb/adsb_deku#serverdemodulationexternal-applications 
         // handle crossterm events
         //
         // Loop until all MouseEvents are read, if you don't do this it takes forever to read
-        // all the moved mouse signals
+        // all the moved mouse signals and repeated keyboard events
         loop {
             if poll(Duration::from_millis(10))? {
                 match read()? {
@@ -503,15 +503,11 @@ see https://github.com/rsadsb/adsb_deku#serverdemodulationexternal-applications 
                             &adsb_airplanes,
                             &mut airplanes_state,
                         );
-
-                        // there isn't another keyboard event likely, don't read anymore
-                        break;
                     },
                     // handle mouse events
                     Event::Mouse(mouse_event) => {
                         trace!("{:?}", mouse_event);
                         handle_mouseevent(mouse_event, &mut settings, &bottom_touchscreen_rects);
-                        //there is most likely another mouse event, jump back to read it
                     },
                     _ => (),
                 }
