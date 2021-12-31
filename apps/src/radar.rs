@@ -806,10 +806,8 @@ fn build_tab_map<A: tui::backend::Backend>(
         .paint(|ctx| {
             ctx.layer();
 
-            let (lat_diff, long_diff) = scale_lat_long(settings.scale);
-
             // draw locations
-            draw_locations(ctx, settings, lat_diff, long_diff);
+            draw_locations(ctx, settings);
 
             // draw ADSB tab airplanes
             for key in adsb_airplanes.0.keys() {
@@ -858,10 +856,8 @@ fn build_tab_coverage<A: tui::backend::Backend>(
         .paint(|ctx| {
             ctx.layer();
 
-            let (lat_diff, long_diff) = scale_lat_long(settings.scale);
-
             // draw locations
-            draw_locations(ctx, settings, lat_diff, long_diff);
+            draw_locations(ctx, settings);
 
             // draw ADSB tab airplanes
             for (lat, long, seen_number, _) in coverage_airplanes.iter() {
@@ -989,12 +985,7 @@ fn draw_lines(ctx: &mut tui::widgets::canvas::Context<'_>) {
 }
 
 /// Draw locations on the map
-fn draw_locations(
-    ctx: &mut tui::widgets::canvas::Context<'_>,
-    settings: &Settings,
-    lat_diff: f64,
-    long_diff: f64,
-) {
+fn draw_locations(ctx: &mut tui::widgets::canvas::Context<'_>, settings: &Settings) {
     for city in &settings.opts.locations {
         let (x, y) = settings.to_xy(city.lat, city.long);
 
@@ -1011,13 +1002,4 @@ fn draw_locations(
             Span::styled(city.name.to_string(), Style::default().fg(Color::Green)),
         );
     }
-}
-
-fn scale_lat_long(scale: f64) -> (f64, f64) {
-    // Difference between each lat point
-    let lat_diff = scale;
-    // Difference between each long point
-    let long_diff = lat_diff * LAT_LONG_DIFF;
-
-    (lat_diff, long_diff)
 }
