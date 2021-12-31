@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - refactor: general code improvements and adding const usage
 - feat: add version info to logging
 - feat: improve user facing errors
+- feat(breaking): use mercator projection for map/coverage tabs, change `--scale` usage
 
 ### apps/1090
 
