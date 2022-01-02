@@ -287,7 +287,7 @@ fn get_lat_lon(
     let ni = cmp::max(cpr_nl(lat) - p, 1) as f64;
     let m =
         (cpr_lon_even * (cpr_nl(lat) - 1) as f64 - cpr_lon_odd * cpr_nl(lat) as f64 + 0.5).floor();
-    let mut lon = (360.0 / ni) * (m % ni + c);
+    let mut lon = (360.0 / ni) * (m.rem_euclid(ni) + c);
     if lon >= 180.0 {
         lon -= 360.0;
     }
@@ -343,5 +343,31 @@ mod tests {
         let position = get_position((&even, &odd)).unwrap();
         assert!((position.latitude - 88.917_474_261_784_96).abs() < f64::EPSILON);
         assert!((position.longitude - 101.011_047_363_281_25).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn cpr_calculate_position_negative_m() {
+        /*
+         * The `m` value can be negative. This test provides input
+         * to test that code path.
+         */
+
+        // *8f7c0017581bb01b3e135e818c6f;
+        let even = Altitude {
+            odd_flag: CPRFormat::Even,
+            lat_cpr: 3_487,
+            lon_cpr: 4_958,
+            ..Altitude::default()
+        };
+        // *8f7c0017581bb481393da48aef5d;
+        let odd = Altitude {
+            odd_flag: CPRFormat::Odd,
+            lat_cpr: 16_540,
+            lon_cpr: 81_316,
+            ..Altitude::default()
+        };
+        let position = get_position((&even, &odd)).unwrap();
+        assert!((position.latitude - -35.84019547801907).abs() < f64::EPSILON);
+        assert!((position.longitude - 150.2838524351729).abs() < f64::EPSILON);
     }
 }
