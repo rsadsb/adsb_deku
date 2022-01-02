@@ -196,9 +196,9 @@ struct Settings<'a> {
     lat: f64,
     /// current long from operator
     long: f64,
-    /// true: current lat/long/scale differs from gpsd/cmdline input
-    /// false: user has changed lat/long/scale with mouse/keyboard
-    view_mutated: Arc<Mutex<bool>>,
+    /// true: current lat/long differs from gpsd/cmdline input
+    /// false: user has changed lat/long with mouse/keyboard
+    lat_long_mutated: Arc<Mutex<bool>>,
     /// last seen mouse clicking position
     last_mouse_dragging: Option<(u16, u16)>,
 }
@@ -213,7 +213,7 @@ impl<'a> Settings<'a> {
             scale: opts.scale,
             lat: opts.lat,
             long: opts.long,
-            view_mutated: Arc::new(Mutex::new(false)),
+            lat_long_mutated: Arc::new(Mutex::new(false)),
             opts,
             last_mouse_dragging: None,
         }
@@ -249,12 +249,10 @@ impl<'a> Settings<'a> {
         if self.scale > SCALE_MINIMUM {
             self.scale -= SCALE_CHANGE;
         }
-        self.mutated();
     }
 
     fn scale_decrease(&mut self) {
         self.scale += SCALE_CHANGE;
-        self.mutated();
     }
 
     fn lat_increase(&mut self) {
@@ -278,8 +276,8 @@ impl<'a> Settings<'a> {
     }
 
     fn mutated(&mut self) {
-        if let Ok(mut view_mutated) = self.view_mutated.lock() {
-            *view_mutated = true;
+        if let Ok(mut lat_long_mutated) = self.lat_long_mutated.lock() {
+            *lat_long_mutated = true;
         }
     }
 
@@ -287,8 +285,8 @@ impl<'a> Settings<'a> {
         self.lat = self.opts.lat;
         self.long = self.opts.long;
         self.scale = self.opts.scale;
-        if let Ok(mut view_mutated) = self.view_mutated.lock() {
-            *view_mutated = false;
+        if let Ok(mut lat_long_mutated) = self.lat_long_mutated.lock() {
+            *lat_long_mutated = false;
         }
     }
 }
@@ -353,7 +351,7 @@ see https://github.com/rsadsb/adsb_deku#serverdemodulationexternal-applications 
     if gpsd {
         // clone locally
         let cloned_gps_lat_long = Arc::clone(&gps_lat_long);
-        let view_mutated = Arc::clone(&settings.view_mutated);
+        let lat_long_mutated = Arc::clone(&settings.lat_long_mutated);
 
         // start thread
         std::thread::spawn(move || {
@@ -375,8 +373,8 @@ see https://github.com/rsadsb/adsb_deku#serverdemodulationexternal-applications 
             // normal GPS messages from the NMEA messages.
             loop {
                 if let Ok(ResponseData::Tpv(data)) = get_data(&mut reader) {
-                    if let Ok(view_mutated) = view_mutated.lock() {
-                        if !*view_mutated {
+                    if let Ok(lat_long_mutated) = lat_long_mutated.lock() {
+                        if !*lat_long_mutated {
                             if let Ok(mut lat_long) = cloned_gps_lat_long.lock() {
                                 if let (Some(lat), Some(lon)) = (data.lat, data.lon) {
                                     info!("[gpsd] lat: {},  long:{}", lat, lon);
@@ -701,8 +699,8 @@ fn draw(
                 .map(Spans::from)
                 .collect();
 
-            let view_type = if let Ok(view_mutated) = settings.view_mutated.lock() {
-                if *view_mutated {
+            let view_type = if let Ok(lat_long_mutated) = settings.lat_long_mutated.lock() {
+                if *lat_long_mutated {
                     "(CUSTOM)"
                 } else {
                     ""
