@@ -196,9 +196,9 @@ struct Settings<'a> {
     lat: f64,
     /// current long from operator
     long: f64,
-    /// true: current lat/long/scale differs from gpsd/cmdline input
-    /// false: user has changed lat/long/scale with mouse/keyboard
-    view_mutated: Arc<Mutex<bool>>,
+    /// true: current lat/long differs from gpsd/cmdline input
+    /// false: user has changed lat/long with mouse/keyboard
+    lat_long_mutated: Arc<Mutex<bool>>,
     /// last seen mouse clicking position
     last_mouse_dragging: Option<(u16, u16)>,
 }
@@ -213,7 +213,7 @@ impl<'a> Settings<'a> {
             scale: opts.scale,
             lat: opts.lat,
             long: opts.long,
-            view_mutated: Arc::new(Mutex::new(false)),
+            lat_long_mutated: Arc::new(Mutex::new(false)),
             opts,
             last_mouse_dragging: None,
         }
@@ -249,12 +249,10 @@ impl<'a> Settings<'a> {
         if self.scale > SCALE_MINIMUM {
             self.scale -= SCALE_CHANGE;
         }
-        self.mutated();
     }
 
     fn scale_decrease(&mut self) {
         self.scale += SCALE_CHANGE;
-        self.mutated();
     }
 
     fn lat_increase(&mut self) {
@@ -278,8 +276,8 @@ impl<'a> Settings<'a> {
     }
 
     fn mutated(&mut self) {
-        if let Ok(mut view_mutated) = self.view_mutated.lock() {
-            *view_mutated = true;
+        if let Ok(mut lat_long_mutated) = self.lat_long_mutated.lock() {
+            *lat_long_mutated = true;
         }
     }
 
@@ -287,10 +285,16 @@ impl<'a> Settings<'a> {
         self.lat = self.opts.lat;
         self.long = self.opts.long;
         self.scale = self.opts.scale;
-        if let Ok(mut view_mutated) = self.view_mutated.lock() {
-            *view_mutated = false;
+        if let Ok(mut lat_long_mutated) = self.lat_long_mutated.lock() {
+            *lat_long_mutated = false;
         }
     }
+}
+
+#[derive(Default, Debug, Clone)]
+struct TuiInfo {
+    bottom_chunks: Option<Vec<Rect>>,
+    touchscreen_buttons: Option<Vec<Rect>>,
 }
 
 fn main() -> Result<()> {
@@ -353,7 +357,7 @@ see https://github.com/rsadsb/adsb_deku#serverdemodulationexternal-applications 
     if gpsd {
         // clone locally
         let cloned_gps_lat_long = Arc::clone(&gps_lat_long);
-        let view_mutated = Arc::clone(&settings.view_mutated);
+        let lat_long_mutated = Arc::clone(&settings.lat_long_mutated);
 
         // start thread
         std::thread::spawn(move || {
@@ -375,8 +379,8 @@ see https://github.com/rsadsb/adsb_deku#serverdemodulationexternal-applications 
             // normal GPS messages from the NMEA messages.
             loop {
                 if let Ok(ResponseData::Tpv(data)) = get_data(&mut reader) {
-                    if let Ok(view_mutated) = view_mutated.lock() {
-                        if !*view_mutated {
+                    if let Ok(lat_long_mutated) = lat_long_mutated.lock() {
+                        if !*lat_long_mutated {
                             if let Ok(mut lat_long) = cloned_gps_lat_long.lock() {
                                 if let (Some(lat), Some(lon)) = (data.lat, data.lon) {
                                     info!("[gpsd] lat: {},  long:{}", lat, lon);
@@ -508,7 +512,7 @@ see https://github.com/rsadsb/adsb_deku#serverdemodulationexternal-applications 
         adsb_airplanes.prune(filter_time);
 
         // draw crossterm
-        let bottom_touchscreen_rects = draw(
+        let tui_info = draw(
             &mut terminal,
             &adsb_airplanes,
             &settings,
@@ -536,7 +540,7 @@ see https://github.com/rsadsb/adsb_deku#serverdemodulationexternal-applications 
                     // handle mouse events
                     Event::Mouse(mouse_event) => {
                         trace!("{:?}", mouse_event);
-                        handle_mouseevent(mouse_event, &mut settings, &bottom_touchscreen_rects);
+                        handle_mouseevent(mouse_event, &mut settings, &tui_info);
                     },
                     _ => (),
                 }
@@ -605,11 +609,7 @@ fn handle_keyevent(
 }
 
 /// Handle a `MouseEvent`
-fn handle_mouseevent(
-    mouse_event: MouseEvent,
-    settings: &mut Settings,
-    bottom_touchscreen_rects: &Option<Vec<Rect>>,
-) {
+fn handle_mouseevent(mouse_event: MouseEvent, settings: &mut Settings, tui_info: &TuiInfo) {
     match mouse_event.kind {
         MouseEventKind::Down(MouseButton::Left) => {
             // Tabs
@@ -624,7 +624,7 @@ fn handle_mouseevent(
                 _ => (),
             }
             // left touchscreen (if enabled)
-            if let Some(btr) = bottom_touchscreen_rects {
+            if let Some(btr) = &tui_info.touchscreen_buttons {
                 let scale_i_start = btr[0].y;
                 let scale_i_end = btr[0].y + btr[0].height;
                 let scale_o_start = btr[1].y;
@@ -651,6 +651,25 @@ fn handle_mouseevent(
             }
         },
         MouseEventKind::Drag(MouseButton::Left) => {
+            // check tab
+            match settings.tab_selection {
+                Tab::Map | Tab::Coverage => (),
+                Tab::Airplanes => return,
+            }
+
+            // check bounds below tab selection
+            if mouse_event.row < TUI_BAR_WIDTH {
+                return;
+            }
+
+            // check bounds if in map view, ignoring touchscreen controls
+            if let Some(bottom_chunks) = &tui_info.bottom_chunks {
+                let minimum_left_bound = bottom_chunks[1].x;
+                if mouse_event.column < minimum_left_bound {
+                    return;
+                }
+            }
+
             // if we have a previous mouse drag without a mouse lift, change the current position
             if let Some((column, row)) = &settings.last_mouse_dragging {
                 let up =
@@ -680,8 +699,8 @@ fn draw(
     settings: &Settings,
     coverage_airplanes: &[(f64, f64, u8, ICAO)],
     airplanes_state: &mut TableState,
-) -> Option<Vec<Rect>> {
-    let mut bottom_touchscreen_rects = None;
+) -> TuiInfo {
+    let mut tui_info = TuiInfo::default();
 
     // tui drawing
     terminal
@@ -701,8 +720,8 @@ fn draw(
                 .map(Spans::from)
                 .collect();
 
-            let view_type = if let Ok(view_mutated) = settings.view_mutated.lock() {
-                if *view_mutated {
+            let view_type = if let Ok(lat_long_mutated) = settings.lat_long_mutated.lock() {
+                if *lat_long_mutated {
                     "(CUSTOM)"
                 } else {
                     ""
@@ -727,7 +746,7 @@ fn draw(
 
             f.render_widget(tab.clone(), chunks[0]);
 
-            bottom_touchscreen_rects = draw_bottom_chunks(
+            tui_info = draw_bottom_chunks(
                 f,
                 chunks,
                 settings,
@@ -738,7 +757,7 @@ fn draw(
         })
         .unwrap();
 
-    bottom_touchscreen_rects
+    tui_info
 }
 
 fn draw_bottom_chunks<A: tui::backend::Backend>(
@@ -748,17 +767,21 @@ fn draw_bottom_chunks<A: tui::backend::Backend>(
     adsb_airplanes: &Airplanes,
     coverage_airplanes: &[(f64, f64, u8, ICAO)],
     airplanes_state: &mut TableState,
-) -> Option<Vec<Rect>> {
-    // Create the bottom chunks, only adding the contraint for the left side if the --touchscreen
-    // option is chosen
+) -> TuiInfo {
+    let mut tui_info = TuiInfo::default();
+
+    // if --touchscreen was used, create 10 percent of the screen on the left for the three
+    // required buttoms to appear
     let left_size = if settings.opts.touchscreen { 10 } else { 0 };
     let bottom_chunks = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([Constraint::Min(left_size), Constraint::Percentage(100)].as_ref())
         .split(chunks[1]);
 
+    tui_info.bottom_chunks = Some(bottom_chunks.clone());
+
     // Optionally create the tui widgets for the touchscreen
-    let r_rects = if settings.opts.touchscreen {
+    tui_info.touchscreen_buttons = if settings.opts.touchscreen {
         let touchscreen_chunks = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
@@ -789,7 +812,7 @@ fn draw_bottom_chunks<A: tui::backend::Backend>(
         Tab::Airplanes => build_tab_airplanes(f, bottom_chunks, adsb_airplanes, airplanes_state),
     }
 
-    r_rects
+    tui_info
 }
 
 /// Render Map tab for tui display
