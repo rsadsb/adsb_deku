@@ -107,14 +107,13 @@ impl FromStr for Location {
     }
 }
 
-#[derive(Parser)]
+#[derive(Debug, Clone, Parser)]
 #[clap(
     version,
     name = "radar",
     author = "wcampbell0x2a",
     about = "TUI Display of ADS-B protocol info from demodulator"
 )]
-#[derive(Debug, Clone)]
 struct Opts {
     /// ip address / hostname of ADS-B server / demodulator
     #[clap(long, default_value = "127.0.0.1")]
