@@ -34,7 +34,6 @@ This application uses [tui-rs](https://github.com/fdehau/tui-rs) for generating 
 
 ```text
 # Startup "radar" display in tui relative to your antenna position
-> cd apps
 > cargo r --bin radar --release -- --lat="50.0" --long="50.0" --locations "(name,lat,long)" "(name,lat,long)"
 ```
 
@@ -44,7 +43,6 @@ to a terminal stdout. Optionally panic on missing implementation or `fmt::Displa
 
 ```text
 # Startup 1090 decode chain using this library
-> cd apps
 > cargo r --bin 1090 --release -- --debug
 ```
 
