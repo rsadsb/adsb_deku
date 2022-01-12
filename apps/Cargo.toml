@@ -15,7 +15,7 @@ name = "1090"
 path = "src/1090.rs"
 
 [dependencies]
-adsb_deku = { path = "../", version = "0.5" }
+adsb_deku = { path = "../libadsb_deku", version = "0.5" }
 hex = "0.4"
 crossterm = "0.22"
 clap = {version = "3.0.0", features = ["color", "derive", "wrap_help"]}

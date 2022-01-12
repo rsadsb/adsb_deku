@@ -159,11 +159,13 @@ on missing `fmt::Display` or bytes protocol decode.
 
 This library is also fuzzed, ensuring no panic when parsing from demodulated bytes.
 ```text
+> cd libadsb_deku
 > cargo fuzz run fuzz_target_1
 ```
 
 #### fmt
 ```text
+> cd {apps, libadsb_deku}
 > cargo +nightly fmt
 ```
 

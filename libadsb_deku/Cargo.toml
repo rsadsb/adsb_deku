@@ -9,10 +9,6 @@ keywords = ["deku", "adsb", "aerorust", "airplane", "radar"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[workspace]
-members = [
-    "apps"
-]
 
 [dependencies]
 deku = "0.12"
