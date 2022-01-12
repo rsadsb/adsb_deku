@@ -90,3 +90,10 @@ This enables those features for platforms without keyboard and mouse usage.
 | Up    | Move selection upward      |
 | Down  | Move selection downward    |
 | Enter | Center Map tab on aircraft |
+
+## Contributing
+
+### fmt
+```text
+> cargo +nightly fmt
+```

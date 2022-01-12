@@ -124,7 +124,7 @@ pub mod cpr;
 mod crc;
 mod mode_ac;
 
-#[doc = include_str!("../../README.md")]
+#[doc = include_str!("../README.md")]
 mod readme_test {}
 
 use adsb::{ControlField, ADSB};
