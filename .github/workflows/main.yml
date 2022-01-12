@@ -8,12 +8,9 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        #targets:
-        #  - x86_64-unknown-linux-gnu
-        #  - armv7-unknown-linux-gnueabihf
-        dir:
-          - ./apps/Cargo.toml
-          - ./libadsb_deku/Cargo.toml
+        targets:
+          - x86_64-unknown-linux-gnu
+          - armv7-unknown-linux-gnueabihf
 
     steps:
       - uses: actions/checkout@v2
@@ -21,30 +18,24 @@ jobs:
         with:
           profile: minimal
           toolchain: stable
-          #target: ${{ matrix.targets }}
+          target: ${{ matrix.targets }}
           override: true
       - uses: actions-rs/cargo@v1
         with:
-          #use-cross: true
+          use-cross: true
           command: build
-          #args: --target ${{ matrix.targets }} --manifest-path ${{ matrix.dir }}
-          args: --manifest-path ${{ matrix.dir }}
+          args: --workspace --target ${{ matrix.targets }}
 
       - uses: actions-rs/cargo@v1
         with:
-          #use-cross: true
+          use-cross: true
           command: test
-          #args: --target ${{ matrix.targets }} --manifest-path ${{ matrix.dir }}
-          args: --manifest-path ${{ matrix.dir }}
+          args: --workspace --target ${{ matrix.targets }}
 
   # fmt and clippy on nightly builds
   fmt-clippy-nightly:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        dir:
-          - ./apps/Cargo.toml
-          - ./libadsb_deku/Cargo.toml
+
     steps:
       - uses: actions/checkout@v2
 
@@ -59,9 +50,9 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: fmt
-          args: --manifest-path ${{ matrix.dir }} -- --check
+          args: --workspace -- --check
 
       - uses: actions-rs/cargo@v1
         with:
           command: clippy
-          args: --manifest-path ${{ matrix.dir }} -- -D warnings
+          args: --workspace -- -D warnings

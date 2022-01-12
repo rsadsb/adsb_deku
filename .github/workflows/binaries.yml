@@ -1,19 +1,15 @@
-#on:
-#  push:
-#    branches:
-#      - master
-#  pull_request:
-#    branches:
-#      - master
-#  release:
-#    types:
-#      - created
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+  release:
+    types:
+      - created
 
 name: binaries
-
-defaults:
-  run:
-    working-directory: ./apps
 
 jobs:
   # release binaries
@@ -36,7 +32,7 @@ jobs:
         with:
           use-cross: true
           command: build
-          args: --release --target ${{ matrix.targets }} --manifest-path apps/Cargo.toml
+          args: --workspace --release --target ${{ matrix.targets }}
 
       - uses: actions/upload-artifact@v2
         with:
