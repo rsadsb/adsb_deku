@@ -312,6 +312,8 @@ fn main() -> Result<()> {
         .with_env_filter(env)
         .with_ansi(true)
         .with_writer(non_blocking)
+        .with_line_number(true)
+        .with_file(true)
         .init();
 
     // print current version
