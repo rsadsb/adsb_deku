@@ -38,11 +38,12 @@ OPTIONS:
     -h, --help                         Print help information
         --host <HOST>                  ip address / hostname of ADS-B server / demodulator [default: 127.0.0.1]
         --lat <LAT>                    Antenna location latitude
+        --limit-parsing                Limit parsing of ADS-B messages to `DF::ADSB(17)` messages
         --locations <LOCATIONS>...     Vector of location [(name, lat, long),..]
         --log-folder <LOG_FOLDER>      [default: logs]
         --long <LONG>                  Antenna location longitude
         --port <PORT>                  port of ADS-B server / demodulator [default: 30002]
-        --scale <SCALE>                Zoom level of Radar and Coverage (+=zoom out/-=zoom in) [default: 1.4]
+        --scale <SCALE>                Zoom level of Radar and Coverage (+=zoom out/-=zoom in) [default: 1.0]
         --touchscreen                  Enable three tabs on left side of screen for zoom out/zoom in/and reset
     -V, --version                      Print version information
 ```
