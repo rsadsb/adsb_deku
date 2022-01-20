@@ -537,6 +537,7 @@ pub enum Sign {
 }
 
 impl Sign {
+    #[must_use]
     pub fn value(&self) -> i16 {
         match self {
             Self::Positive => 1,

@@ -45,7 +45,7 @@ pub struct AirplaneCoor {
 impl AirplaneCoor {
     /// From Odd/Even Altitudes, update the position of aircraft
     ///
-    /// TODO: verify position, such as speed_test()
+    /// TODO: verify position, such as `speed_test()`
     fn update_position(&mut self) {
         if let [Some(odd), Some(even)] = &self.altitudes {
             self.position = cpr::get_position((odd, even));
@@ -80,6 +80,7 @@ impl fmt::Display for Airplanes {
 }
 
 impl Airplanes {
+    #[must_use]
     pub fn new() -> Self {
         Self(HashMap::new())
     }
@@ -154,6 +155,7 @@ impl Airplanes {
     }
 
     /// return latitude, longitude and altitude of specific ICAO for airplane
+    #[must_use]
     pub fn lat_long_altitude(&self, icao: ICAO) -> Option<(cpr::Position, u32)> {
         match self.0.get(&icao) {
             Some(airplane_state) => {
@@ -169,6 +171,7 @@ impl Airplanes {
     }
 
     /// return all latitude/longitude from Hashmap of current "seen" aircrafts
+    #[must_use]
     pub fn all_lat_long_altitude(&self) -> Vec<(cpr::Position, ICAO)> {
         let mut all_lat_long = vec![];
         for (key, airplane_state) in &self.0 {
