@@ -782,9 +782,13 @@ fn draw_bottom_chunks<A: tui::backend::Backend>(
 ) -> TuiInfo {
     let mut tui_info = TuiInfo::default();
 
+    // touchscreen is enabled when operator enabled and Map or Coverage.
+    let touchscreen_enable =
+        settings.opts.touchscreen && matches!(settings.tab_selection, Tab::Map | Tab::Coverage);
+
     // if --touchscreen was used, create 10 percent of the screen on the left for the three
     // required buttoms to appear
-    let left_size = if settings.opts.touchscreen { 10 } else { 0 };
+    let left_size = if touchscreen_enable { 10 } else { 0 };
     let bottom_chunks = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([Constraint::Min(left_size), Constraint::Percentage(100)].as_ref())
@@ -793,7 +797,7 @@ fn draw_bottom_chunks<A: tui::backend::Backend>(
     tui_info.bottom_chunks = Some(bottom_chunks.clone());
 
     // Optionally create the tui widgets for the touchscreen
-    tui_info.touchscreen_buttons = if settings.opts.touchscreen {
+    tui_info.touchscreen_buttons = if touchscreen_enable {
         let touchscreen_chunks = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
