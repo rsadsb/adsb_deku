@@ -27,10 +27,9 @@ use std::str::FromStr;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
-use adsb_deku::adsb::ME;
 use adsb_deku::cpr::Position;
 use adsb_deku::deku::DekuContainerRead;
-use adsb_deku::{Frame, DF, ICAO};
+use adsb_deku::{Frame, ICAO};
 use anyhow::{Context, Result};
 use apps::Airplanes;
 use clap::Parser;
@@ -158,9 +157,13 @@ struct Opts {
     #[clap(long, default_value = "logs")]
     log_folder: String,
 
-    /// Enable three tabs on left side of screen for zoom out/zoom in/and reset.
+    /// Enable three tabs on left side of screen for zoom out/zoom in/and reset
     #[clap(long)]
     touchscreen: bool,
+
+    /// Limit parsing of ADS-B messages to `DF::ADSB(17)` messages
+    #[clap(long)]
+    limit_parsing: bool,
 }
 
 /// Available top row Tabs
@@ -447,23 +450,18 @@ see https://github.com/rsadsb/adsb_deku#serverdemodulationexternal-applications 
             }
 
             // decode
-            if let Ok((_, frame)) = Frame::from_bytes((&bytes, 0)) {
-                debug!("message: {:#?}", frame);
-                if let DF::ADSB(ref adsb) = frame.df {
-                    adsb_airplanes.incr_messages(adsb.icao);
-                    match &adsb.me {
-                        ME::AircraftIdentification(identification) => {
-                            adsb_airplanes.add_identification(adsb.icao, identification);
-                        },
-                        ME::AirborneVelocity(vel) => {
-                            adsb_airplanes.add_airborne_velocity(adsb.icao, vel);
-                        },
-                        ME::AirbornePositionGNSSAltitude(altitude)
-                        | ME::AirbornePositionBaroAltitude(altitude) => {
-                            adsb_airplanes.add_altitude(adsb.icao, altitude);
-                        },
-                        _ => {},
-                    };
+            // first check if the option is selected that limits the parsing by first checking the
+            // first 5 bits if they are the known adsb header DF field
+            let df_adsb = if settings.opts.limit_parsing {
+                ((bytes[0] & 0b1111_1000) >> 3) == 17
+            } else {
+                true
+            };
+            if df_adsb {
+                // parse the entire DF frame
+                if let Ok((_, frame)) = Frame::from_bytes((&bytes, 0)) {
+                    debug!("message: {:#?}", frame);
+                    adsb_airplanes.action(frame);
                 }
             }
         }

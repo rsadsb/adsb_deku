@@ -2,8 +2,8 @@ use std::collections::HashMap;
 use std::fmt;
 use std::time::SystemTime;
 
-use adsb_deku::adsb::{AirborneVelocity, Identification};
-use adsb_deku::{cpr, Altitude, CPRFormat, ICAO};
+use adsb_deku::adsb::{AirborneVelocity, Identification, ME};
+use adsb_deku::{cpr, Altitude, CPRFormat, Frame, DF, ICAO};
 use tracing::{debug, info};
 
 #[derive(Debug)]
@@ -91,13 +91,32 @@ impl Airplanes {
         state.last_time = SystemTime::now();
     }
 
-    pub fn add_identification(&mut self, icao: ICAO, identification: &Identification) {
+    pub fn action(&mut self, frame: Frame) {
+        if let DF::ADSB(ref adsb) = frame.df {
+            self.incr_messages(adsb.icao);
+            match &adsb.me {
+                ME::AircraftIdentification(identification) => {
+                    self.add_identification(adsb.icao, identification);
+                },
+                ME::AirborneVelocity(vel) => {
+                    self.add_airborne_velocity(adsb.icao, vel);
+                },
+                ME::AirbornePositionGNSSAltitude(altitude)
+                | ME::AirbornePositionBaroAltitude(altitude) => {
+                    self.add_altitude(adsb.icao, altitude);
+                },
+                _ => {},
+            };
+        }
+    }
+
+    fn add_identification(&mut self, icao: ICAO, identification: &Identification) {
         let mut state = self.0.entry(icao).or_insert_with(AirplaneState::default);
         state.callsign = Some(identification.cn.clone());
         info!("[{}] with identification: {}", icao, identification.cn);
     }
 
-    pub fn add_airborne_velocity(&mut self, icao: ICAO, vel: &AirborneVelocity) {
+    fn add_airborne_velocity(&mut self, icao: ICAO, vel: &AirborneVelocity) {
         let mut state = self.0.entry(icao).or_insert_with(AirplaneState::default);
         if let Some((_, ground_speed, vert_speed)) = vel.calculate() {
             info!(
@@ -109,14 +128,8 @@ impl Airplanes {
         }
     }
 
-    pub fn add_squawk(&mut self, icao: ICAO, squawk: u32) {
-        let mut state = self.0.entry(icao).or_insert_with(AirplaneState::default);
-        state.squawk = Some(squawk);
-        info!("[{}] with squawk: {}", icao, squawk);
-    }
-
     /// Add `Altitude` from adsb frame
-    pub fn add_altitude(&mut self, icao: ICAO, altitude: &Altitude) {
+    fn add_altitude(&mut self, icao: ICAO, altitude: &Altitude) {
         let state = self.0.entry(icao).or_insert_with(AirplaneState::default);
         info!(
             "[{}] with altitude: {}, cpr lat: {}, cpr long: {}",
