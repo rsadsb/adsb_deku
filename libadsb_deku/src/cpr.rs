@@ -215,6 +215,7 @@ pub(crate) fn cpr_nl(lat: f64) -> u64 {
 /// Using both an Odd and Even `Altitude`, calculate the latitude/longitude
 ///
 /// reference: ICAO 9871 (D.2.4.7.7)
+#[must_use]
 pub fn get_position(cpr_frames: (&Altitude, &Altitude)) -> Option<Position> {
     let latest_frame = cpr_frames.1;
     let (even_frame, odd_frame) = match cpr_frames {
@@ -367,7 +368,7 @@ mod tests {
             ..Altitude::default()
         };
         let position = get_position((&even, &odd)).unwrap();
-        assert!((position.latitude - -35.84019547801907).abs() < f64::EPSILON);
-        assert!((position.longitude - 150.2838524351729).abs() < f64::EPSILON);
+        assert!((position.latitude - -35.840_195_478_019_07).abs() < f64::EPSILON);
+        assert!((position.longitude - 150.283_852_435_172_9).abs() < f64::EPSILON);
     }
 }

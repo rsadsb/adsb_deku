@@ -972,7 +972,8 @@ pub struct AirborneVelocity {
 }
 
 impl AirborneVelocity {
-    /// Return effective (heading, ground_speed, vertical_rate) for groundspeed
+    /// Return effective (heading, `ground_speed`, `vertical_rate`) for groundspeed
+    #[must_use]
     pub fn calculate(&self) -> Option<(f64, f64, i16)> {
         if let AirborneVelocitySubType::GroundSpeedDecoding(ground_speed) = &self.sub_type {
             let v_ew = f64::from((ground_speed.ew_vel as i16 - 1) * ground_speed.ew_sign.value());
