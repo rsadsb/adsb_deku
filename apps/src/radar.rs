@@ -457,7 +457,7 @@ see https://github.com/rsadsb/adsb_deku#serverdemodulationexternal-applications 
             if df_adsb {
                 // parse the entire DF frame
                 if let Ok((_, frame)) = Frame::from_bytes((&bytes, 0)) {
-                    debug!("message: {:#?}", frame);
+                    debug!("message: {}", frame);
                     adsb_airplanes.action(frame);
                 }
             }
