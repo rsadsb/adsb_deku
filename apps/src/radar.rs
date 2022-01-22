@@ -56,14 +56,11 @@ const MAX_PLOT_HIGH: f64 = 400.0;
 const MAX_PLOT_LOW: f64 = MAX_PLOT_HIGH * -1.0;
 
 mod scale {
-    /// Minimum scale an operator can set
-    pub const MINIMUM: f64 = 0.1;
-
     /// Diff between scale changes
-    pub const CHANGE: f64 = 0.1;
+    pub const CHANGE: f64 = 1.1;
 
     /// Value used as mutiplier in map scaling for projection
-    pub const DEFAULT: f64 = 50000.0;
+    pub const DEFAULT: f64 = 500000.0;
 }
 
 /// Accuracy of latitude/longitude for Coverage is affected by this variable.
@@ -138,8 +135,8 @@ struct Opts {
     #[clap(long)]
     disable_lat_long: bool,
 
-    /// Zoom level of Radar and Coverage (+=zoom out/-=zoom in)
-    #[clap(long, default_value = "1.0")]
+    /// Zoom level of Radar and Coverage (-=zoom out/+=zoom in)
+    #[clap(long, default_value = ".12")]
     scale: f64,
 
     /// Enable automatic updating of lat/lon from gpsd(https://gpsd.io/) server
@@ -251,13 +248,13 @@ impl<'a> Settings<'a> {
     }
 
     fn scale_increase(&mut self) {
-        if self.scale > scale::MINIMUM {
-            self.scale -= scale::CHANGE;
-        }
+        self.scale /= scale::CHANGE;
+        info!(self.scale)
     }
 
     fn scale_decrease(&mut self) {
-        self.scale += scale::CHANGE;
+        self.scale *= scale::CHANGE;
+        info!(self.scale)
     }
 
     fn lat_increase(&mut self) {
