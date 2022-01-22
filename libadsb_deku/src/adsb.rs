@@ -109,8 +109,8 @@ impl ME {
                     " Extended Squitter{}No position information",
                     transponder
                 )?;
-                writeln!(f, "  Address:       {} {}", icao, address_type)?;
-                writeln!(f, "  Air/Ground:    {}", capability)?;
+                writeln!(f, "  Address:       {icao} {address_type}")?;
+                writeln!(f, "  Air/Ground:    {capability}")?;
             },
             ME::AircraftIdentification(Identification { tc, ca, cn }) => {
                 writeln!(
@@ -118,14 +118,14 @@ impl ME {
                     " Extended Squitter{}Aircraft identification and category",
                     transponder
                 )?;
-                writeln!(f, "  Address:       {} {}", icao, address_type)?;
-                writeln!(f, "  Air/Ground:    {}", capability)?;
-                writeln!(f, "  Ident:         {}", cn)?;
-                writeln!(f, "  Category:      {}{}", tc, ca)?;
+                writeln!(f, "  Address:       {icao} {address_type}")?;
+                writeln!(f, "  Air/Ground:    {capability}")?;
+                writeln!(f, "  Ident:         {cn}")?;
+                writeln!(f, "  Category:      {tc}{ca}")?;
             },
             ME::SurfacePosition(..) => {
-                writeln!(f, " Extended Squitter{}Surface position", transponder)?;
-                writeln!(f, "  Address:       {} {}", icao, address_type)?;
+                writeln!(f, " Extended Squitter{transponder}Surface position")?;
+                writeln!(f, "  Address:       {icao} {address_type}")?;
             },
             ME::AirbornePositionBaroAltitude(altitude) => {
                 writeln!(
@@ -133,8 +133,8 @@ impl ME {
                     " Extended Squitter{}Airborne position (barometric altitude)",
                     transponder
                 )?;
-                writeln!(f, "  Address:       {} {}", icao, address_type)?;
-                writeln!(f, "  Air/Ground:    {}", capability)?;
+                writeln!(f, "  Address:       {icao} {address_type}")?;
+                writeln!(f, "  Air/Ground:    {capability}")?;
                 write!(f, "{}", altitude)?;
             },
             ME::AirborneVelocity(airborne_velocity) => match &airborne_velocity.sub_type {
@@ -144,8 +144,8 @@ impl ME {
                         " Extended Squitter{}Airborne velocity over ground, subsonic",
                         transponder
                     )?;
-                    writeln!(f, "  Address:       {} {}", icao, address_type)?;
-                    writeln!(f, "  Air/Ground:    {}", capability)?;
+                    writeln!(f, "  Address:       {icao} {address_type}")?;
+                    writeln!(f, "  Air/Ground:    {capability}")?;
                     writeln!(
                         f,
                         "  GNSS delta:    {}{} ft",
@@ -172,11 +172,10 @@ impl ME {
                 AirborneVelocitySubType::AirspeedDecoding(airspeed_decoding) => {
                     writeln!(
                         f,
-                        " Extended Squitter{}Airspeed and heading, subsonic",
-                        transponder
+                        " Extended Squitter{transponder}Airspeed and heading, subsonic",
                     )?;
-                    writeln!(f, "  Address:       {} {}", icao, address_type)?;
-                    writeln!(f, "  Air/Ground:    {}", capability)?;
+                    writeln!(f, "  Address:       {icao} {address_type}")?;
+                    writeln!(f, "  Air/Ground:    {capability}")?;
                     writeln!(f, "  IAS:           {} kt", airspeed_decoding.airspeed)?;
                     if airborne_velocity.vrate_value > 0 {
                         writeln!(
@@ -191,34 +190,31 @@ impl ME {
                 AirborneVelocitySubType::Reserved0(_) | AirborneVelocitySubType::Reserved1(_) => {
                     writeln!(
                         f,
-                        " Extended Squitter{}Airborne Velocity status (reserved)",
-                        transponder
+                        " Extended Squitter{transponder}Airborne Velocity status (reserved)",
                     )?;
-                    writeln!(f, "  Address:       {} {}", icao, address_type)?;
+                    writeln!(f, "  Address:       {icao} {address_type}")?;
                 },
             },
             ME::AirbornePositionGNSSAltitude(altitude) => {
                 writeln!(
                     f,
-                    " Extended Squitter{}Airborne position (GNSS altitude)",
-                    transponder
+                    " Extended Squitter{transponder}Airborne position (GNSS altitude)",
                 )?;
-                writeln!(f, "  Address:      {} {}", icao, address_type)?;
+                writeln!(f, "  Address:      {icao} {address_type}")?;
                 write!(f, "{}", altitude)?;
             },
             ME::Reserved0(_) | ME::Reserved1(_) => {
-                writeln!(f, " Extended Squitter{}Unknown", transponder)?;
-                writeln!(f, "  Address:       {} {}", icao, address_type)?;
-                writeln!(f, "  Air/Ground:    {}", capability)?;
+                writeln!(f, " Extended Squitter{transponder}Unknown")?;
+                writeln!(f, "  Address:       {icao} {address_type}")?;
+                writeln!(f, "  Air/Ground:    {capability}")?;
             },
             ME::SurfaceSystemStatus(_) => {
                 writeln!(
                     f,
-                    " Extended Squitter{}Reserved for surface system status",
-                    transponder
+                    " Extended Squitter{transponder}Reserved for surface system status",
                 )?;
-                writeln!(f, "  Address:       {} {}", icao, address_type)?;
-                writeln!(f, "  Air/Ground:    {}", capability)?;
+                writeln!(f, "  Address:       {icao} {address_type}")?;
+                writeln!(f, "  Air/Ground:    {capability}")?;
             },
             ME::AircraftStatus(AircraftStatus {
                 emergency_state,
@@ -227,22 +223,20 @@ impl ME {
             }) => {
                 writeln!(
                     f,
-                    " Extended Squitter{}Emergency/priority status",
-                    transponder
+                    " Extended Squitter{transponder}Emergency/priority status",
                 )?;
-                writeln!(f, "  Address:       {} {}", icao, address_type)?;
-                writeln!(f, "  Air/Ground:    {}", capability)?;
-                writeln!(f, "  Squawk:        {:x?}", squawk)?;
-                writeln!(f, "  Emergency/priority:    {}", emergency_state)?;
+                writeln!(f, "  Address:       {icao} {address_type}")?;
+                writeln!(f, "  Air/Ground:    {capability}")?;
+                writeln!(f, "  Squawk:        {squawk:x?}")?;
+                writeln!(f, "  Emergency/priority:    {emergency_state}")?;
             },
             ME::TargetStateAndStatusInformation(target_info) => {
                 writeln!(
                     f,
-                    " Extended Squitter{}Target state and status (V2)",
-                    transponder
+                    " Extended Squitter{transponder}Target state and status (V2)",
                 )?;
-                writeln!(f, "  Address:       {} {}", icao, address_type)?;
-                writeln!(f, "  Air/Ground:    {}", capability)?;
+                writeln!(f, "  Address:       {icao} {address_type}")?;
+                writeln!(f, "  Air/Ground:    {capability}")?;
                 writeln!(f, "  Target State and Status:")?;
                 writeln!(f, "    Target altitude:   MCP, {} ft", target_info.altitude)?;
                 writeln!(f, "    Altimeter setting: {} millibars", target_info.qnh)?;
@@ -275,38 +269,34 @@ impl ME {
             ME::AircraftOperationalCoordination(_) => {
                 writeln!(
                     f,
-                    " Extended Squitter{}Aircraft Operational Coordination",
-                    transponder
+                    " Extended Squitter{transponder}Aircraft Operational Coordination",
                 )?;
                 writeln!(f, "  Address:       {} {}", icao, address_type)?;
             },
             ME::AircraftOperationStatus(OperationStatus::Airborne(opstatus_airborne)) => {
                 writeln!(
                     f,
-                    " Extended Squitter{}Aircraft operational status (airborne)",
-                    transponder
+                    " Extended Squitter{transponder}Aircraft operational status (airborne)",
                 )?;
-                writeln!(f, "  Address:       {} {}", icao, address_type)?;
-                writeln!(f, "  Air/Ground:    {}", capability)?;
-                write!(f, "  Aircraft Operational Status:\n{}", opstatus_airborne)?;
+                writeln!(f, "  Address:       {icao} {address_type}")?;
+                writeln!(f, "  Air/Ground:    {capability}")?;
+                write!(f, "  Aircraft Operational Status:\n{opstatus_airborne}")?;
             },
             ME::AircraftOperationStatus(OperationStatus::Surface(opstatus_surface)) => {
                 writeln!(
                     f,
-                    " Extended Squitter{}Aircraft operational status (surface)",
-                    transponder
+                    " Extended Squitter{transponder}Aircraft operational status (surface)",
                 )?;
-                writeln!(f, "  Address:       {} {}", icao, address_type)?;
-                writeln!(f, "  Air/Ground:    {}", capability)?;
-                write!(f, "  Aircraft Operational Status:\n {}", opstatus_surface)?;
+                writeln!(f, "  Address:       {icao} {address_type}")?;
+                writeln!(f, "  Air/Ground:    {capability}")?;
+                write!(f, "  Aircraft Operational Status:\n {opstatus_surface}")?;
             },
             ME::AircraftOperationStatus(OperationStatus::Reserved(..)) => {
                 writeln!(
                     f,
-                    " Extended Squitter{}Aircraft operational status (reserved)",
-                    transponder
+                    " Extended Squitter{transponder}Aircraft operational status (reserved)",
                 )?;
-                writeln!(f, "  Address:       {} {}", icao, address_type)?;
+                writeln!(f, "  Address:       {icao} {address_type}")?;
             },
         }
         Ok(f)

@@ -169,45 +169,50 @@ impl Frame {
 
 impl std::fmt::Display for Frame {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let crc = self.crc;
         match &self.df {
             DF::ShortAirAirSurveillance { altitude, .. } => {
                 writeln!(f, " Short Air-Air Surveillance")?;
-                writeln!(f, "  ICAO Address:  {:06x} (Mode S / ADS-B)", self.crc)?;
+                writeln!(f, "  ICAO Address:  {crc:06x} (Mode S / ADS-B)")?;
                 if altitude.0 > 0 {
+                    let altitude = altitude.0;
                     writeln!(f, "  Air/Ground:    airborne?")?;
-                    writeln!(f, "  Altitude:      {} ft barometric", altitude.0)?;
+                    writeln!(f, "  Altitude:      {altitude} ft barometric")?;
                 } else {
                     writeln!(f, "  Air/Ground:    ground")?;
                 }
             },
             DF::SurveillanceAltitudeReply { fs, ac, .. } => {
                 writeln!(f, " Surveillance, Altitude Reply")?;
-                writeln!(f, "  ICAO Address:  {:06x} (Mode S / ADS-B)", self.crc)?;
-                writeln!(f, "  Air/Ground:    {}", fs)?;
+                writeln!(f, "  ICAO Address:  {crc:06x} (Mode S / ADS-B)")?;
+                writeln!(f, "  Air/Ground:    {fs}")?;
                 if ac.0 > 0 {
-                    writeln!(f, "  Altitude:      {} ft barometric", ac.0)?;
+                    let altitude = ac.0;
+                    writeln!(f, "  Altitude:      {altitude} ft barometric")?;
                 }
             },
             DF::SurveillanceIdentityReply { fs, id, .. } => {
+                let identity = id.0;
                 writeln!(f, " Surveillance, Identity Reply")?;
-                writeln!(f, "  ICAO Address:  {:06x} (Mode S / ADS-B)", self.crc)?;
-                writeln!(f, "  Air/Ground:    {}", fs)?;
-                writeln!(f, "  Identity:      {:04x}", id.0)?;
+                writeln!(f, "  ICAO Address:  {crc:06x} (Mode S / ADS-B)")?;
+                writeln!(f, "  Air/Ground:    {fs}")?;
+                writeln!(f, "  Identity:      {identity:04x}")?;
             },
             DF::AllCallReply {
                 capability, icao, ..
             } => {
                 writeln!(f, " All Call Reply")?;
-                writeln!(f, "  ICAO Address:  {} (Mode S / ADS-B)", icao)?;
-                writeln!(f, "  Air/Ground:    {}", capability)?;
+                writeln!(f, "  ICAO Address:  {icao} (Mode S / ADS-B)")?;
+                writeln!(f, "  Air/Ground:    {capability}")?;
             },
             DF::LongAirAir { altitude, .. } => {
                 writeln!(f, " Long Air-Air ACAS")?;
-                writeln!(f, "  ICAO Address:  {:06x} (Mode S / ADS-B)", self.crc)?;
+                writeln!(f, "  ICAO Address:  {crc:06x} (Mode S / ADS-B)")?;
                 // TODO the airborne? should't be static
                 if altitude.0 > 0 {
+                    let altitude = altitude.0;
                     writeln!(f, "  Air/Ground:    airborne?")?;
-                    writeln!(f, "  Baro altitude: {} ft", altitude.0)?;
+                    writeln!(f, "  Baro altitude: {altitude} ft")?;
                 } else {
                     writeln!(f, "  Air/Ground:    ground")?;
                 }
@@ -222,19 +227,20 @@ impl std::fmt::Display for Frame {
             DF::ExtendedQuitterMilitaryApplication { .. } => {},
             DF::CommBAltitudeReply { bds, alt, .. } => {
                 writeln!(f, " Comm-B, Altitude Reply")?;
-                writeln!(f, "  ICAO Address:  {:x?} (Mode S / ADS-B)", self.crc)?;
-                writeln!(f, "  Altitude:      {} ft", alt.0)?;
+                writeln!(f, "  ICAO Address:  {crc:x?} (Mode S / ADS-B)")?;
+                let altitude = alt.0;
+                writeln!(f, "  Altitude:      {altitude} ft")?;
                 write!(f, "  {}", bds)?;
             },
             DF::CommBIdentityReply { id, bds, .. } => {
                 writeln!(f, " Comm-B, Identity Reply")?;
-                writeln!(f, "    ICAO Address:  {:x?} (Mode S / ADS-B)", self.crc)?;
-                writeln!(f, "    Squawk:        {:x?}", id)?;
+                writeln!(f, "    ICAO Address:  {crc:x?} (Mode S / ADS-B)")?;
+                writeln!(f, "    Squawk:        {id:x?}")?;
                 write!(f, "    {}", bds)?;
             },
             DF::CommDExtendedLengthMessage { .. } => {
                 writeln!(f, " Comm-D Extended Length Message")?;
-                writeln!(f, "    ICAO Address:     {:x?} (Mode S / ADS-B)", self.crc)?;
+                writeln!(f, "    ICAO Address:     {crc:x?} (Mode S / ADS-B)")?;
             },
         }
         Ok(())

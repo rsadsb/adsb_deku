@@ -1,4 +1,6 @@
 # adsb_deku library
+Minimum required rust version: `1.58.1`.
+
 Add the following lines to your Cargo.toml file:
 ```text
 adsb_deku = "*"
