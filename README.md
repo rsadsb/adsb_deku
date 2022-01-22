@@ -15,6 +15,9 @@ This library uses [deku](https://github.com/sharksforarms/deku) for deserializat
 ![Radar Example](media/2021_12_08.gif)
 
 ## Applications
+
+Minimum required rust version: `1.58.1`.
+
 ### Client Applications
 
 Client applications use this library to display the data accumulated from an ADS-B demodulation server in various ways.

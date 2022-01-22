@@ -114,15 +114,15 @@ impl Airplanes {
     fn add_identification(&mut self, icao: ICAO, identification: &Identification) {
         let mut state = self.0.entry(icao).or_insert_with(AirplaneState::default);
         state.callsign = Some(identification.cn.clone());
-        info!("[{}] with identification: {}", icao, identification.cn);
+        info!("[{icao}] with identification: {}", identification.cn);
     }
 
     fn add_airborne_velocity(&mut self, icao: ICAO, vel: &AirborneVelocity) {
         let mut state = self.0.entry(icao).or_insert_with(AirplaneState::default);
         if let Some((_, ground_speed, vert_speed)) = vel.calculate() {
             info!(
-                "[{}] with airborne velocity: speed: {}, vertical speed: {}",
-                icao, ground_speed, vert_speed
+                "[{icao}] with airborne velocity: speed: {}, vertical speed: {}",
+                ground_speed, vert_speed
             );
             state.speed = Some(ground_speed);
             state.vert_speed = Some(vert_speed);
@@ -133,8 +133,8 @@ impl Airplanes {
     fn add_altitude(&mut self, icao: ICAO, altitude: &Altitude) {
         let state = self.0.entry(icao).or_insert_with(AirplaneState::default);
         info!(
-            "[{}] with altitude: {}, cpr lat: {}, cpr long: {}",
-            icao, altitude.alt, altitude.lat_cpr, altitude.lon_cpr
+            "[{icao}] with altitude: {}, cpr lat: {}, cpr long: {}",
+            altitude.alt, altitude.lat_cpr, altitude.lon_cpr
         );
         match altitude.odd_flag {
             CPRFormat::Odd => {
@@ -191,11 +191,11 @@ impl Airplanes {
                 if time < std::time::Duration::from_secs(filter_time) {
                     true
                 } else {
-                    info!("[{}] non-active, removing", k);
+                    info!("[{k}] non-active, removing");
                     false
                 }
             } else {
-                info!("[{}] non-active(time error), removing", k);
+                info!("[{k}] non-active(time error), removing");
                 false
             }
         });

@@ -322,9 +322,11 @@ fn main() -> Result<()> {
 
     // Setup non-blocking TcpStream
     let socket = SocketAddr::from((opts.host, opts.port));
+    let host = opts.host;
+    let port = opts.port;
     let stream = TcpStream::connect_timeout(&socket, Duration::from_secs(5)).with_context(|| {
-        format!(r#"could not open port to ADS-B client at {}:{}, try running https://github.com/rsadsb/dump1090_rs.
-see https://github.com/rsadsb/adsb_deku#serverdemodulationexternal-applications for more details"#, opts.host.clone(), opts.port)
+        format!(r#"could not open port to ADS-B client at {host}:{port}, try running https://github.com/rsadsb/dump1090_rs.
+see https://github.com/rsadsb/adsb_deku#serverdemodulationexternal-applications for more details"#)
     })?;
     stream
         .set_read_timeout(Some(std::time::Duration::from_millis(50)))
@@ -370,10 +372,7 @@ see https://github.com/rsadsb/adsb_deku#serverdemodulationexternal-applications 
             let gpsd_port = 2947;
             let stream = TcpStream::connect((gpsd_ip.clone(), gpsd_port))
                 .with_context(|| {
-                    format!(
-                        "unable to connect to gpsd server @ {}:{}",
-                        gpsd_ip, gpsd_port
-                    )
+                    format!("unable to connect to gpsd server @ {gpsd_ip}:{gpsd_port}")
                 })
                 .unwrap();
             let mut reader = BufReader::new(&stream);
@@ -390,7 +389,7 @@ see https://github.com/rsadsb/adsb_deku#serverdemodulationexternal-applications 
                         if !*lat_long_mutated {
                             if let Ok(mut lat_long) = cloned_gps_lat_long.lock() {
                                 if let (Some(lat), Some(lon)) = (data.lat, data.lon) {
-                                    info!("[gpsd] lat: {},  long:{}", lat, lon);
+                                    info!("[gpsd] lat: {lat},  long:{lon}");
                                     *lat_long = Some((lat, lon));
                                 }
                             }
@@ -434,7 +433,7 @@ see https://github.com/rsadsb/adsb_deku#serverdemodulationexternal-applications 
 
             // convert from string hex -> bytes
             let hex = &mut input.to_string()[1..len - 2].to_string();
-            debug!("bytes: {}", hex);
+            debug!("bytes: {hex}");
             let bytes = if let Ok(bytes) = hex::decode(&hex) {
                 bytes
             } else {
@@ -457,7 +456,7 @@ see https://github.com/rsadsb/adsb_deku#serverdemodulationexternal-applications 
             if df_adsb {
                 // parse the entire DF frame
                 if let Ok((_, frame)) = Frame::from_bytes((&bytes, 0)) {
-                    debug!("message: {}", frame);
+                    debug!("ADS-B Frame: {frame}");
                     adsb_airplanes.action(frame);
                 }
             }
@@ -745,10 +744,7 @@ fn draw(
             let tab = Tabs::new(titles)
                 .block(
                     Block::default()
-                        .title(format!(
-                            "({},{}) {}",
-                            settings.lat, settings.long, view_type
-                        ))
+                        .title(format!("({},{}) {view_type}", settings.lat, settings.long))
                         .borders(Borders::ALL),
                 )
                 .style(Style::default().fg(Color::White))
@@ -862,9 +858,9 @@ fn build_tab_map<A: tui::backend::Backend>(
                     });
 
                     let name = if settings.opts.disable_lat_long {
-                        format!("{}", key).into_boxed_str()
+                        format!("{key}").into_boxed_str()
                     } else {
-                        format!("{} ({}, {})", key, position.latitude, position.longitude)
+                        format!("{key} ({}, {})", position.latitude, position.longitude)
                             .into_boxed_str()
                     };
 
@@ -942,20 +938,20 @@ fn build_tab_airplanes<A: tui::backend::Backend>(
         if let Some((position, altitude)) = pos {
             lat = format!("{}", position.latitude);
             lon = format!("{}", position.longitude);
-            alt = format!("{}", altitude);
+            alt = format!("{altitude}");
         }
         rows.push(Row::new(vec![
-            format!("{}", key),
+            format!("{key}"),
             state.callsign.as_ref().unwrap_or(&empty).clone(),
             lat,
             lon,
-            format!("{:>8}", alt),
+            format!("{alt:>8}"),
             state
                 .vert_speed
-                .map_or_else(|| "".into(), |v| format!("{:>6}", v)),
+                .map_or_else(|| "".into(), |v| format!("{v:>6}")),
             state
                 .speed
-                .map_or_else(|| "".into(), |v| format!("{:>5.0}", v)),
+                .map_or_else(|| "".into(), |v| format!("{v:>5.0}")),
             format!("{:>8}", state.num_messages),
         ]));
     }
@@ -987,7 +983,7 @@ fn build_tab_airplanes<A: tui::backend::Backend>(
         )
         .block(
             Block::default()
-                .title(format!("Airplanes({})", rows_len))
+                .title(format!("Airplanes({rows_len})"))
                 .borders(Borders::ALL),
         )
         .widths(&[
