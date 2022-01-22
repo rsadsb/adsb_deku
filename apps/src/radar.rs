@@ -197,7 +197,7 @@ struct Settings<'a> {
     long: f64,
     /// true: current lat/long differs from gpsd/cmdline input
     /// false: user has changed lat/long with mouse/keyboard
-    lat_long_mutated: Arc<Mutex<bool>>,
+    custom_lat_lon: bool,
     /// last seen mouse clicking position
     last_mouse_dragging: Option<(u16, u16)>,
 }
@@ -212,7 +212,7 @@ impl<'a> Settings<'a> {
             scale: opts.scale,
             lat: opts.lat,
             long: opts.long,
-            lat_long_mutated: Arc::new(Mutex::new(false)),
+            custom_lat_lon: false,
             opts,
             last_mouse_dragging: None,
         }
@@ -278,18 +278,14 @@ impl<'a> Settings<'a> {
     }
 
     fn mutated(&mut self) {
-        if let Ok(mut lat_long_mutated) = self.lat_long_mutated.lock() {
-            *lat_long_mutated = true;
-        }
+        self.custom_lat_lon = true;
     }
 
     fn reset(&mut self) {
         self.lat = self.opts.lat;
         self.long = self.opts.long;
         self.scale = self.opts.scale;
-        if let Ok(mut lat_long_mutated) = self.lat_long_mutated.lock() {
-            *lat_long_mutated = false;
-        }
+        self.custom_lat_lon = false;
     }
 }
 
@@ -365,7 +361,6 @@ see https://github.com/rsadsb/adsb_deku#serverdemodulationexternal-applications 
     if gpsd {
         // clone locally
         let cloned_gps_lat_long = Arc::clone(&gps_lat_long);
-        let lat_long_mutated = Arc::clone(&settings.lat_long_mutated);
 
         // start thread
         std::thread::spawn(move || {
@@ -385,14 +380,10 @@ see https://github.com/rsadsb/adsb_deku#serverdemodulationexternal-applications 
             loop {
                 if let Ok(ResponseData::Tpv(data)) = get_data(&mut reader) {
                     // only update if the operator hasn't set a lat/long position already
-                    if let Ok(lat_long_mutated) = lat_long_mutated.lock() {
-                        if !*lat_long_mutated {
-                            if let Ok(mut lat_long) = cloned_gps_lat_long.lock() {
-                                if let (Some(lat), Some(lon)) = (data.lat, data.lon) {
-                                    info!("[gpsd] lat: {lat},  long:{lon}");
-                                    *lat_long = Some((lat, lon));
-                                }
-                            }
+                    if let Ok(mut lat_long) = cloned_gps_lat_long.lock() {
+                        if let (Some(lat), Some(lon)) = (data.lat, data.lon) {
+                            info!("[gpsd] lat: {lat},  long:{lon}");
+                            *lat_long = Some((lat, lon));
                         }
                     }
                 }
@@ -415,7 +406,7 @@ see https://github.com/rsadsb/adsb_deku#serverdemodulationexternal-applications 
         input.clear();
 
         // if `--gpsd_ip` is selected, check if there is an update from that thread
-        if settings.opts.gpsd {
+        if settings.opts.gpsd && !settings.custom_lat_lon {
             if let Ok(lat_long) = gps_lat_long.lock() {
                 if let Some((lat, long)) = *lat_long {
                     settings.lat = lat as f64;
@@ -731,12 +722,8 @@ fn draw(
                 .map(Spans::from)
                 .collect();
 
-            let view_type = if let Ok(lat_long_mutated) = settings.lat_long_mutated.lock() {
-                if *lat_long_mutated {
-                    "(CUSTOM)"
-                } else {
-                    ""
-                }
+            let view_type = if settings.custom_lat_lon {
+                "(CUSTOM)"
             } else {
                 ""
             };
