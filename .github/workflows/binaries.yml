@@ -42,4 +42,4 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           name: 1090-${{ matrix.targets }}
-          path: apps/target/${{ matrix.targets }}/release/1090
+          path: target/${{ matrix.targets }}/release/1090
