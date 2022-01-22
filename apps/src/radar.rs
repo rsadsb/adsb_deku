@@ -565,6 +565,7 @@ fn handle_keyevent(
     adsb_airplanes: &Airplanes,
     airplanes_state: &mut TableState,
 ) {
+    let modifiers = key_event.modifiers;
     let code = key_event.code;
     let current_selection = settings.tab_selection;
     match (code, current_selection) {
@@ -574,9 +575,14 @@ fn handle_keyevent(
         (KeyCode::F(3), _) => settings.tab_selection = Tab::Airplanes,
         (KeyCode::Tab, _) => settings.tab_selection = settings.tab_selection.next_tab(),
         (KeyCode::Char('q'), _) => settings.quit = Some("user requested action: quit"),
+        (KeyCode::Char('c'), _) => {
+            if modifiers == crossterm::event::KeyModifiers::CONTROL {
+                settings.quit = Some("user requested action: quit");
+            }
+        },
+        // Map and Coverage
         (KeyCode::Char('-'), Tab::Map | Tab::Coverage) => settings.scale_increase(),
         (KeyCode::Char('+'), Tab::Map | Tab::Coverage) => settings.scale_decrease(),
-        // Map and Coverage
         (KeyCode::Up, Tab::Map | Tab::Coverage) => settings.lat_increase(),
         (KeyCode::Down, Tab::Map | Tab::Coverage) => settings.lat_decrease(),
         (KeyCode::Left, Tab::Map | Tab::Coverage) => settings.long_increase(),

@@ -66,13 +66,14 @@ This enables those features for platforms without keyboard and mouse usage.
 ### Key Bindings
 
 #### Any Tab
-|  Key  |  Action                    |
-| ----- | -------------------------- |
-| F1    | Move to Radar screen       |
-| F2    | Move to Coverage screen    |
-| F2    | Move to Airplanes screen   |
-| TAB   | Move to next tab           |
-| q     | Quit the app               |
+|  Key     |  Action                    |
+| -------- | -------------------------- |
+| F1       | Move to Radar screen       |
+| F2       | Move to Coverage screen    |
+| F2       | Move to Airplanes screen   |
+| TAB      | Move to next tab           |
+| q        | Quit the app               |
+| ctrl + C | Quit the app               |
 
 
 ### Map or Coverage
