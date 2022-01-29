@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### adsb_deku
 - refactor: improve `fmt::Display` of `ControlField`
 - fix(breaking): change `OperationalCodeSurface.reserved` from `u16` to `u8`
+- fix: Handle negative m value. Thanks ([@amacd31](https://github.com/amacd31)) ([!78](https://github.com/rsadsb/adsb_deku/pull/78))
 
 ### apps/radar
 - fix: breaking clap change, same syntax as before for `--cities`
@@ -28,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat(breaking): use mercator projection for map/coverage tabs, change `--scale` usage
 - feat: Update to clap v3.0.0
 - feat(breaking): change `--scale` to use * and /
+- feat: Add ctrl+c as quit option
 
 ### apps/1090
 
