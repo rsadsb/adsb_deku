@@ -4,22 +4,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-`adsb_deku` follows semvar when versioning, but apps are not required to follow the semvar convention.
+`adsb_deku` follows semvar when versioning, but `apps` are not required to follow the semvar convention.
 
 ## [Unreleased]
 
 ### adsb_deku
 - refactor: improve `fmt::Display` of `ControlField`
 - fix(breaking): change `OperationalCodeSurface.reserved` from `u16` to `u8`
-- fix: Handle negative m value. Thanks ([@amacd31](https://github.com/amacd31)) ([!78](https://github.com/rsadsb/adsb_deku/pull/78))
+- fix: Handle negative cpr `m` value. Thanks ([@amacd31](https://github.com/amacd31)) ([!78](https://github.com/rsadsb/adsb_deku/pull/78))
+- bump msrv to `1.58.1`
 
 ### apps/radar
 - fix: breaking clap change, same syntax as before for `--cities`
 - fix: time related unwrap(). Thanks ([@Jachdich](https://github.com/Jachdich)) ([!57](https://github.com/rsadsb/adsb_deku/pull/57))
 - feat: change logs to rotate daily instead of hourly
-- feat: add debug tracing of bytes and `Frame`
+- feat: add debug and error tracing of bytes and `adsb_deku::Frame`
 - feat: improve performance of latitude/longitude calculation
-- fix: breaking clap change, same syntax as before for `--cities`
 - feat: add Mouse control for Map/Coverage lat/long position
 - feat: add Mouse control for tab selection
 - feat: add `--touchscreen`, three left-side buttons for zoom out, zoom in, reset screen actions
@@ -30,8 +30,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat: Update to clap v3.0.0
 - feat(breaking): change `--scale` to use * and /
 - feat: Add ctrl+c as quit option
+- feat: fix position mis decoding with ([!101](https://github.com/rsadsb/adsb_deku/pull/101)), fixing: ([#21](https://github.com/rsadsb/adsb_deku/issues/21))
+- feat(breaking): `--cities` has been renamed to `--locations`
+- bump msrv to `1.58.1`
 
 ### apps/1090
+- bump msrv to `1.58.1`
 
 ### Other
 - feat: add test, check, and release binaries for x86_64-unknown-linux-gnu and armv7-unknown-linux-gnueabihf
