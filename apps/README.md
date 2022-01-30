@@ -31,22 +31,68 @@ USAGE:
     radar [OPTIONS] --lat <LAT> --long <LONG>
 
 OPTIONS:
-        --disable-lat-long             Disable output of latitude and longitude on display
-        --filter-time <FILTER_TIME>    Seconds since last message from airplane, triggers removal of airplane after time is up [default:
-                                       10]
-        --gpsd                         Enable automatic updating of lat/lon from gpsd(https://gpsd.io/) server
-        --gpsd-ip <GPSD_IP>            Ip address of gpsd [default: localhost]
-    -h, --help                         Print help information
-        --host <HOST>                  ip address / hostname of ADS-B server / demodulator [default: 127.0.0.1]
-        --lat <LAT>                    Antenna location latitude
-        --limit-parsing                Limit parsing of ADS-B messages to `DF::ADSB(17)` messages
-        --locations <LOCATIONS>...     Vector of location [(name, lat, long),..]
-        --log-folder <LOG_FOLDER>      [default: logs]
-        --long <LONG>                  Antenna location longitude
-        --port <PORT>                  port of ADS-B server / demodulator [default: 30002]
-        --scale <SCALE>                Zoom level of Radar and Coverage (-=zoom out/+=zoom in) [default: .12]
-        --touchscreen                  Enable three tabs on left side of screen for zoom out/zoom in/and reset
-    -V, --version                      Print version information
+        --disable-lat-long
+            Disable output of latitude and longitude on display
+
+        --filter-time <FILTER_TIME>
+            Seconds since last message from airplane, triggers removal of airplane after time is up
+
+            [default: 10]
+
+        --gpsd
+            Enable automatic updating of lat/lon from gpsd(https://gpsd.io/) server.
+
+            This overwrites the `--lat` and `--long`
+
+        --gpsd-ip <GPSD_IP>
+            Ip address of gpsd
+
+            [default: localhost]
+
+    -h, --help
+            Print help information
+
+        --host <HOST>
+            ip address / hostname of ADS-B server / demodulator
+
+            [default: 127.0.0.1]
+
+        --lat <LAT>
+            Antenna location latitude, this use for aircraft position algorithms.
+
+            This is overwritten when using the `--gpsd` option.
+
+        --limit-parsing
+            Limit parsing of ADS-B messages to `DF::ADSB(17)` num_messages
+
+            This can improve performance of just needing to read radar related messages
+
+        --locations <LOCATIONS>...
+            Vector of location [(name, lat, long),..]
+
+        --log-folder <LOG_FOLDER>
+            [default: logs]
+
+        --long <LONG>
+            Antenna location longitude
+
+            This is overwritten when using the `--gpsd` option.
+
+        --port <PORT>
+            port of ADS-B server / demodulator
+
+            [default: 30002]
+
+        --scale <SCALE>
+            Zoom level of Radar and Coverage (-=zoom out/+=zoom in)
+
+            [default: .12]
+
+        --touchscreen
+            Enable three tabs on left side of screen for zoom out/zoom in/and reset
+
+    -V, --version
+            Print version information
 ```
 
 ### Logging

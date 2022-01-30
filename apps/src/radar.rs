@@ -1,6 +1,6 @@
 //! This tui program displays the current ADS-B detected airplanes on a plot with your current
 //! position as (0,0) and has the ability to show different information about aircraft locations
-//! and testing your coverage.
+//! and testing your coverage.,
 //!
 //! # Tabs
 //!
@@ -40,7 +40,7 @@ use crossterm::event::{
 use crossterm::terminal::enable_raw_mode;
 use crossterm::ExecutableCommand;
 use gpsd_proto::{get_data, handshake, ResponseData};
-use tracing::{debug, info, trace};
+use tracing::{debug, error, info, trace};
 use tracing_subscriber::EnvFilter;
 use tui::backend::{Backend, CrosstermBackend};
 use tui::layout::{Constraint, Direction, Layout, Rect};
@@ -119,11 +119,15 @@ struct Opts {
     #[clap(long, default_value = "30002")]
     port: u16,
 
-    /// Antenna location latitude
+    /// Antenna location latitude, this use for aircraft position algorithms.
+    ///
+    /// This is overwritten when using the `--gpsd` option.
     #[clap(long)]
     lat: f64,
 
     /// Antenna location longitude
+    ///
+    /// This is overwritten when using the `--gpsd` option.
     #[clap(long)]
     long: f64,
 
@@ -139,7 +143,9 @@ struct Opts {
     #[clap(long, default_value = ".12")]
     scale: f64,
 
-    /// Enable automatic updating of lat/lon from gpsd(https://gpsd.io/) server
+    /// Enable automatic updating of lat/lon from gpsd(https://gpsd.io/) server.
+    ///
+    /// This overwrites the `--lat` and `--long`
     #[clap(long)]
     gpsd: bool,
 
@@ -148,7 +154,7 @@ struct Opts {
     gpsd_ip: String,
 
     /// Seconds since last message from airplane, triggers removal of airplane after time is up
-    #[clap(long, default_value = "10")]
+    #[clap(long, default_value = "30")]
     filter_time: u64,
 
     #[clap(long, default_value = "logs")]
@@ -158,7 +164,9 @@ struct Opts {
     #[clap(long)]
     touchscreen: bool,
 
-    /// Limit parsing of ADS-B messages to `DF::ADSB(17)` messages
+    /// Limit parsing of ADS-B messages to `DF::ADSB(17)` num_messages
+    ///
+    /// This can improve performance of just needing to read radar related messages
     #[clap(long)]
     limit_parsing: bool,
 }
@@ -195,16 +203,15 @@ struct Settings<'a> {
     lat: f64,
     /// current long from operator
     long: f64,
-    /// true: current lat/long differs from gpsd/cmdline input
-    /// false: user has changed lat/long with mouse/keyboard
-    custom_lat_lon: bool,
+    /// current lat from operator
+    custom_lat: Option<f64>,
+    /// current long from operator
+    custom_long: Option<f64>,
     /// last seen mouse clicking position
     last_mouse_dragging: Option<(u16, u16)>,
 }
 
 impl<'a> Settings<'a> {
-    // TODO: the Mutex::new() can be replaced with AtomicBool
-    #[allow(clippy::mutex_atomic)]
     fn new(opts: Opts) -> Self {
         Self {
             quit: None,
@@ -212,7 +219,8 @@ impl<'a> Settings<'a> {
             scale: opts.scale,
             lat: opts.lat,
             long: opts.long,
-            custom_lat_lon: false,
+            custom_lat: None,
+            custom_long: None,
             opts,
             last_mouse_dragging: None,
         }
@@ -229,7 +237,9 @@ impl<'a> Settings<'a> {
 
     /// Calculate mercator for local lat/long
     fn local_lat_lon(&self) -> (f64, f64) {
-        self.to_mercator(self.lat, self.long)
+        let lat = self.custom_lat.map_or(self.lat, |lat| lat);
+        let long = self.custom_long.map_or(self.long, |long| long);
+        self.to_mercator(lat, long)
     }
 
     /// Convert lat/long to mercator coordinates
@@ -237,11 +247,8 @@ impl<'a> Settings<'a> {
         let scale: f64 = self.scale * scale::DEFAULT;
 
         let x = (long + 180.0) * (scale / 360.0);
-
-        let lat_rad = (lat * std::f64::consts::PI) / 180.0;
-
+        let lat_rad = lat.to_radians();
         let merc_n = f64::ln(f64::tan((std::f64::consts::PI / 4.0) + (lat_rad / 2.0)));
-
         let y = (scale / 2.0) - (scale * merc_n / (2.0 * std::f64::consts::PI));
 
         (x, y)
@@ -249,43 +256,48 @@ impl<'a> Settings<'a> {
 
     fn scale_increase(&mut self) {
         self.scale /= scale::CHANGE;
-        info!(self.scale)
     }
 
     fn scale_decrease(&mut self) {
         self.scale *= scale::CHANGE;
-        info!(self.scale)
     }
 
     fn lat_increase(&mut self) {
-        self.lat += 0.005;
-        self.mutated();
+        if let Some(lat) = &mut self.custom_lat {
+            *lat += 0.005;
+        } else {
+            self.custom_lat = Some(self.lat + 0.005);
+        }
     }
 
     fn lat_decrease(&mut self) {
-        self.lat -= 0.005;
-        self.mutated();
+        if let Some(lat) = &mut self.custom_lat {
+            *lat -= 0.005;
+        } else {
+            self.custom_lat = Some(self.lat - 0.005);
+        }
     }
 
     fn long_increase(&mut self) {
-        self.long -= 0.03;
-        self.mutated();
+        if let Some(long) = &mut self.custom_long {
+            *long -= 0.03;
+        } else {
+            self.custom_long = Some(self.long - 0.03);
+        }
     }
 
     fn long_decrease(&mut self) {
-        self.long += 0.03;
-        self.mutated();
-    }
-
-    fn mutated(&mut self) {
-        self.custom_lat_lon = true;
+        if let Some(long) = &mut self.custom_long {
+            *long += 0.03;
+        } else {
+            self.custom_long = Some(self.long + 0.03);
+        }
     }
 
     fn reset(&mut self) {
-        self.lat = self.opts.lat;
-        self.long = self.opts.long;
+        self.custom_lat = None;
+        self.custom_long = None;
         self.scale = self.opts.scale;
-        self.custom_lat_lon = false;
     }
 }
 
@@ -405,13 +417,11 @@ see https://github.com/rsadsb/adsb_deku#serverdemodulationexternal-applications 
         }
         input.clear();
 
-        // if `--gpsd_ip` is selected, check if there is an update from that thread
-        if settings.opts.gpsd && !settings.custom_lat_lon {
-            if let Ok(lat_long) = gps_lat_long.lock() {
-                if let Some((lat, long)) = *lat_long {
-                    settings.lat = lat as f64;
-                    settings.long = long as f64;
-                }
+        // update lat/long from gpsd thread
+        if let Ok(lat_long) = gps_lat_long.lock() {
+            if let Some((lat, long)) = *lat_long {
+                settings.lat = lat as f64;
+                settings.long = long as f64;
             }
         }
 
@@ -446,9 +456,16 @@ see https://github.com/rsadsb/adsb_deku#serverdemodulationexternal-applications 
             };
             if df_adsb {
                 // parse the entire DF frame
-                if let Ok((_, frame)) = Frame::from_bytes((&bytes, 0)) {
-                    debug!("ADS-B Frame: {frame}");
-                    adsb_airplanes.action(frame);
+                let frame = Frame::from_bytes((&bytes, 0));
+                match frame {
+                    Ok((left_over, frame)) => {
+                        debug!("ADS-B Frame: {frame}");
+                        adsb_airplanes.action(frame, (settings.lat, settings.long));
+                        if left_over.1 != 0 {
+                            error!("{left_over:x?}");
+                        }
+                    },
+                    Err(e) => error!("{e:?}"),
                 }
             }
         }
@@ -580,28 +597,24 @@ fn handle_keyevent(
         (KeyCode::Enter, Tab::Map | Tab::Coverage) => settings.reset(),
         // Airplanes
         (KeyCode::Up, Tab::Airplanes) => {
-            let index = if let Some(selected) = airplanes_state.selected() {
-                selected - 1
-            } else {
-                0
-            };
+            let index = airplanes_state
+                .selected()
+                .map_or(0, |selected| selected - 1);
             airplanes_state.select(Some(index));
         },
         (KeyCode::Down, Tab::Airplanes) => {
-            let index = if let Some(selected) = airplanes_state.selected() {
-                selected + 1
-            } else {
-                0
-            };
+            let index = airplanes_state
+                .selected()
+                .map_or(0, |selected| selected + 1);
             airplanes_state.select(Some(index));
         },
         (KeyCode::Enter, Tab::Airplanes) => {
             if let Some(selected) = airplanes_state.selected() {
                 let key = adsb_airplanes.0.keys().nth(selected).unwrap();
-                let pos = adsb_airplanes.lat_long_altitude(*key);
-                if let Some((position, _)) = pos {
-                    settings.lat = position.latitude;
-                    settings.long = position.longitude;
+                let pos = adsb_airplanes.aircraft_details(*key);
+                if let Some((position, _, _)) = pos {
+                    settings.custom_lat = Some(position.latitude);
+                    settings.custom_long = Some(position.longitude);
                     settings.tab_selection = Tab::Map;
                 }
             }
@@ -676,14 +689,21 @@ fn handle_mouseevent(mouse_event: MouseEvent, settings: &mut Settings, tui_info:
             if let Some((column, row)) = &settings.last_mouse_dragging {
                 let up =
                     f64::from(i32::from(mouse_event.row).wrapping_sub(i32::from(*row))) * 0.020;
-                settings.lat += up;
+                if let Some(lat) = &mut settings.custom_lat {
+                    *lat += up;
+                } else {
+                    settings.custom_lat = Some(settings.lat + up);
+                }
 
                 let left =
                     f64::from(i32::from(mouse_event.column).wrapping_sub(i32::from(*column)))
                         * 0.020;
-                settings.long -= left;
+                if let Some(long) = &mut settings.custom_long {
+                    *long -= left;
+                } else {
+                    settings.custom_long = Some(settings.long - left);
+                }
             }
-            settings.mutated();
             settings.last_mouse_dragging = Some((mouse_event.column, mouse_event.row));
         },
         MouseEventKind::Up(_) => {
@@ -722,16 +742,22 @@ fn draw(
                 .map(Spans::from)
                 .collect();
 
-            let view_type = if settings.custom_lat_lon {
-                "(CUSTOM)"
-            } else {
-                ""
-            };
+            let mut view_type = "";
+
+            let lat = settings.custom_long.map_or(settings.lat, |lat| {
+                view_type = "(CUSTOM)";
+                lat
+            });
+
+            let long = settings.custom_long.map_or(settings.long, |long| {
+                view_type = "(CUSTOM)";
+                long
+            });
 
             let tab = Tabs::new(titles)
                 .block(
                     Block::default()
-                        .title(format!("({},{}) {view_type}", settings.lat, settings.long))
+                        .title(format!("({},{}) {view_type}", lat, long))
                         .borders(Borders::ALL),
                 )
                 .style(Style::default().fg(Color::White))
@@ -834,8 +860,8 @@ fn build_tab_map<A: tui::backend::Backend>(
 
             // draw ADSB tab airplanes
             for key in adsb_airplanes.0.keys() {
-                let value = adsb_airplanes.lat_long_altitude(*key);
-                if let Some((position, _altitude)) = value {
+                let value = adsb_airplanes.aircraft_details(*key);
+                if let Some((position, _, _)) = value {
                     let (x, y) = settings.to_xy(position.latitude, position.longitude);
 
                     // draw dot on location
@@ -918,13 +944,15 @@ fn build_tab_airplanes<A: tui::backend::Backend>(
     let empty = "".to_string();
     for key in adsb_airplanes.0.keys() {
         let state = adsb_airplanes.0.get(key).unwrap();
-        let pos = adsb_airplanes.lat_long_altitude(*key);
+        let pos = adsb_airplanes.aircraft_details(*key);
         let mut lat = empty.clone();
         let mut lon = empty.clone();
         let mut alt = empty.clone();
-        if let Some((position, altitude)) = pos {
+        let mut s_kilo_distance = empty.clone();
+        if let Some((position, altitude, kilo_distance)) = pos {
             lat = format!("{}", position.latitude);
             lon = format!("{}", position.longitude);
+            s_kilo_distance = format!("{}", kilo_distance);
             alt = format!("{altitude}");
         }
         rows.push(Row::new(vec![
@@ -939,6 +967,7 @@ fn build_tab_airplanes<A: tui::backend::Backend>(
             state
                 .speed
                 .map_or_else(|| "".into(), |v| format!("{v:>5.0}")),
+            format!("{:>8}", s_kilo_distance),
             format!("{:>8}", state.num_messages),
         ]));
     }
@@ -964,6 +993,7 @@ fn build_tab_airplanes<A: tui::backend::Backend>(
                 "Altitude",
                 "   FPM",
                 "Speed",
+                "Distance",
                 "    Msgs",
             ])
             .bottom_margin(1),
@@ -982,6 +1012,7 @@ fn build_tab_airplanes<A: tui::backend::Backend>(
             Constraint::Length(6),
             Constraint::Length(5),
             Constraint::Length(8),
+            Constraint::Length(7),
         ])
         .column_spacing(1)
         .highlight_style(Style::default().add_modifier(Modifier::BOLD))
