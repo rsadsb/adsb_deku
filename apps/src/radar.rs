@@ -237,17 +237,8 @@ impl<'a> Settings<'a> {
 
     /// Calculate mercator for local lat/long
     fn local_lat_lon(&self) -> (f64, f64) {
-        let lat = if let Some(lat) = self.custom_lat {
-            lat
-        } else {
-            self.lat
-        };
-
-        let long = if let Some(long) = self.custom_long {
-            long
-        } else {
-            self.long
-        };
+        let lat = self.custom_lat.map_or(self.lat, |lat| lat);
+        let long = self.custom_long.map_or(self.long, |long| long);
         self.to_mercator(lat, long)
     }
 
@@ -256,11 +247,8 @@ impl<'a> Settings<'a> {
         let scale: f64 = self.scale * scale::DEFAULT;
 
         let x = (long + 180.0) * (scale / 360.0);
-
-        let lat_rad = (lat * std::f64::consts::PI) / 180.0;
-
+        let lat_rad = lat.to_radians();
         let merc_n = f64::ln(f64::tan((std::f64::consts::PI / 4.0) + (lat_rad / 2.0)));
-
         let y = (scale / 2.0) - (scale * merc_n / (2.0 * std::f64::consts::PI));
 
         (x, y)
@@ -268,12 +256,10 @@ impl<'a> Settings<'a> {
 
     fn scale_increase(&mut self) {
         self.scale /= scale::CHANGE;
-        info!(self.scale)
     }
 
     fn scale_decrease(&mut self) {
         self.scale *= scale::CHANGE;
-        info!(self.scale)
     }
 
     fn lat_increase(&mut self) {
@@ -611,19 +597,15 @@ fn handle_keyevent(
         (KeyCode::Enter, Tab::Map | Tab::Coverage) => settings.reset(),
         // Airplanes
         (KeyCode::Up, Tab::Airplanes) => {
-            let index = if let Some(selected) = airplanes_state.selected() {
-                selected - 1
-            } else {
-                0
-            };
+            let index = airplanes_state
+                .selected()
+                .map_or(0, |selected| selected - 1);
             airplanes_state.select(Some(index));
         },
         (KeyCode::Down, Tab::Airplanes) => {
-            let index = if let Some(selected) = airplanes_state.selected() {
-                selected + 1
-            } else {
-                0
-            };
+            let index = airplanes_state
+                .selected()
+                .map_or(0, |selected| selected + 1);
             airplanes_state.select(Some(index));
         },
         (KeyCode::Enter, Tab::Airplanes) => {
@@ -762,19 +744,15 @@ fn draw(
 
             let mut view_type = "";
 
-            let lat = if let Some(lat) = settings.custom_lat {
+            let lat = settings.custom_long.map_or(settings.lat, |lat| {
                 view_type = "(CUSTOM)";
                 lat
-            } else {
-                settings.lat
-            };
+            });
 
-            let long = if let Some(long) = settings.custom_long {
+            let long = settings.custom_long.map_or(settings.long, |long| {
                 view_type = "(CUSTOM)";
                 long
-            } else {
-                settings.long
-            };
+            });
 
             let tab = Tabs::new(titles)
                 .block(

@@ -68,10 +68,9 @@ impl AirplaneCoor {
                 if kilo_distance > MAX_RECEIVER_DISTANCE {
                     warn!("range: {kilo_distance} -  old: {lat_long:?} new: {test_position:?}");
                     return false;
-                } else {
-                    self.kilo_distance = Some(kilo_distance);
-                    debug!("range: {kilo_distance}");
                 }
+                self.kilo_distance = Some(kilo_distance);
+                debug!("range: {kilo_distance}");
             }
 
             // if previous position, check against for range. This is a non-great way of doing
@@ -81,9 +80,8 @@ impl AirplaneCoor {
                 if distance > MAX_AIRCRAFT_DISTANCE {
                     warn!("distance: {distance} old: {current_position:?}, invalid: {test_position:?}");
                     return false;
-                } else {
-                    debug!("distance: {distance}")
                 }
+                debug!("distance: {distance}");
             }
 
             // Good new position!
@@ -125,8 +123,10 @@ impl AirplaneCoor {
         let long1_rad = s.1.to_radians();
         let long2_rad = other.1.to_radians();
 
-        let a = ((lat2_rad - lat1_rad) / 2.00).sin().powf(2.00)
-            + lat1_rad.cos() * lat2_rad.cos() * ((long2_rad - long1_rad) / 2.00).sin().powf(2.00);
+        let a = ((lat2_rad - lat1_rad) / 2.00).sin().mul_add(
+            ((lat2_rad - lat1_rad) / 2.00).sin(),
+            lat1_rad.cos() * lat2_rad.cos() * ((long2_rad - long1_rad) / 2.00).sin().powi(2),
+        );
         let c = 2.00 * ((a).sqrt().atan2((1.00 - a).sqrt()));
         r * c
     }
