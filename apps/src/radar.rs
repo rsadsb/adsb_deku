@@ -40,7 +40,7 @@ use crossterm::event::{
 use crossterm::terminal::enable_raw_mode;
 use crossterm::ExecutableCommand;
 use gpsd_proto::{get_data, handshake, ResponseData};
-use tracing::{error, debug, info, trace};
+use tracing::{debug, error, info, trace};
 use tracing_subscriber::EnvFilter;
 use tui::backend::{Backend, CrosstermBackend};
 use tui::layout::{Constraint, Direction, Layout, Rect};
