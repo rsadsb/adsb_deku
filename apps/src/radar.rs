@@ -20,6 +20,8 @@
 //!
 //! Display all information gathered from observed aircraft
 
+mod airport;
+
 use std::io::{self, BufRead, BufReader, BufWriter};
 use std::net::{Ipv4Addr, SocketAddr, TcpStream};
 use std::num::ParseFloatError;
@@ -50,6 +52,8 @@ use tui::text::{Span, Spans};
 use tui::widgets::canvas::{Canvas, Line, Points};
 use tui::widgets::{Block, Borders, Row, Table, TableState, Tabs};
 use tui::Terminal;
+
+use crate::airport::Airport;
 
 /// Amount of zoom out from your original lat/long position
 const MAX_PLOT_HIGH: f64 = 400.0;
@@ -169,6 +173,14 @@ struct Opts {
     /// This can improve performance of just needing to read radar related messages
     #[clap(long)]
     limit_parsing: bool,
+
+    /// Import downloaded csv file for FAA Airport from https://github.com/mborsetti/airportsdata
+    #[clap(long)]
+    airports: Option<String>,
+
+    /// comma seperated filter for --airports timezone data, such as: "America/Chicago,America/New_York"
+    #[clap(long)]
+    airports_tz_filter: Option<String>,
 }
 
 /// Available top row Tabs
@@ -209,6 +221,8 @@ struct Settings<'a> {
     custom_long: Option<f64>,
     /// last seen mouse clicking position
     last_mouse_dragging: Option<(u16, u16)>,
+    /// Parsed list of airport locations
+    airports: Option<Vec<Airport>>,
 }
 
 impl<'a> Settings<'a> {
@@ -223,6 +237,7 @@ impl<'a> Settings<'a> {
             custom_long: None,
             opts,
             last_mouse_dragging: None,
+            airports: None,
         }
     }
 
@@ -361,6 +376,12 @@ see https://github.com/rsadsb/adsb_deku#serverdemodulationexternal-applications 
     // create settings, dropping opts to prevent bad usage of variable
     let mut settings = Settings::new(opts.clone());
     drop(opts);
+
+    let mut airports = vec![];
+    if let Some(airport) = &settings.opts.airports {
+        airports = Airport::from_file(airport, &settings.opts.airports_tz_filter);
+    }
+    settings.airports = Some(airports);
 
     // This next group of functions and variables handle if `gpsd_ip` is set from the command
     // line.
@@ -744,7 +765,7 @@ fn draw(
 
             let mut view_type = "";
 
-            let lat = settings.custom_long.map_or(settings.lat, |lat| {
+            let lat = settings.custom_lat.map_or(settings.lat, |lat| {
                 view_type = "(CUSTOM)";
                 lat
             });
@@ -1040,20 +1061,38 @@ fn draw_lines(ctx: &mut tui::widgets::canvas::Context<'_>) {
 
 /// Draw locations on the map
 fn draw_locations(ctx: &mut tui::widgets::canvas::Context<'_>, settings: &Settings) {
-    for city in &settings.opts.locations {
-        let (x, y) = settings.to_xy(city.lat, city.long);
+    for location in &settings.opts.locations {
+        let (x, y) = settings.to_xy(location.lat, location.long);
 
-        // draw city coor
+        // draw location coor
         ctx.draw(&Points {
             coords: &[(x, y)],
             color: Color::Green,
         });
 
-        // draw city name
+        // draw location name
         ctx.print(
             x,
             y,
-            Span::styled(city.name.to_string(), Style::default().fg(Color::Green)),
+            Span::styled(location.name.to_string(), Style::default().fg(Color::Green)),
         );
+    }
+    if let Some(airports) = &settings.airports {
+        for Airport { icao, lat, lon, .. } in airports {
+            let (x, y) = settings.to_xy(*lat, *lon);
+
+            // draw city coor
+            ctx.draw(&Points {
+                coords: &[(x, y)],
+                color: Color::Green,
+            });
+
+            // draw city name
+            ctx.print(
+                x,
+                y,
+                Span::styled(icao.to_string(), Style::default().fg(Color::Green)),
+            );
+        }
     }
 }

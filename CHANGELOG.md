@@ -33,6 +33,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat: fix position mis decoding with ([!101](https://github.com/rsadsb/adsb_deku/pull/101)), fixing: ([#21](https://github.com/rsadsb/adsb_deku/issues/21))
 - feat(breaking): `--cities` has been renamed to `--locations`
 - bump msrv to `1.58.1`
+- feat: add `--airports` and `--airports-tz-filter` for import csv file from https://github.com/mborsetti/airportsdata. ([!103](https://github.com/rsadsb/adsb_deku/pull/103)), fixing: ([#39](https://github.com/rsadsb/adsb_deku/issues/39))
+
 
 ### apps/1090
 - bump msrv to `1.58.1`
