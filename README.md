@@ -12,7 +12,7 @@ See [rsadsb-blog](https://rsadsb.github.io/) for release details.
 
 This library uses [deku](https://github.com/sharksforarms/deku) for deserialization of protocol.
 
-![Radar Example](media/2021_12_08.gif)
+![Radar Example](media/peek_2022_02_01_23_35.gif)
 
 ## Applications
 

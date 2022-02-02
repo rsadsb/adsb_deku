@@ -50,6 +50,9 @@ OPTIONS:
         --scale <SCALE>                              Zoom level of Radar and Coverage (-=zoom out/+=zoom in) [default: .12]
         --touchscreen                                Enable three tabs on left side of screen for zoom out/zoom in/and reset
     -V, --version                                    Print version information
+
+Environment Variables:
+    RUST_LOG: See "https://docs.rs/tracing-subscriber/latest/tracing_subscriber/fmt/index.html#filtering-events-with-environment-variables"`
 ```
 
 ### Logging
