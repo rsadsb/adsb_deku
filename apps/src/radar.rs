@@ -107,12 +107,17 @@ impl FromStr for Location {
     }
 }
 
+const AFTER_TEST: &str = r#"Environment Variables:
+    RUST_LOG: See "https://docs.rs/tracing-subscriber/latest/tracing_subscriber/fmt/index.html#filtering-events-with-environment-variables"
+"#;
+
 #[derive(Debug, Clone, Parser)]
 #[clap(
     version,
     name = "radar",
     author = "wcampbell0x2a",
-    about = "TUI Display of ADS-B protocol info from demodulator"
+    about = "TUI Display of ADS-B protocol info from demodulator",
+    after_help = AFTER_TEST,
 )]
 struct Opts {
     /// ip address / hostname of ADS-B server / demodulator
