@@ -666,10 +666,10 @@ fn handle_mouseevent(mouse_event: MouseEvent, settings: &mut Settings, tui_info:
                 (8..=16, TUI_START_MARGIN..=TUI_BAR_WIDTH) => {
                     settings.tab_selection = Tab::Coverage;
                 },
-                (20..=32, TUI_START_MARGIN..=TUI_BAR_WIDTH) => {
+                (20..=34, TUI_START_MARGIN..=TUI_BAR_WIDTH) => {
                     settings.tab_selection = Tab::Airplanes;
                 },
-                (32..=40, TUI_START_MARGIN..=TUI_BAR_WIDTH) => {
+                (36..=40, TUI_START_MARGIN..=TUI_BAR_WIDTH) => {
                     settings.tab_selection = Tab::Help;
                 },
                 _ => (),
