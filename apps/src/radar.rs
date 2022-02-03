@@ -348,7 +348,10 @@ fn main() -> Result<()> {
 
     // print current version
     let version = env!("CARGO_PKG_VERSION");
-    info!("starting radar-v{} with options: {:?}", version, opts);
+    info!(
+        "starting rsadsb/radar-v{} with options: {:?}",
+        version, opts
+    );
 
     // Setup non-blocking TcpStream
     let socket = SocketAddr::from((opts.host, opts.port));
@@ -552,6 +555,7 @@ see https://github.com/rsadsb/adsb_deku#serverdemodulationexternal-applications 
 
         // draw crossterm tui display
         let tui_info = draw(
+            version,
             &mut terminal,
             &adsb_airplanes,
             &settings,
@@ -748,6 +752,7 @@ fn handle_mouseevent(mouse_event: MouseEvent, settings: &mut Settings, tui_info:
 }
 
 fn draw(
+    version: &str,
     terminal: &mut Terminal<CrosstermBackend<std::io::Stdout>>,
     adsb_airplanes: &Airplanes,
     settings: &Settings,
@@ -789,7 +794,10 @@ fn draw(
             let tab = Tabs::new(titles)
                 .block(
                     Block::default()
-                        .title(format!("({},{}) {view_type}", lat, long))
+                        .title(format!(
+                            "rsadsb/radar(v{}) - ({},{}) {view_type}",
+                            version, lat, long
+                        ))
                         .borders(Borders::ALL),
                 )
                 .style(Style::default().fg(Color::White))
