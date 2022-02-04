@@ -1,6 +1,6 @@
 //! This tui program displays the current ADS-B detected airplanes on a plot with your current
 //! position as (0,0) and has the ability to show different information about aircraft locations
-//! and testing your coverage.,
+//! and testing your coverage.
 //!
 //! # Tabs
 //!
@@ -33,7 +33,6 @@ use adsb_deku::cpr::Position;
 use adsb_deku::deku::DekuContainerRead;
 use adsb_deku::{Frame, ICAO};
 use anyhow::{Context, Result};
-use apps::Airplanes;
 use clap::Parser;
 use crossterm::event::{
     poll, read, EnableMouseCapture, Event, KeyCode, KeyEvent, MouseButton, MouseEvent,
@@ -42,6 +41,7 @@ use crossterm::event::{
 use crossterm::terminal::enable_raw_mode;
 use crossterm::ExecutableCommand;
 use gpsd_proto::{get_data, handshake, ResponseData};
+use rsadsb_apps::Airplanes;
 use tracing::{debug, error, info, trace};
 use tracing_subscriber::EnvFilter;
 use tui::backend::{Backend, CrosstermBackend};
