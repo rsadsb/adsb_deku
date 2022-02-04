@@ -76,7 +76,8 @@ This enables those features for platforms without keyboard and mouse usage.
 | -------- | -------------------------- |
 | F1       | Move to Radar screen       |
 | F2       | Move to Coverage screen    |
-| F2       | Move to Airplanes screen   |
+| F3       | Move to Airplanes screen   |
+| F4       | Move to Help screen   |
 | TAB      | Move to next tab           |
 | q        | Quit the app               |
 | ctrl + C | Quit the app               |

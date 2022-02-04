@@ -194,6 +194,7 @@ enum Tab {
     Map       = 0,
     Coverage  = 1,
     Airplanes = 2,
+    Help      = 3,
 }
 
 impl Tab {
@@ -201,7 +202,8 @@ impl Tab {
         match self {
             Self::Map => Self::Coverage,
             Self::Coverage => Self::Airplanes,
-            Self::Airplanes => Self::Map,
+            Self::Airplanes => Self::Help,
+            Self::Help => Self::Map,
         }
     }
 }
@@ -346,7 +348,10 @@ fn main() -> Result<()> {
 
     // print current version
     let version = env!("CARGO_PKG_VERSION");
-    info!("starting radar-v{} with options: {:?}", version, opts);
+    info!(
+        "starting rsadsb/radar-v{} with options: {:?}",
+        version, opts
+    );
 
     // Setup non-blocking TcpStream
     let socket = SocketAddr::from((opts.host, opts.port));
@@ -550,6 +555,7 @@ see https://github.com/rsadsb/adsb_deku#serverdemodulationexternal-applications 
 
         // draw crossterm tui display
         let tui_info = draw(
+            version,
             &mut terminal,
             &adsb_airplanes,
             &settings,
@@ -606,6 +612,7 @@ fn handle_keyevent(
         (KeyCode::F(1), _) => settings.tab_selection = Tab::Map,
         (KeyCode::F(2), _) => settings.tab_selection = Tab::Coverage,
         (KeyCode::F(3), _) => settings.tab_selection = Tab::Airplanes,
+        (KeyCode::F(4), _) => settings.tab_selection = Tab::Help,
         (KeyCode::Tab, _) => settings.tab_selection = settings.tab_selection.next_tab(),
         (KeyCode::Char('q'), _) => settings.quit = Some("user requested action: quit"),
         (KeyCode::Char('c'), _) => {
@@ -659,8 +666,11 @@ fn handle_mouseevent(mouse_event: MouseEvent, settings: &mut Settings, tui_info:
                 (8..=16, TUI_START_MARGIN..=TUI_BAR_WIDTH) => {
                     settings.tab_selection = Tab::Coverage;
                 },
-                (20..=32, TUI_START_MARGIN..=TUI_BAR_WIDTH) => {
+                (20..=34, TUI_START_MARGIN..=TUI_BAR_WIDTH) => {
                     settings.tab_selection = Tab::Airplanes;
+                },
+                (36..=40, TUI_START_MARGIN..=TUI_BAR_WIDTH) => {
+                    settings.tab_selection = Tab::Help;
                 },
                 _ => (),
             }
@@ -695,7 +705,7 @@ fn handle_mouseevent(mouse_event: MouseEvent, settings: &mut Settings, tui_info:
             // check tab
             match settings.tab_selection {
                 Tab::Map | Tab::Coverage => (),
-                Tab::Airplanes => return,
+                Tab::Airplanes | Tab::Help => return,
             }
 
             // check bounds below tab selection
@@ -742,6 +752,7 @@ fn handle_mouseevent(mouse_event: MouseEvent, settings: &mut Settings, tui_info:
 }
 
 fn draw(
+    version: &str,
     terminal: &mut Terminal<CrosstermBackend<std::io::Stdout>>,
     adsb_airplanes: &Airplanes,
     settings: &Settings,
@@ -762,7 +773,7 @@ fn draw(
 
             // render tabs
             let airplane_len = format!("Airplanes({})", adsb_airplanes.0.len());
-            let titles = ["Map", "Coverage", &airplane_len]
+            let titles = ["Map", "Coverage", &airplane_len, "Help"]
                 .iter()
                 .copied()
                 .map(Spans::from)
@@ -783,7 +794,10 @@ fn draw(
             let tab = Tabs::new(titles)
                 .block(
                     Block::default()
-                        .title(format!("({},{}) {view_type}", lat, long))
+                        .title(format!(
+                            "rsadsb/radar(v{}) - ({},{}) {view_type}",
+                            version, lat, long
+                        ))
                         .borders(Borders::ALL),
                 )
                 .style(Style::default().fg(Color::White))
@@ -862,6 +876,7 @@ fn draw_bottom_chunks<A: tui::backend::Backend>(
         Tab::Map => build_tab_map(f, bottom_chunks, settings, adsb_airplanes),
         Tab::Coverage => build_tab_coverage(f, bottom_chunks, settings, coverage_airplanes),
         Tab::Airplanes => build_tab_airplanes(f, bottom_chunks, adsb_airplanes, airplanes_state),
+        Tab::Help => build_tab_help(f, bottom_chunks),
     }
 
     tui_info
@@ -951,8 +966,6 @@ fn build_tab_coverage<A: tui::backend::Backend>(
                     color: Color::Rgb(color_number, color_number, color_number),
                 });
             }
-
-            //draw_lines(ctx);
         });
     f.render_widget(canvas, chunks[1]);
 }
@@ -1044,6 +1057,91 @@ fn build_tab_airplanes<A: tui::backend::Backend>(
         .highlight_style(Style::default().add_modifier(Modifier::BOLD))
         .highlight_symbol(">> ");
     f.render_stateful_widget(table, chunks[1], &mut airplanes_state.clone());
+}
+
+/// Render Help tab for tui display
+fn build_tab_help<A: tui::backend::Backend>(f: &mut tui::Frame<A>, chunks: Vec<Rect>) {
+    let horizontal_chunks = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Percentage(2),
+            Constraint::Percentage(96),
+            Constraint::Percentage(2),
+        ])
+        .split(chunks[1]);
+
+    let vertical_chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Percentage(2),
+            Constraint::Percentage(30),
+            Constraint::Percentage(30),
+            Constraint::Percentage(30),
+            Constraint::Percentage(2),
+        ])
+        .split(horizontal_chunks[1]);
+
+    // First help section
+    let rows = vec![
+        Row::new(vec!["F1", "Move to Radar screen"]),
+        Row::new(vec!["F2", "Move to Coverage screen"]),
+        Row::new(vec!["F3", "Move to Airplanes screen"]),
+        Row::new(vec!["F4", "Move to Help screen"]),
+        Row::new(vec!["TAB", "Move to Next screen"]),
+        Row::new(vec!["q", "Quit this app"]),
+        Row::new(vec!["ctrl+c", "Quit this app"]),
+    ];
+    let table = Table::new(rows)
+        .style(Style::default().fg(Color::White))
+        .header(Row::new(vec!["Key", "Action"]).bottom_margin(1))
+        .widths(&[Constraint::Percentage(10), Constraint::Percentage(90)])
+        .column_spacing(1)
+        .block(
+            Block::default()
+                .title("Key Bindings - Any Tab")
+                .borders(Borders::ALL),
+        );
+    f.render_widget(table, vertical_chunks[1]);
+
+    // Second help section
+    let rows = vec![
+        Row::new(vec!["-", "Zoom out"]),
+        Row::new(vec!["+", "Zoom in"]),
+        Row::new(vec!["Up", "Move map up"]),
+        Row::new(vec!["Down", "Move map down"]),
+        Row::new(vec!["Left", "Move map left"]),
+        Row::new(vec!["Right", "Move map right"]),
+        Row::new(vec!["Enter", "Map position reset"]),
+    ];
+    let table = Table::new(rows)
+        .style(Style::default().fg(Color::White))
+        .header(Row::new(vec!["Key", "Action"]).bottom_margin(1))
+        .widths(&[Constraint::Percentage(10), Constraint::Percentage(90)])
+        .column_spacing(1)
+        .block(
+            Block::default()
+                .title("Key Bindings - Map or Coverage")
+                .borders(Borders::ALL),
+        );
+    f.render_widget(table, vertical_chunks[2]);
+
+    // Third help section
+    let rows = vec![
+        Row::new(vec!["Up", "Move selection upward"]),
+        Row::new(vec!["Down", "Move selection downward"]),
+        Row::new(vec!["Enter", "Center Map tab on selected aircraft"]),
+    ];
+    let table = Table::new(rows)
+        .style(Style::default().fg(Color::White))
+        .header(Row::new(vec!["Key", "Action"]).bottom_margin(1))
+        .widths(&[Constraint::Percentage(10), Constraint::Percentage(90)])
+        .column_spacing(1)
+        .block(
+            Block::default()
+                .title("Key Bindings - Airplanes")
+                .borders(Borders::ALL),
+        );
+    f.render_widget(table, vertical_chunks[3]);
 }
 
 /// Draw vertical and horizontal lines
