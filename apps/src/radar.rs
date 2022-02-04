@@ -33,7 +33,7 @@ use adsb_deku::cpr::Position;
 use adsb_deku::deku::DekuContainerRead;
 use adsb_deku::{Frame, ICAO};
 use anyhow::{Context, Result};
-use apps::Airplanes;
+use rsadsb_apps::Airplanes;
 use clap::Parser;
 use crossterm::event::{
     poll, read, EnableMouseCapture, Event, KeyCode, KeyEvent, MouseButton, MouseEvent,
