@@ -1,13 +1,9 @@
 on:
   push:
-    branches:
-      - master
+    branches: [ master ]
+    tags: [ 'v*' ]
   pull_request:
-    branches:
-      - master
-  release:
-    types:
-      - created
+    branches: [ master ]
 
 name: binaries
 
@@ -20,6 +16,9 @@ jobs:
         targets:
           - x86_64-unknown-linux-gnu
           - armv7-unknown-linux-gnueabihf
+        bins:
+          - radar
+          - 1090
 
     steps:
       - uses: actions/checkout@v2
@@ -32,14 +31,24 @@ jobs:
         with:
           use-cross: true
           command: build
-          args: --workspace --release --target ${{ matrix.targets }}
+          args: --bin ${{ matrix.bins }} --release --target ${{ matrix.targets }}
+
+      - name: archive
+        run: |
+          tar -czvf ${{ matrix.bins }}-${{ matrix.targets }}.tar.gz \
+              -C target/${{ matrix.targets }}/release/ ${{ matrix.bins }}
 
       - uses: actions/upload-artifact@v2
         with:
-          name: radar-${{ matrix.targets }}
-          path: target/${{ matrix.targets }}/release/radar
+          name: ${{ matrix.bins }}-${{ matrix.targets }}.tar.gz
+          path: ${{ matrix.bins }}-${{ matrix.targets }}.tar.gz
 
-      - uses: actions/upload-artifact@v2
+      - name: Upload binary to release
+        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+        uses: svenstaro/upload-release-action@v2
         with:
-          name: 1090-${{ matrix.targets }}
-          path: target/${{ matrix.targets }}/release/1090
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ${{ matrix.bins }}-${{ matrix.targets }}.tar.gz
+          asset_name: ${{ matrix.bins }}-${{ matrix.targets }}.tar.gz
+          tag: ${{ github.ref }}
+          overwrite: true
