@@ -408,28 +408,31 @@ see https://github.com/rsadsb/adsb_deku#serverdemodulationexternal-applications 
         // start thread
         std::thread::spawn(move || {
             let gpsd_port = 2947;
-            let stream = TcpStream::connect((gpsd_ip.clone(), gpsd_port))
-                .with_context(|| {
+            if let Ok(stream) =
+                TcpStream::connect((gpsd_ip.clone(), gpsd_port)).with_context(|| {
                     format!("unable to connect to gpsd server @ {gpsd_ip}:{gpsd_port}")
                 })
-                .unwrap();
-            let mut reader = BufReader::new(&stream);
-            let mut writer = BufWriter::new(&stream);
-            handshake(&mut reader, &mut writer).unwrap();
-            info!("[gpsd] connected");
+            {
+                let mut reader = BufReader::new(&stream);
+                let mut writer = BufWriter::new(&stream);
+                handshake(&mut reader, &mut writer).unwrap();
+                info!("[gpsd] connected");
 
-            // keep looping while reading new messages looking for GGA messages which are the
-            // normal GPS messages from the NMEA messages.
-            loop {
-                if let Ok(ResponseData::Tpv(data)) = get_data(&mut reader) {
-                    // only update if the operator hasn't set a lat/long position already
-                    if let Ok(mut lat_long) = cloned_gps_lat_long.lock() {
-                        if let (Some(lat), Some(lon)) = (data.lat, data.lon) {
-                            info!("[gpsd] lat: {lat},  long:{lon}");
-                            *lat_long = Some((lat, lon));
+                // keep looping while reading new messages looking for GGA messages which are the
+                // normal GPS messages from the NMEA messages.
+                loop {
+                    if let Ok(ResponseData::Tpv(data)) = get_data(&mut reader) {
+                        // only update if the operator hasn't set a lat/long position already
+                        if let Ok(mut lat_long) = cloned_gps_lat_long.lock() {
+                            if let (Some(lat), Some(lon)) = (data.lat, data.lon) {
+                                info!("[gpsd] lat: {lat},  long:{lon}");
+                                *lat_long = Some((lat, lon));
+                            }
                         }
                     }
                 }
+            } else {
+                error!("could not connect to gpsd");
             }
         });
     }
