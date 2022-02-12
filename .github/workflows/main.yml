@@ -17,6 +17,7 @@ jobs:
         targets:
           - x86_64-unknown-linux-gnu
           - armv7-unknown-linux-gnueabihf
+          - aarch64-linux-android
         toolchain:
           - stable
             # msrv
