@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [v0.5.0] 2022-02-11
+## [v0.5.0] 2022-02-12
 ### adsb_deku
 - refactor: improve `fmt::Display` of `ControlField`
 - fix(breaking): change `OperationalCodeSurface.reserved` from `u16` to `u8`
