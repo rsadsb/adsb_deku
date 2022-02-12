@@ -41,7 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - bump msrv to `1.58.1`
 
 ### Other
-- feat: add test, check, and release binaries for x86_64-unknown-linux-gnu and armv7-unknown-linux-gnueabihf
+- feat: add test, check, and release binaries for x86_64-unknown-linux-gnu, armv7-unknown-linux-gnueabihf, and aarch64-linux-android
 
 ## [v0.4.0] 2021-12-08
 ### adsb_deku
