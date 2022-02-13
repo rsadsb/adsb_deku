@@ -798,7 +798,7 @@ fn draw(
                 .block(
                     Block::default()
                         .title(format!(
-                            "rsadsb/radar(v{}) - ({},{}) {view_type}",
+                            "rsadsb/radar(v{}) - ({:.3},{:.3}) {view_type}",
                             version, lat, long
                         ))
                         .borders(Borders::ALL),
@@ -992,8 +992,8 @@ fn build_tab_airplanes<A: tui::backend::Backend>(
         let mut alt = empty.clone();
         let mut s_kilo_distance = empty.clone();
         if let Some((position, altitude, kilo_distance)) = pos {
-            lat = format!("{}", position.latitude);
-            lon = format!("{}", position.longitude);
+            lat = format!("{:.3}", position.latitude);
+            lon = format!("{:.3}", position.longitude);
             s_kilo_distance = format!("{}", kilo_distance);
             alt = format!("{altitude}");
         }
@@ -1030,8 +1030,8 @@ fn build_tab_airplanes<A: tui::backend::Backend>(
             Row::new(vec![
                 "ICAO",
                 "Call sign",
-                "Latitude",
-                "Longitude",
+                "Lat",
+                "Long",
                 "Altitude",
                 "   FPM",
                 "Speed",
@@ -1048,12 +1048,12 @@ fn build_tab_airplanes<A: tui::backend::Backend>(
         .widths(&[
             Constraint::Length(6),
             Constraint::Length(9),
-            Constraint::Length(15),
-            Constraint::Length(15),
+            Constraint::Length(8),
+            Constraint::Length(8),
             Constraint::Length(8),
             Constraint::Length(6),
             Constraint::Length(5),
-            Constraint::Length(8),
+            Constraint::Length(6),
             Constraint::Length(7),
         ])
         .column_spacing(1)
