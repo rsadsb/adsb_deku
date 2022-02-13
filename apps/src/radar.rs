@@ -1030,8 +1030,8 @@ fn build_tab_airplanes<A: tui::backend::Backend>(
             Row::new(vec![
                 "ICAO",
                 "Call sign",
-                "Longitude",
                 "Latitude",
+                "Longitude",
                 "Altitude",
                 "   FPM",
                 "Speed",

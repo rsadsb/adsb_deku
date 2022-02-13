@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v0.5.1] 2022-02-13
+
+### radar
+- fix: Swap Airplanes table "Latitude" and "Longitude", found by reddit user @BanksOfTheOuchita ([!111](https://github.com/rsadsb/adsb_deku/pull/111))
+
 ## [v0.5.0] 2022-02-12
 ### adsb_deku
 - refactor: improve `fmt::Display` of `ControlField`
