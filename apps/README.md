@@ -5,7 +5,7 @@ See main README.md for app sample images.
 ## 1090
 See `--help` for more information.
 ```
-1090 0.5.0
+1090 0.5.1
 wcampbell0x2a
 Dump ADS-B protocol info from demodulator
 
@@ -25,7 +25,7 @@ OPTIONS:
 ## radar
 See `--help` for more information.
 ```
-radar 0.5.0
+radar 0.5.1
 wcampbell0x2a
 TUI Display of ADS-B protocol info from demodulator
 
