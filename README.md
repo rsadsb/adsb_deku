@@ -10,7 +10,7 @@ Decoder for [ADS-B(Automatic Dependent Surveillance-Broadcast)](https://en.wikip
 
 See [quickstart-guide](https://rsadsb.github.io/quickstart.html) for a quick installation guide.
 
-See [rsadsb-blog](https://rsadsb.github.io/v0.5.0.html) for latest release details.
+See [rsadsb-v0.5.0](https://rsadsb.github.io/v0.5.0.html) for latest major release details.
 
 This library uses [deku](https://github.com/sharksforarms/deku) for deserialization of protocol.
 
