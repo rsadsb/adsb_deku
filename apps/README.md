@@ -33,10 +33,13 @@ USAGE:
     radar [OPTIONS] --lat <LAT> --long <LONG>
 
 OPTIONS:
-        --airports <AIRPORTS>                        Import downloaded csv file for FAA Airport from https://github.com/mborsetti/airportsdata
-        --airports-tz-filter <AIRPORTS_TZ_FILTER>    comma seperated filter for --airports timezone data, such as: "America/Chicago,America/New_York"
+        --airports <AIRPORTS>                        Import downloaded csv file for FAA Airport from
+                                                     https://github.com/mborsetti/airportsdata
+        --airports-tz-filter <AIRPORTS_TZ_FILTER>    comma seperated filter for --airports timezone data, such as:
+                                                     "America/Chicago,America/New_York"
         --disable-lat-long                           Disable output of latitude and longitude on display
-        --filter-time <FILTER_TIME>                  Seconds since last message from airplane, triggers removal of airplane after time is up [default: 30]
+        --filter-time <FILTER_TIME>                  Seconds since last message from airplane, triggers removal of airplane after time
+                                                     is up [default: 30]
         --gpsd                                       Enable automatic updating of lat/lon from gpsd(https://gpsd.io/) server
         --gpsd-ip <GPSD_IP>                          Ip address of gpsd [default: localhost]
     -h, --help                                       Print help information
@@ -52,7 +55,8 @@ OPTIONS:
     -V, --version                                    Print version information
 
 Environment Variables:
-    RUST_LOG: See "https://docs.rs/tracing-subscriber/latest/tracing_subscriber/fmt/index.html#filtering-events-with-environment-variables"`
+    RUST_LOG: See "https://docs.rs/tracing-subscriber/latest/tracing_subscriber/fmt/index.html#filtering-events-with-environment-
+variables"
 ```
 
 ### Logging
