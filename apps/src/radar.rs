@@ -21,11 +21,10 @@
 //! Display all information gathered from observed aircraft
 
 mod airport;
+mod cli;
 
 use std::io::{self, BufRead, BufReader, BufWriter};
-use std::net::{Ipv4Addr, SocketAddr, TcpStream};
-use std::num::ParseFloatError;
-use std::str::FromStr;
+use std::net::{SocketAddr, TcpStream};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
@@ -54,6 +53,7 @@ use tui::widgets::{Block, Borders, Row, Table, TableState, Tabs};
 use tui::Terminal;
 
 use crate::airport::Airport;
+use crate::cli::Opts;
 
 /// Amount of zoom out from your original lat/long position
 const MAX_PLOT_HIGH: f64 = 400.0;
@@ -78,115 +78,6 @@ const TUI_START_MARGIN: u16 = 1;
 
 /// width of tui top bar
 const TUI_BAR_WIDTH: u16 = 3;
-
-/// Parsing struct for the --locations clap parameter
-#[derive(Debug, Clone)]
-pub struct Location {
-    name: String,
-    lat: f64,
-    long: f64,
-}
-
-impl FromStr for Location {
-    type Err = ParseFloatError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let coords: Vec<&str> = s
-            .trim_matches(|p| p == '(' || p == ')')
-            .split(',')
-            .collect();
-
-        let lat_fromstr = coords[1].parse::<f64>()?;
-        let long_fromstr = coords[2].parse::<f64>()?;
-
-        Ok(Self {
-            name: coords[0].to_string(),
-            lat: lat_fromstr,
-            long: long_fromstr,
-        })
-    }
-}
-
-const AFTER_TEST: &str = r#"Environment Variables:
-    RUST_LOG: See "https://docs.rs/tracing-subscriber/latest/tracing_subscriber/fmt/index.html#filtering-events-with-environment-variables"
-"#;
-
-#[derive(Debug, Clone, Parser)]
-#[clap(
-    version,
-    name = "radar",
-    author = "wcampbell0x2a",
-    about = "TUI Display of ADS-B protocol info from demodulator",
-    after_help = AFTER_TEST,
-)]
-struct Opts {
-    /// ip address / hostname of ADS-B server / demodulator
-    #[clap(long, default_value = "127.0.0.1")]
-    host: Ipv4Addr,
-
-    /// port of ADS-B server / demodulator
-    #[clap(long, default_value = "30002")]
-    port: u16,
-
-    /// Antenna location latitude, this use for aircraft position algorithms.
-    ///
-    /// This is overwritten when using the `--gpsd` option.
-    #[clap(long)]
-    lat: f64,
-
-    /// Antenna location longitude
-    ///
-    /// This is overwritten when using the `--gpsd` option.
-    #[clap(long)]
-    long: f64,
-
-    /// Vector of location [(name, lat, long),..]
-    #[clap(long, multiple_values(true))]
-    locations: Vec<Location>,
-
-    /// Disable output of latitude and longitude on display
-    #[clap(long)]
-    disable_lat_long: bool,
-
-    /// Zoom level of Radar and Coverage (-=zoom out/+=zoom in)
-    #[clap(long, default_value = ".12")]
-    scale: f64,
-
-    /// Enable automatic updating of lat/lon from gpsd(https://gpsd.io/) server.
-    ///
-    /// This overwrites the `--lat` and `--long`
-    #[clap(long)]
-    gpsd: bool,
-
-    /// Ip address of gpsd
-    #[clap(long, default_value = "localhost")]
-    gpsd_ip: String,
-
-    /// Seconds since last message from airplane, triggers removal of airplane after time is up
-    #[clap(long, default_value = "30")]
-    filter_time: u64,
-
-    #[clap(long, default_value = "logs")]
-    log_folder: String,
-
-    /// Enable three tabs on left side of screen for zoom out/zoom in/and reset
-    #[clap(long)]
-    touchscreen: bool,
-
-    /// Limit parsing of ADS-B messages to `DF::ADSB(17)` num_messages
-    ///
-    /// This can improve performance of just needing to read radar related messages
-    #[clap(long)]
-    limit_parsing: bool,
-
-    /// Import downloaded csv file for FAA Airport from https://github.com/mborsetti/airportsdata
-    #[clap(long)]
-    airports: Option<String>,
-
-    /// comma seperated filter for --airports timezone data, such as: "America/Chicago,America/New_York"
-    #[clap(long)]
-    airports_tz_filter: Option<String>,
-}
 
 /// Available top row Tabs
 #[derive(Copy, Clone)]
