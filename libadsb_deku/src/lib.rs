@@ -2,6 +2,8 @@
 /*!
 `adsb_deku` provides decoding for the [`ADS-B`] Downlink protocol by using the [`deku`] crate.
 
+See [`rsadsb.github.io`] for more details.
+
 # Downlink Format Support
 |  [`DF`]  |  Name                               |  Section    |
 | -------- | ----------------------------------- | ----------- |
@@ -109,6 +111,7 @@ different `adsb_deku` uses. See the [`README.md`] for examples of use.
 [`apps/`]: https://github.com/rsadsb/adsb_deku/tree/master/apps
 [`ADS-B`]: https://en.wikipedia.org/wiki/Automatic_Dependent_Surveillance%E2%80%93Broadcast
 [`deku`]: https://github.com/sharksforarms/deku
+[`rsadsb.github.io`]: https://rsadsb.github.io/
 */
 
 // good reference: http://www.anteni.net/adsb/Doc/1090-WP30-18-DRAFT_DO-260B-V42.pdf
