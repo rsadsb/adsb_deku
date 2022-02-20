@@ -4,6 +4,18 @@ Compact Position Reporting for [`Position`] Reporting
 reference: ICAO 9871 (D.2.4.7)
 !*/
 
+#[cfg(feature = "alloc")]
+use core::{
+    clone::Clone,
+    cmp,
+    cmp::PartialEq,
+    convert::From,
+    fmt::Debug,
+    marker::Copy,
+    option::Option::{self, None, Some},
+    prelude::rust_2021::derive,
+};
+#[cfg(not(feature = "alloc"))]
 use std::cmp;
 
 use crate::{Altitude, CPRFormat};
@@ -247,7 +259,7 @@ pub fn get_position(cpr_frames: (&Altitude, &Altitude)) -> Option<Position> {
     let cpr_lat_odd = f64::from(odd_frame.lat_cpr) / CPR_MAX;
     let cpr_lon_odd = f64::from(odd_frame.lon_cpr) / CPR_MAX;
 
-    let j = (59.0 * cpr_lat_even - 60.0 * cpr_lat_odd + 0.5).floor();
+    let j = libm::floor(59.0 * cpr_lat_even - 60.0 * cpr_lat_odd + 0.5);
 
     let mut lat_even = D_LAT_EVEN * (j % 60.0 + cpr_lat_even);
     let mut lat_odd = D_LAT_ODD * (j % 59.0 + cpr_lat_odd);
@@ -286,9 +298,15 @@ fn get_lat_lon(
         (1, cpr_lon_odd)
     };
     let ni = cmp::max(cpr_nl(lat) - p, 1) as f64;
-    let m =
-        (cpr_lon_even * (cpr_nl(lat) - 1) as f64 - cpr_lon_odd * cpr_nl(lat) as f64 + 0.5).floor();
-    let mut lon = (360.0 / ni) * (m.rem_euclid(ni) + c);
+    let m = libm::floor(
+        cpr_lon_even * (cpr_nl(lat) - 1) as f64 - cpr_lon_odd * cpr_nl(lat) as f64 + 0.5,
+    );
+
+    // rem_euclid
+    let r = m % ni;
+    let r = if r < 0.0 { r + libm::fabs(ni) } else { r };
+
+    let mut lon = (360.0 / ni) * (r + c);
     if lon >= 180.0 {
         lon -= 360.0;
     }

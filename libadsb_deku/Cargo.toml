@@ -9,8 +9,16 @@ keywords = ["deku", "adsb", "aerorust", "airplane", "radar"]
 categories = ["aerospace::protocols", "parsing"]
 rust-version = "1.59.0"
 
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[features]
+default = ["std"]
+std = ["deku/std", "alloc"]
+alloc = ["deku/alloc"]
+
 [dependencies]
-deku = "0.13.0"
+deku = { version = "0.13", default-features = false }
+libm = "0.2.2"
 
 [dev-dependencies]
 hex = "0.4"

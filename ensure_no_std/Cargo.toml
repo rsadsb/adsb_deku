@@ -1,0 +1,15 @@
+[package]
+name = "ensure_no_std"
+version = "0.1.0"
+authors = ["wcampbell <wcampbell1995@gmail.com>"]
+edition = "2021"
+
+[features]
+default = ["alloc"]
+alloc = []
+
+[dependencies]
+hexlit = "0.5.0"
+wee_alloc = "0.4"
+adsb_deku = { path = "../libadsb_deku", default-features = false, features = ["alloc"] }
+rsadsb_common = { path = "../rsadsb_common", default-features = false, features = ["alloc"] }

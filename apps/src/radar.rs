@@ -10,6 +10,7 @@ use std::net::{SocketAddr, TcpStream};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, SystemTime};
 
+use rsadsb_common::AirplaneCoor;
 use adsb_deku::cpr::Position;
 use adsb_deku::deku::DekuContainerRead;
 use adsb_deku::{Frame, ICAO};
@@ -22,8 +23,8 @@ use crossterm::event::{
 use crossterm::terminal::enable_raw_mode;
 use crossterm::ExecutableCommand;
 use gpsd_proto::{get_data, handshake, ResponseData};
-use rsadsb_apps::{AirplaneCoor, Airplanes};
 use time::UtcOffset;
+use rsadsb_common::Airplanes;
 use tracing::{debug, error, info, trace};
 use tracing_subscriber::EnvFilter;
 use tui::backend::{Backend, CrosstermBackend};

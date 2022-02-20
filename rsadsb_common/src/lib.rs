@@ -1,5 +1,15 @@
-use std::collections::HashMap;
-use std::fmt;
+#![cfg_attr(not(feature = "std"), no_std)]
+
+extern crate alloc;
+
+#[cfg(feature = "alloc")]
+use alloc::{collections::BTreeMap, fmt, string::String, vec, vec::Vec};
+#[cfg(feature = "alloc")]
+use core::{
+    clone::Clone, default::Default, fmt::Debug, marker::Copy, prelude::rust_2021::derive,
+    result::Result::Ok, writeln,
+};
+#[cfg(feature = "std")]
 use std::time::SystemTime;
 
 use adsb_deku::adsb::{AirborneVelocity, Identification, ME};
@@ -12,138 +22,8 @@ const MAX_RECEIVER_DISTANCE: f64 = 400.0;
 // Max obsurd distance an aircraft travelled between messages
 const MAX_AIRCRAFT_DISTANCE: f64 = 100.0;
 
-#[derive(Debug)]
-pub struct AirplaneState {
-    // TODO: rename to coor
-    pub coords: AirplaneCoor,
-    pub squawk: Option<u32>,
-    pub callsign: Option<String>,
-    /// heading from `adsb::AirborneVelocity::calculate()`
-    ///
-    /// 0 = Straight up
-    /// 90 = Right, and so on
-    pub heading: Option<f64>,
-    /// speed from `adsb::AirborneVelocity::calculate()`
-    pub speed: Option<f64>,
-    /// vert_speed from `adsb::AirborneVelocity::calculate()`
-    pub vert_speed: Option<i16>,
-    pub on_ground: Option<bool>,
-    pub num_messages: u64,
-    pub last_time: SystemTime,
-    pub track: Option<Vec<AirplaneCoor>>,
-}
-
-impl Default for AirplaneState {
-    fn default() -> Self {
-        Self {
-            coords: AirplaneCoor::default(),
-            squawk: None,
-            callsign: None,
-            heading: None,
-            speed: None,
-            vert_speed: None,
-            on_ground: None,
-            num_messages: 0,
-            last_time: SystemTime::now(),
-            track: None,
-        }
-    }
-}
-
-#[derive(Debug, Default, Clone, Copy, PartialEq)]
-pub struct AirplaneCoor {
-    /// [odd, even]
-    pub altitudes: [Option<Altitude>; 2],
-    /// lat/long
-    pub position: Option<cpr::Position>,
-    /// last good time
-    pub last_time: Option<SystemTime>,
-    /// distance from receiver lat/long
-    pub kilo_distance: Option<f64>,
-}
-
-impl AirplaneCoor {
-    /// After checking the range of the new lat / long, new position from last position, update the
-    /// position of an aircraft
-    fn update_position(&mut self, lat_long: (f64, f64)) -> bool {
-        if let [Some(odd), Some(even)] = self.altitudes {
-            let test_position = cpr::get_position((&odd, &even));
-
-            // Check kilometer range from receiver
-            if let Some(test_position) = test_position {
-                let kilo_distance = Self::haversine_distance(
-                    lat_long,
-                    (test_position.latitude, test_position.longitude),
-                );
-                if kilo_distance > MAX_RECEIVER_DISTANCE {
-                    warn!("range: {kilo_distance} -  old: {lat_long:?} new: {test_position:?}");
-                    return false;
-                }
-                self.kilo_distance = Some(kilo_distance);
-                debug!("range: {kilo_distance}");
-            }
-
-            // if previous position, check against for range. This is a non-great way of doing
-            // this, but maybe in the future we can check against the speed of the aircraft
-            if let (Some(current_position), Some(test_position)) = (self.position, test_position) {
-                let distance = Self::haversine_distance_position(current_position, test_position);
-                if distance > MAX_AIRCRAFT_DISTANCE {
-                    warn!("distance: {distance} old: {current_position:?}, invalid: {test_position:?}");
-                    return false;
-                }
-                debug!("distance: {distance}");
-            }
-
-            // Good new position!
-            self.position = test_position;
-            debug!("update_position: odd: (lat: {}, long: {}), even: (lat: {}, long: {}), position: {:?}",
-                odd.lat_cpr,
-                odd.lon_cpr,
-                even.lat_cpr,
-                even.lat_cpr,
-                self.position);
-            self.last_time = Some(SystemTime::now());
-        }
-        true
-    }
-
-    /// Return altitude from Odd Altitude
-    fn altitude(&self) -> Option<u32> {
-        if let Some(odd) = self.altitudes[0] {
-            return Some(odd.alt);
-        }
-        None
-    }
-
-    /// Calculate the kilometers between two lat/long points
-    fn haversine_distance_position(position: cpr::Position, other: cpr::Position) -> f64 {
-        let lat1 = position.latitude;
-        let lat2 = other.latitude;
-        let long1 = position.longitude;
-        let long2 = other.longitude;
-        Self::haversine_distance((lat1, long1), (lat2, long2))
-    }
-
-    // https://en.wikipedia.org/wiki/Haversine_formula
-    fn haversine_distance(s: (f64, f64), other: (f64, f64)) -> f64 {
-        // kilometers
-        let r = 6371.00;
-        let lat1_rad = s.0.to_radians();
-        let lat2_rad = other.0.to_radians();
-        let long1_rad = s.1.to_radians();
-        let long2_rad = other.1.to_radians();
-
-        let a = ((lat2_rad - lat1_rad) / 2.00).sin().mul_add(
-            ((lat2_rad - lat1_rad) / 2.00).sin(),
-            lat1_rad.cos() * lat2_rad.cos() * ((long2_rad - long1_rad) / 2.00).sin().powi(2),
-        );
-        let c = 2.00 * ((a).sqrt().atan2((1.00 - a).sqrt()));
-        r * c
-    }
-}
-
 #[derive(Debug, Default)]
-pub struct Airplanes(pub HashMap<ICAO, AirplaneState>);
+pub struct Airplanes(pub BTreeMap<ICAO, AirplaneState>);
 
 impl fmt::Display for Airplanes {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -160,14 +40,17 @@ impl fmt::Display for Airplanes {
 impl Airplanes {
     #[must_use]
     pub fn new() -> Self {
-        Self(HashMap::new())
+        Self(BTreeMap::new())
     }
 
     /// Increment message count and update last time seen
     pub fn incr_messages(&mut self, icao: ICAO) {
         let mut state = self.0.entry(icao).or_insert_with(AirplaneState::default);
         state.num_messages += 1;
-        state.last_time = SystemTime::now();
+        #[cfg(feature = "std")]
+        {
+            state.last_time = std::time::SystemTime::now();
+        }
     }
 
     pub fn action(&mut self, frame: Frame, lat_long: (f64, f64)) {
@@ -295,6 +178,7 @@ impl Airplanes {
     }
 
     /// Remove airplane after not active for a time
+    #[cfg(feature = "std")]
     pub fn prune(&mut self, filter_time: u64) {
         self.0.retain(|k, v| {
             if let Ok(time) = v.last_time.elapsed() {
@@ -309,5 +193,146 @@ impl Airplanes {
                 false
             }
         });
+    }
+}
+
+#[derive(Debug)]
+pub struct AirplaneState {
+    // TODO: rename to coor
+    pub coords: AirplaneCoor,
+    pub squawk: Option<u32>,
+    pub callsign: Option<String>,
+    /// heading from `adsb::AirborneVelocity::calculate()`
+    ///
+    /// 0 = Straight up
+    /// 90 = Right, and so on
+    pub heading: Option<f64>,
+    /// speed from `adsb::AirborneVelocity::calculate()`
+    pub speed: Option<f64>,
+    /// vert_speed from `adsb::AirborneVelocity::calculate()`
+    pub vert_speed: Option<i16>,
+    pub on_ground: Option<bool>,
+    pub num_messages: u64,
+    #[cfg(feature = "std")]
+    pub last_time: SystemTime,
+    pub track: Option<Vec<AirplaneCoor>>,
+}
+
+impl Default for AirplaneState {
+    fn default() -> Self {
+        Self {
+            coords: AirplaneCoor::default(),
+            squawk: None,
+            callsign: None,
+            heading: None,
+            speed: None,
+            vert_speed: None,
+            on_ground: None,
+            num_messages: 0,
+            #[cfg(feature = "std")]
+            last_time: SystemTime::now(),
+            track: None,
+        }
+    }
+}
+
+#[derive(Debug, Default, Clone, Copy, PartialEq)]
+pub struct AirplaneCoor {
+    /// [odd, even]
+    pub altitudes: [Option<Altitude>; 2],
+    /// lat/long
+    pub position: Option<cpr::Position>,
+    /// last good time
+    #[cfg(feature = "std")]
+    pub last_time: Option<SystemTime>,
+    /// distance from receiver lat/long
+    pub kilo_distance: Option<f64>,
+}
+
+impl AirplaneCoor {
+    /// After checking the range of the new lat / long, new position from last position, update the
+    /// position of an aircraft
+    fn update_position(&mut self, lat_long: (f64, f64)) -> bool {
+        if let [Some(odd), Some(even)] = self.altitudes {
+            let test_position = cpr::get_position((&odd, &even));
+
+            // Check kilometer range from receiver
+            if let Some(test_position) = test_position {
+                let kilo_distance = Self::haversine_distance(
+                    lat_long,
+                    (test_position.latitude, test_position.longitude),
+                );
+                if kilo_distance > MAX_RECEIVER_DISTANCE {
+                    warn!("range: {kilo_distance} -  old: {lat_long:?} new: {test_position:?}");
+                    return false;
+                }
+                self.kilo_distance = Some(kilo_distance);
+                debug!("range: {kilo_distance}");
+            }
+
+            // if previous position, check against for range. This is a non-great way of doing
+            // this, but maybe in the future we can check against the speed of the aircraft
+            if let (Some(current_position), Some(test_position)) = (self.position, test_position) {
+                let distance = Self::haversine_distance_position(current_position, test_position);
+                if distance > MAX_AIRCRAFT_DISTANCE {
+                    warn!("distance: {distance} old: {current_position:?}, invalid: {test_position:?}");
+                    return false;
+                }
+                debug!("distance: {distance}");
+            }
+
+            // Good new position!
+            self.position = test_position;
+            debug!("update_position: odd: (lat: {}, long: {}), even: (lat: {}, long: {}), position: {:?}",
+                odd.lat_cpr,
+                odd.lon_cpr,
+                even.lat_cpr,
+                even.lat_cpr,
+                self.position);
+            #[cfg(feature = "std")]
+            {
+                self.last_time = Some(SystemTime::now());
+            }
+        }
+        true
+    }
+
+    /// Return altitude from Odd Altitude
+    fn altitude(&self) -> Option<u32> {
+        if let Some(odd) = self.altitudes[0] {
+            return Some(odd.alt);
+        }
+        None
+    }
+
+    /// Calculate the kilometers between two lat/long points
+    fn haversine_distance_position(position: cpr::Position, other: cpr::Position) -> f64 {
+        let lat1 = position.latitude;
+        let lat2 = other.latitude;
+        let long1 = position.longitude;
+        let long2 = other.longitude;
+        Self::haversine_distance((lat1, long1), (lat2, long2))
+    }
+
+    // https://en.wikipedia.org/wiki/Haversine_formula
+    fn haversine_distance(s: (f64, f64), other: (f64, f64)) -> f64 {
+        // kilometers
+        let lat1_rad = s.0.to_radians();
+        let lat2_rad = other.0.to_radians();
+        let long1_rad = s.1.to_radians();
+        let long2_rad = other.1.to_radians();
+
+        let x_lat = libm::sin((lat2_rad - lat1_rad) / 2.00);
+        let x_long = libm::sin((long2_rad - long1_rad) / 2.00);
+
+        let a = x_lat * x_lat
+            + libm::cos(lat1_rad)
+                * libm::cos(lat2_rad)
+                * libm::powf(libm::sin(x_long) as f32, 2.0) as f64;
+
+        let c = 2.0 * libm::atan2(libm::sqrt(a), libm::sqrt(1.0 - a));
+
+        let r = 6371.00;
+        r * c
     }
 }
