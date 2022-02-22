@@ -5,8 +5,6 @@ license = "MIT"
 edition = "2021"
 rust-version = "1.58.1"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [[bin]]
 name = "radar"
 path = "src/radar.rs"
