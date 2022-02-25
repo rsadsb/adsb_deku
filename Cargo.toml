@@ -1,2 +1,6 @@
 [workspace]
 members = ["apps", "libadsb_deku"]
+
+[profile.release]
+strip = true
+overflow-checks = true

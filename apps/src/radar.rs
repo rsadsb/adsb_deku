@@ -259,7 +259,7 @@ see https://github.com/rsadsb/adsb_deku#serverdemodulationexternal-applications 
 
     // empty containers
     let mut input = String::new();
-    let mut coverage_airplanes: Vec<(f64, f64, u8, ICAO)> = Vec::new();
+    let mut coverage_airplanes: Vec<(f64, f64, u32, ICAO)> = Vec::new();
     let mut adsb_airplanes = Airplanes::new();
 
     // setup tui params
@@ -650,7 +650,7 @@ fn draw(
     terminal: &mut Terminal<CrosstermBackend<std::io::Stdout>>,
     adsb_airplanes: &Airplanes,
     settings: &Settings,
-    coverage_airplanes: &[(f64, f64, u8, ICAO)],
+    coverage_airplanes: &[(f64, f64, u32, ICAO)],
     airplanes_state: &mut TableState,
 ) -> TuiInfo {
     let mut tui_info = TuiInfo::default();
@@ -721,7 +721,7 @@ fn draw_bottom_chunks<A: tui::backend::Backend>(
     chunks: Vec<Rect>,
     settings: &Settings,
     adsb_airplanes: &Airplanes,
-    coverage_airplanes: &[(f64, f64, u8, ICAO)],
+    coverage_airplanes: &[(f64, f64, u32, ICAO)],
     airplanes_state: &mut TableState,
 ) -> TuiInfo {
     let mut tui_info = TuiInfo::default();
@@ -831,7 +831,7 @@ fn build_tab_coverage<A: tui::backend::Backend>(
     f: &mut tui::Frame<A>,
     chunks: Vec<Rect>,
     settings: &Settings,
-    coverage_airplanes: &[(f64, f64, u8, ICAO)],
+    coverage_airplanes: &[(f64, f64, u32, ICAO)],
 ) {
     let canvas = Canvas::default()
         .block(Block::default().title("Coverage").borders(Borders::ALL))
@@ -847,8 +847,8 @@ fn build_tab_coverage<A: tui::backend::Backend>(
             for (lat, long, seen_number, _) in coverage_airplanes.iter() {
                 let (x, y) = settings.to_xy(*lat, *long);
 
-                let number: u16 = 100_u16 + (u16::from(*seen_number) * 100);
-                let color_number: u8 = if number > u16::from(u8::MAX) {
+                let number: u32 = 100 + *seen_number * 50;
+                let color_number: u8 = if number > u32::from(u8::MAX) {
                     u8::MAX
                 } else {
                     number as u8
