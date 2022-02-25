@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### radar
 - fix: Swap Airplanes table "Latitude" and "Longitude", found by reddit user @BanksOfTheOuchita ([!111](https://github.com/rsadsb/adsb_deku/pull/111))
+- feat: Release binary is now stripped. ~2.26MB -> ~1.24MB. MSRV is bumped to `1.59`.
+
+### 1090
+- feat: Release binary is now stripped. ~1.2MB -> 440KB. MSRV is bumped to `1.59`.
 
 ## [v0.5.0] 2022-02-12
 ### adsb_deku
