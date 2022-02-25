@@ -3,7 +3,7 @@ name = "rsadsb_apps"
 version = "0.5.1"
 license = "MIT"
 edition = "2021"
-rust-version = "1.58.1"
+rust-version = "1.59.0"
 
 [[bin]]
 name = "radar"

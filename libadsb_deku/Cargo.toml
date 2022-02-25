@@ -7,10 +7,7 @@ description = "Decoder for ADS-B(Automatic Depedent Surveillance-Broadcast) - wr
 repository = "https://github.com/wcampbel0x2a/adsb_deku"
 keywords = ["deku", "adsb", "aerorust", "airplane", "radar"]
 categories = ["aerospace::protocols", "parsing"]
-rust-version = "1.58.1"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
+rust-version = "1.59.0"
 
 [dependencies]
 deku = "0.12"
