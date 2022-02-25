@@ -1,24 +1,6 @@
 //! This tui program displays the current ADS-B detected airplanes on a plot with your current
 //! position as (0,0) and has the ability to show different information about aircraft locations
 //! and testing your coverage.
-//!
-//! # Tabs
-//!
-//! ## ADSB
-//!
-//! Regular display of recently observed aircraft on a lat/long plot
-//!
-//! ## Coverage
-//!
-//! Instead of only showing current airplanes, only plot dots for a seen airplane location
-//!
-//! Instead of using a `HashMap` for only storing an aircraft position for each aircraft, store
-//! all aircrafts and only display a dot where detection at the lat/long position. This is for
-//! testing the reach of your antenna.
-//!
-//! ## Airplanes
-//!
-//! Display all information gathered from observed aircraft
 
 mod airport;
 mod cli;
@@ -40,7 +22,7 @@ use crossterm::event::{
 use crossterm::terminal::enable_raw_mode;
 use crossterm::ExecutableCommand;
 use gpsd_proto::{get_data, handshake, ResponseData};
-use rsadsb_apps::Airplanes;
+use rsadsb_apps::{AirplaneCoor, Airplanes};
 use tracing::{debug, error, info, trace};
 use tracing_subscriber::EnvFilter;
 use tui::backend::{Backend, CrosstermBackend};
@@ -85,7 +67,8 @@ enum Tab {
     Map       = 0,
     Coverage  = 1,
     Airplanes = 2,
-    Help      = 3,
+    Stats     = 3,
+    Help      = 4,
 }
 
 impl Tab {
@@ -93,8 +76,37 @@ impl Tab {
         match self {
             Self::Map => Self::Coverage,
             Self::Coverage => Self::Airplanes,
-            Self::Airplanes => Self::Help,
+            Self::Airplanes => Self::Stats,
+            Self::Stats => Self::Help,
             Self::Help => Self::Map,
+        }
+    }
+}
+
+#[derive(Debug, Default)]
+struct Stats {
+    // TODO: add time?
+    most_distance: Option<(ICAO, AirplaneCoor)>,
+}
+
+impl Stats {
+    fn update(&mut self, airplanes: &Airplanes) {
+        let current_distance = if let Some(most_distance) = self.most_distance {
+            if let Some(kilo_distance) = most_distance.1.kilo_distance {
+                kilo_distance
+            } else {
+                0.0
+            }
+        } else {
+            0.0
+        };
+        for (key, state) in airplanes.0.iter() {
+            if let Some(distance) = state.coords.kilo_distance {
+                if distance > current_distance {
+                    info!("new max distance: [{}]{:?}", key, state.coords);
+                    self.most_distance = Some((*key, state.coords));
+                }
+            }
         }
     }
 }
@@ -328,6 +340,8 @@ see https://github.com/rsadsb/adsb_deku#serverdemodulationexternal-applications 
         });
     }
 
+    let mut stats = Stats::default();
+
     info!("tui setup");
     loop {
         // cleanup and quit if required
@@ -389,6 +403,8 @@ see https://github.com/rsadsb/adsb_deku#serverdemodulationexternal-applications 
                         if left_over.1 != 0 {
                             error!("{left_over:x?}");
                         }
+                        // update stats
+                        stats.update(&adsb_airplanes);
                     },
                     Err(e) => error!("{e:?}"),
                 }
@@ -455,6 +471,7 @@ see https://github.com/rsadsb/adsb_deku#serverdemodulationexternal-applications 
             &settings,
             &coverage_airplanes,
             &mut airplanes_state,
+            &stats,
         );
 
         // handle crossterm events
@@ -506,7 +523,8 @@ fn handle_keyevent(
         (KeyCode::F(1), _) => settings.tab_selection = Tab::Map,
         (KeyCode::F(2), _) => settings.tab_selection = Tab::Coverage,
         (KeyCode::F(3), _) => settings.tab_selection = Tab::Airplanes,
-        (KeyCode::F(4), _) => settings.tab_selection = Tab::Help,
+        (KeyCode::F(4), _) => settings.tab_selection = Tab::Stats,
+        (KeyCode::F(5), _) => settings.tab_selection = Tab::Help,
         (KeyCode::Tab, _) => settings.tab_selection = settings.tab_selection.next_tab(),
         (KeyCode::Char('q'), _) => settings.quit = Some("user requested action: quit"),
         (KeyCode::Char('c'), _) => {
@@ -564,6 +582,9 @@ fn handle_mouseevent(mouse_event: MouseEvent, settings: &mut Settings, tui_info:
                     settings.tab_selection = Tab::Airplanes;
                 },
                 (36..=40, TUI_START_MARGIN..=TUI_BAR_WIDTH) => {
+                    settings.tab_selection = Tab::Stats;
+                },
+                (40..=44, TUI_START_MARGIN..=TUI_BAR_WIDTH) => {
                     settings.tab_selection = Tab::Help;
                 },
                 _ => (),
@@ -599,7 +620,7 @@ fn handle_mouseevent(mouse_event: MouseEvent, settings: &mut Settings, tui_info:
             // check tab
             match settings.tab_selection {
                 Tab::Map | Tab::Coverage => (),
-                Tab::Airplanes | Tab::Help => return,
+                Tab::Airplanes | Tab::Stats | Tab::Help => return,
             }
 
             // check bounds below tab selection
@@ -652,6 +673,7 @@ fn draw(
     settings: &Settings,
     coverage_airplanes: &[(f64, f64, u32, ICAO)],
     airplanes_state: &mut TableState,
+    stats: &Stats,
 ) -> TuiInfo {
     let mut tui_info = TuiInfo::default();
 
@@ -667,7 +689,7 @@ fn draw(
 
             // render tabs
             let airplane_len = format!("Airplanes({})", adsb_airplanes.0.len());
-            let titles = ["Map", "Coverage", &airplane_len, "Help"]
+            let titles = ["Map", "Coverage", &airplane_len, "Stats", "Help"]
                 .iter()
                 .copied()
                 .map(Spans::from)
@@ -709,6 +731,7 @@ fn draw(
                 adsb_airplanes,
                 coverage_airplanes,
                 airplanes_state,
+                stats,
             );
         })
         .unwrap();
@@ -723,6 +746,7 @@ fn draw_bottom_chunks<A: tui::backend::Backend>(
     adsb_airplanes: &Airplanes,
     coverage_airplanes: &[(f64, f64, u32, ICAO)],
     airplanes_state: &mut TableState,
+    stats: &Stats,
 ) -> TuiInfo {
     let mut tui_info = TuiInfo::default();
 
@@ -770,6 +794,7 @@ fn draw_bottom_chunks<A: tui::backend::Backend>(
         Tab::Map => build_tab_map(f, bottom_chunks, settings, adsb_airplanes),
         Tab::Coverage => build_tab_coverage(f, bottom_chunks, settings, coverage_airplanes),
         Tab::Airplanes => build_tab_airplanes(f, bottom_chunks, adsb_airplanes, airplanes_state),
+        Tab::Stats => build_tab_stats(f, bottom_chunks, &stats),
         Tab::Help => build_tab_help(f, bottom_chunks),
     }
 
@@ -954,6 +979,33 @@ fn build_tab_airplanes<A: tui::backend::Backend>(
 }
 
 /// Render Help tab for tui display
+fn build_tab_stats<A: tui::backend::Backend>(
+    f: &mut tui::Frame<A>,
+    chunks: Vec<Rect>,
+    stats: &Stats,
+) {
+    let mut rows: Vec<Row> = vec![];
+    let value = if let Some((key, value)) = stats.most_distance {
+        let position = value.position.unwrap();
+        let lat = format!("{:.3}", position.latitude);
+        let lon = format!("{:.3}", position.longitude);
+        let distance = format!("{:.3}", value.kilo_distance.unwrap());
+        format!("[{key}]: {distance}km {lat},{lon}")
+    } else {
+        "None".to_string()
+    };
+    rows.push(Row::new(vec!["Max Distance", &value]));
+
+    // draw table
+    let table = Table::new(rows)
+        .style(Style::default().fg(Color::White))
+        .block(Block::default().title("Stats").borders(Borders::ALL))
+        .widths(&[Constraint::Length(20), Constraint::Length(100)])
+        .column_spacing(1);
+    f.render_widget(table, chunks[1]);
+}
+
+/// Render Help tab for tui display
 fn build_tab_help<A: tui::backend::Backend>(f: &mut tui::Frame<A>, chunks: Vec<Rect>) {
     let horizontal_chunks = Layout::default()
         .direction(Direction::Horizontal)
@@ -980,7 +1032,8 @@ fn build_tab_help<A: tui::backend::Backend>(f: &mut tui::Frame<A>, chunks: Vec<R
         Row::new(vec!["F1", "Move to Radar screen"]),
         Row::new(vec!["F2", "Move to Coverage screen"]),
         Row::new(vec!["F3", "Move to Airplanes screen"]),
-        Row::new(vec!["F4", "Move to Help screen"]),
+        Row::new(vec!["F4", "Move to Stats screen"]),
+        Row::new(vec!["F5", "Move to Help screen"]),
         Row::new(vec!["TAB", "Move to Next screen"]),
         Row::new(vec!["q", "Quit this app"]),
         Row::new(vec!["ctrl+c", "Quit this app"]),
