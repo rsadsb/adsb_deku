@@ -8,7 +8,7 @@ mod cli;
 use std::io::{self, BufRead, BufReader, BufWriter};
 use std::net::{SocketAddr, TcpStream};
 use std::sync::{Arc, Mutex};
-use std::time::Duration;
+use std::time::{Duration, SystemTime};
 
 use adsb_deku::cpr::Position;
 use adsb_deku::deku::DekuContainerRead;
@@ -87,10 +87,12 @@ impl Tab {
 struct Stats {
     // TODO: add time?
     most_distance: Option<(ICAO, AirplaneCoor)>,
+    most_airplanes: Option<(SystemTime, u32)>,
 }
 
 impl Stats {
     fn update(&mut self, airplanes: &Airplanes) {
+        // Update most_distance
         let current_distance = if let Some(most_distance) = self.most_distance {
             if let Some(kilo_distance) = most_distance.1.kilo_distance {
                 kilo_distance
@@ -107,6 +109,18 @@ impl Stats {
                     self.most_distance = Some((*key, state.coords));
                 }
             }
+        }
+
+        // Update most airplanes
+        let current_len = airplanes.0.len();
+        let most_airplanes = if let Some(most_airplanes) = self.most_airplanes {
+            most_airplanes.1
+        } else {
+            0
+        };
+        if most_airplanes < current_len as u32 {
+            info!("new most airplanes: {}", current_len);
+            self.most_airplanes = Some((SystemTime::now(), current_len as u32));
         }
     }
 }
@@ -995,6 +1009,15 @@ fn build_tab_stats<A: tui::backend::Backend>(
         "None".to_string()
     };
     rows.push(Row::new(vec!["Max Distance", &value]));
+
+    let value = if let Some((time, most_airplanes)) = stats.most_airplanes {
+        let datetime: chrono::DateTime<chrono::Utc> = time.into();
+        let date_str = datetime.format("%m/%d/%Y %T");
+        format!("{} @ {}", most_airplanes, date_str)
+    } else {
+        "None".to_string()
+    };
+    rows.push(Row::new(vec!["Most Airplanes", &value]));
 
     // draw table
     let table = Table::new(rows)
