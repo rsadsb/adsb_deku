@@ -1011,7 +1011,7 @@ fn build_tab_stats<A: tui::backend::Backend>(
     rows.push(Row::new(vec!["Max Distance", &value]));
 
     let value = if let Some((time, most_airplanes)) = stats.most_airplanes {
-        let datetime: chrono::DateTime<chrono::Utc> = time.into();
+        let datetime: chrono::DateTime<chrono::Local> = time.into();
         let date_str = datetime.format("%m/%d/%Y %T");
         format!("{} @ {}", most_airplanes, date_str)
     } else {
