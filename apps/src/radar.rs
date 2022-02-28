@@ -80,6 +80,7 @@ const TUI_START_MARGIN: u16 = 1;
 const TUI_BAR_WIDTH: u16 = 3;
 
 /// Available top row Tabs
+#[rustfmt::skip]
 #[derive(Copy, Clone)]
 enum Tab {
     Map       = 0,
