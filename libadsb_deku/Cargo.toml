@@ -10,7 +10,7 @@ categories = ["aerospace::protocols", "parsing"]
 rust-version = "1.59.0"
 
 [dependencies]
-deku = "0.12"
+deku = "0.13.0"
 
 [dev-dependencies]
 hex = "0.4"
