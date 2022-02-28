@@ -335,7 +335,11 @@ see https://github.com/rsadsb/adsb_deku#serverdemodulationexternal-applications 
         if let Some(reason) = settings.quit {
             terminal.clear()?;
             let mut stdout = io::stdout();
-            crossterm::execute!(stdout, crossterm::terminal::LeaveAlternateScreen)?;
+            crossterm::execute!(
+                stdout,
+                crossterm::terminal::LeaveAlternateScreen,
+                crossterm::event::DisableMouseCapture
+            )?;
             crossterm::terminal::disable_raw_mode()?;
             terminal.show_cursor()?;
             println!("radar: {}", reason);
