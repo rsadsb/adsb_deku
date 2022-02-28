@@ -85,8 +85,7 @@ impl Tab {
 
 #[derive(Debug, Default)]
 struct Stats {
-    // TODO: add time?
-    most_distance: Option<(ICAO, AirplaneCoor)>,
+    most_distance: Option<(SystemTime, ICAO, AirplaneCoor)>,
     most_airplanes: Option<(SystemTime, u32)>,
 }
 
@@ -94,7 +93,7 @@ impl Stats {
     fn update(&mut self, airplanes: &Airplanes) {
         // Update most_distance
         let current_distance = if let Some(most_distance) = self.most_distance {
-            if let Some(kilo_distance) = most_distance.1.kilo_distance {
+            if let Some(kilo_distance) = most_distance.2.kilo_distance {
                 kilo_distance
             } else {
                 0.0
@@ -106,7 +105,7 @@ impl Stats {
             if let Some(distance) = state.coords.kilo_distance {
                 if distance > current_distance {
                     info!("new max distance: [{}]{:?}", key, state.coords);
-                    self.most_distance = Some((*key, state.coords));
+                    self.most_distance = Some((SystemTime::now(), *key, state.coords));
                 }
             }
         }
@@ -595,10 +594,10 @@ fn handle_mouseevent(mouse_event: MouseEvent, settings: &mut Settings, tui_info:
                 (20..=34, TUI_START_MARGIN..=TUI_BAR_WIDTH) => {
                     settings.tab_selection = Tab::Airplanes;
                 },
-                (36..=40, TUI_START_MARGIN..=TUI_BAR_WIDTH) => {
+                (36..=42, TUI_START_MARGIN..=TUI_BAR_WIDTH) => {
                     settings.tab_selection = Tab::Stats;
                 },
-                (40..=44, TUI_START_MARGIN..=TUI_BAR_WIDTH) => {
+                (42..=48, TUI_START_MARGIN..=TUI_BAR_WIDTH) => {
                     settings.tab_selection = Tab::Help;
                 },
                 _ => (),
@@ -999,31 +998,34 @@ fn build_tab_stats<A: tui::backend::Backend>(
     stats: &Stats,
 ) {
     let mut rows: Vec<Row> = vec![];
-    let value = if let Some((key, value)) = stats.most_distance {
+    let (time, value) = if let Some((time, key, value)) = stats.most_distance {
         let position = value.position.unwrap();
         let lat = format!("{:.3}", position.latitude);
         let lon = format!("{:.3}", position.longitude);
         let distance = format!("{:.3}", value.kilo_distance.unwrap());
-        format!("[{key}]: {distance}km {lat},{lon}")
-    } else {
-        "None".to_string()
-    };
-    rows.push(Row::new(vec!["Max Distance", &value]));
-
-    let value = if let Some((time, most_airplanes)) = stats.most_airplanes {
         let datetime: chrono::DateTime<chrono::Local> = time.into();
         let date_str = datetime.format("%m/%d/%Y %T");
-        format!("{} @ {}", most_airplanes, date_str)
+        (date_str.to_string(), format!("[{key}]: {distance}km {lat},{lon}"))
     } else {
-        "None".to_string()
+        ("None".to_string(), "".to_string())
     };
-    rows.push(Row::new(vec!["Most Airplanes", &value]));
+    rows.push(Row::new(vec!["Max Distance", &time, &value]));
+
+    let (time, value) = if let Some((time, most_airplanes)) = stats.most_airplanes {
+        let datetime: chrono::DateTime<chrono::Local> = time.into();
+        let date_str = datetime.format("%m/%d/%Y %T");
+        (date_str.to_string(), most_airplanes.to_string())
+    } else {
+        ("None".to_string(), "".to_string())
+    };
+    rows.push(Row::new(vec!["Most Airplanes", &time, &value]));
 
     // draw table
     let table = Table::new(rows)
         .style(Style::default().fg(Color::White))
+        .header(Row::new(vec!["Type", "Time", "Value"]).bottom_margin(1))
         .block(Block::default().title("Stats").borders(Borders::ALL))
-        .widths(&[Constraint::Length(20), Constraint::Length(100)])
+        .widths(&[Constraint::Length(20), Constraint::Length(20), Constraint::Length(200)])
         .column_spacing(1);
     f.render_widget(table, chunks[1]);
 }
