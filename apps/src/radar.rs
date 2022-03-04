@@ -844,12 +844,12 @@ fn build_tab_map<A: tui::backend::Backend>(
                     // draw dot on location
                     ctx.draw(&Points {
                         coords: &[(x, y)],
-                        color: Color::White,
+                        color: Color::Green,
                     });
 
-                    let heading = if let Some(heading) = heading {
-                        const ANGLE: f64 = 20.0;
-                        const LENGTH: f64 = 15.0;
+                    if let Some(heading) = heading {
+                        const ANGLE: f64 = 10.0;
+                        const LENGTH: f64 = 10.0;
 
                         let heading = heading + 180.0 % 360.0;
                         let n_heading = if heading > ANGLE {
@@ -861,26 +861,39 @@ fn build_tab_map<A: tui::backend::Backend>(
 
                         let (y_1, x_1) = {
                             (
+                                y + (2.0 * (n_heading.to_radians()).cos()),
+                                x + (2.0 * (n_heading.to_radians()).sin()),
+                            )
+                        };
+
+                        let (y_2, x_2) = {
+                            (
                                 y + (LENGTH * (n_heading.to_radians()).cos()),
                                 x + (LENGTH * (n_heading.to_radians()).sin()),
                             )
                         };
 
                         info!(heading);
-                        info!(x, y);
                         info!(x_1, y_1);
+                        info!(x_2, y_2);
 
                         // draw dot on location
                         ctx.draw(&Line {
-                            x1: x,
-                            x2: x_1,
-                            y1: y,
-                            y2: y_1,
+                            x1: x_1,
+                            x2: x_2,
+                            y1: y_1,
+                            y2: y_2,
                             color: Color::Blue,
                         });
 
                         let n_heading = (heading + ANGLE) % 360.0;
                         let (y_1, x_1) = {
+                            (
+                                y + (2.0 * (n_heading.to_radians()).cos()),
+                                x + (2.0 * (n_heading.to_radians()).sin()),
+                            )
+                        };
+                        let (y_2, x_2) = {
                             (
                                 y + (LENGTH * (n_heading.to_radians()).cos()),
                                 x + (LENGTH * (n_heading.to_radians()).sin()),
@@ -889,19 +902,16 @@ fn build_tab_map<A: tui::backend::Backend>(
 
                         // draw dot on location
                         ctx.draw(&Line {
-                            x1: x,
-                            x2: x_1,
-                            y1: y,
-                            y2: y_1,
+                            x1: x_1,
+                            x2: x_2,
+                            y1: y_1,
+                            y2: y_2,
                             color: Color::Blue,
                         });
-                        format!("{heading}")
-                    } else {
-                        "".to_string()
-                    };
+                    }
 
                     let name = if settings.opts.disable_lat_long {
-                        format!("{key} {heading}").into_boxed_str()
+                        format!("{key}").into_boxed_str()
                     } else {
                         format!("{key} ({}, {})", position.latitude, position.longitude)
                             .into_boxed_str()
