@@ -854,12 +854,14 @@ fn build_tab_map<A: tui::backend::Backend>(
                             .into_boxed_str()
                     };
 
-                    // draw plane ICAO name
-                    ctx.print(
-                        x,
-                        y,
-                        Span::styled(name.to_string(), Style::default().fg(Color::White)),
-                    );
+                    if !settings.opts.disable_icao {
+                        // draw plane ICAO name
+                        ctx.print(
+                            x,
+                            y + 20.0,
+                            Span::styled(name.to_string(), Style::default().fg(Color::White)),
+                        );
+                    }
                 }
             }
 

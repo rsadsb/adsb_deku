@@ -111,6 +111,10 @@ pub struct Opts {
     /// comma seperated filter for --airports timezone data, such as: "America/Chicago,America/New_York"
     #[clap(long)]
     pub airports_tz_filter: Option<String>,
+
+    /// Disable output of icao address of airplane
+    #[clap(long)]
+    pub disable_icao: bool,
 }
 
 #[cfg(test)]
