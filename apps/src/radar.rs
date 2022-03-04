@@ -574,7 +574,7 @@ fn handle_keyevent(
             if let Some(selected) = airplanes_state.selected() {
                 let key = adsb_airplanes.0.keys().nth(selected).unwrap();
                 let pos = adsb_airplanes.aircraft_details(*key);
-                if let Some((position, _, _)) = pos {
+                if let Some((position, _, _, _)) = pos {
                     settings.custom_lat = Some(position.latitude);
                     settings.custom_long = Some(position.longitude);
                     settings.tab_selection = Tab::Map;
@@ -838,7 +838,7 @@ fn build_tab_map<A: tui::backend::Backend>(
             // draw ADSB tab airplanes
             for key in adsb_airplanes.0.keys() {
                 let value = adsb_airplanes.aircraft_details(*key);
-                if let Some((position, _, _)) = value {
+                if let Some((position, _, _, heading)) = value {
                     let (x, y) = settings.to_xy(position.latitude, position.longitude);
 
                     // draw dot on location
@@ -847,8 +847,61 @@ fn build_tab_map<A: tui::backend::Backend>(
                         color: Color::White,
                     });
 
+                    let heading = if let Some(heading) = heading {
+                        const ANGLE: f64 = 20.0;
+                        const LENGTH: f64 = 15.0;
+
+                        let heading = heading + 180.0 % 360.0;
+                        let n_heading = if heading > ANGLE {
+                            heading - ANGLE
+                        } else {
+                            (360.0 + heading) - ANGLE
+                        };
+                        //let n_heading = (heading - 40.0) % 360.0;
+
+                        let (y_1, x_1) = {
+                            (
+                                y + (LENGTH * (n_heading.to_radians()).cos()),
+                                x + (LENGTH * (n_heading.to_radians()).sin()),
+                            )
+                        };
+
+                        info!(heading);
+                        info!(x, y);
+                        info!(x_1, y_1);
+
+                        // draw dot on location
+                        ctx.draw(&Line {
+                            x1: x,
+                            x2: x_1,
+                            y1: y,
+                            y2: y_1,
+                            color: Color::Blue,
+                        });
+
+                        let n_heading = (heading + ANGLE) % 360.0;
+                        let (y_1, x_1) = {
+                            (
+                                y + (LENGTH * (n_heading.to_radians()).cos()),
+                                x + (LENGTH * (n_heading.to_radians()).sin()),
+                            )
+                        };
+
+                        // draw dot on location
+                        ctx.draw(&Line {
+                            x1: x,
+                            x2: x_1,
+                            y1: y,
+                            y2: y_1,
+                            color: Color::Blue,
+                        });
+                        format!("{heading}")
+                    } else {
+                        "".to_string()
+                    };
+
                     let name = if settings.opts.disable_lat_long {
-                        format!("{key}").into_boxed_str()
+                        format!("{key} {heading}").into_boxed_str()
                     } else {
                         format!("{key} ({}, {})", position.latitude, position.longitude)
                             .into_boxed_str()
@@ -899,8 +952,11 @@ fn build_tab_coverage<A: tui::backend::Backend>(
                 };
 
                 // draw dot on location
-                ctx.draw(&Points {
-                    coords: &[(x, y)],
+                ctx.draw(&Line {
+                    x1: x,
+                    x2: x + 50.0,
+                    y1: y,
+                    y2: y + 50.0,
                     color: Color::Rgb(color_number, color_number, color_number),
                 });
             }
@@ -926,17 +982,23 @@ fn build_tab_airplanes<A: tui::backend::Backend>(
         let mut lon = empty.clone();
         let mut alt = empty.clone();
         let mut s_kilo_distance = empty.clone();
-        if let Some((position, altitude, kilo_distance)) = pos {
+        if let Some((position, altitude, kilo_distance, _)) = pos {
             lat = format!("{:.3}", position.latitude);
             lon = format!("{:.3}", position.longitude);
             s_kilo_distance = format!("{}", kilo_distance);
-            alt = format!("{altitude}");
+            alt = altitude.to_string();
         }
+        let heading = if let Some(heading) = state.heading {
+            format!("{heading:.1}")
+        } else {
+            "".to_string()
+        };
         rows.push(Row::new(vec![
             format!("{key}"),
             state.callsign.as_ref().unwrap_or(&empty).clone(),
             lat,
             lon,
+            heading,
             format!("{alt:>8}"),
             state
                 .vert_speed
@@ -967,6 +1029,7 @@ fn build_tab_airplanes<A: tui::backend::Backend>(
                 "Call sign",
                 "Lat",
                 "Long",
+                "Heading",
                 "Altitude",
                 "   FPM",
                 "Speed",
@@ -983,8 +1046,9 @@ fn build_tab_airplanes<A: tui::backend::Backend>(
         .widths(&[
             Constraint::Length(6),
             Constraint::Length(9),
-            Constraint::Length(8),
-            Constraint::Length(8),
+            Constraint::Length(7),
+            Constraint::Length(7),
+            Constraint::Length(7),
             Constraint::Length(8),
             Constraint::Length(6),
             Constraint::Length(5),

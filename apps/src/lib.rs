@@ -18,7 +18,14 @@ pub struct AirplaneState {
     pub coords: AirplaneCoor,
     pub squawk: Option<u32>,
     pub callsign: Option<String>,
+    /// heading from `adsb::AirborneVelocity::calculate()`
+    ///
+    /// 0 = Straight up
+    /// 90 = Right, and so on
+    pub heading: Option<f64>,
+    /// speed from `adsb::AirborneVelocity::calculate()`
     pub speed: Option<f64>,
+    /// vert_speed from `adsb::AirborneVelocity::calculate()`
     pub vert_speed: Option<i16>,
     pub on_ground: Option<bool>,
     pub num_messages: u64,
@@ -31,6 +38,7 @@ impl Default for AirplaneState {
             coords: AirplaneCoor::default(),
             squawk: None,
             callsign: None,
+            heading: None,
             speed: None,
             vert_speed: None,
             on_ground: None,
@@ -187,11 +195,12 @@ impl Airplanes {
 
     fn add_airborne_velocity(&mut self, icao: ICAO, vel: &AirborneVelocity) {
         let mut state = self.0.entry(icao).or_insert_with(AirplaneState::default);
-        if let Some((_, ground_speed, vert_speed)) = vel.calculate() {
+        if let Some((heading, ground_speed, vert_speed)) = vel.calculate() {
             info!(
-                "[{icao}] with airborne velocity: speed: {}, vertical speed: {}",
-                ground_speed, vert_speed
+                "[{icao}] with airborne velocity: heading: {}, speed: {}, vertical speed: {}",
+                heading, ground_speed, vert_speed
             );
+            state.heading = Some(heading);
             state.speed = Some(ground_speed);
             state.vert_speed = Some(vert_speed);
         }
@@ -225,14 +234,14 @@ impl Airplanes {
 
     // return display detail of aircraft
     #[must_use]
-    pub fn aircraft_details(&self, icao: ICAO) -> Option<(cpr::Position, u32, f64)> {
+    pub fn aircraft_details(&self, icao: ICAO) -> Option<(cpr::Position, u32, f64, Option<f64>)> {
         match self.0.get(&icao) {
             Some(airplane_state) => {
                 let coor = &airplane_state.coords;
                 if let (Some(position), Some(altitude), Some(kilo_distance)) =
                     (&coor.position, coor.altitude(), coor.kilo_distance)
                 {
-                    Some((*position, altitude, kilo_distance))
+                    Some((*position, altitude, kilo_distance, airplane_state.heading))
                 } else {
                     None
                 }
