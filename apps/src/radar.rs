@@ -807,7 +807,7 @@ fn draw_bottom_chunks<A: tui::backend::Backend>(
         Tab::Map => build_tab_map(f, bottom_chunks, settings, adsb_airplanes),
         Tab::Coverage => build_tab_coverage(f, bottom_chunks, settings, coverage_airplanes),
         Tab::Airplanes => build_tab_airplanes(f, bottom_chunks, adsb_airplanes, airplanes_state),
-        Tab::Stats => build_tab_stats(f, bottom_chunks, &stats),
+        Tab::Stats => build_tab_stats(f, bottom_chunks, stats),
         Tab::Help => build_tab_help(f, bottom_chunks),
     }
 
