@@ -847,83 +847,75 @@ fn build_tab_map<A: tui::backend::Backend>(
                         color: Color::Green,
                     });
 
-                    if let Some(heading) = heading {
-                        const ANGLE: f64 = 10.0;
-                        const LENGTH: f64 = 10.0;
+                    // make wings for the angle directions facing toward the heading. This tried to
+                    // account for the angles not showing up around the 90 degree mark, of which I
+                    // add degrees of the angle before displaying
+                    if !settings.opts.disable_heading {
+                        if let Some(heading) = heading {
+                            const ANGLE: f64 = 20.0;
+                            const LENGTH: f64 = 8.0;
 
-                        let heading = heading + 180.0 % 360.0;
-                        let n_heading = if heading > ANGLE {
-                            heading - ANGLE
+                            let addition_heading = (heading % 90.0) / 10.0;
+                            let angle: f64 = ANGLE + addition_heading;
+
+                            let heading = heading + 180.0 % 360.0;
+                            // wrap around the angle since we are are subtracting
+                            let n_heading = if heading > angle {
+                                heading - angle
+                            } else {
+                                (360.0 + heading) - angle
+                            };
+
+                            // move the first point out, so that the green point of the aircraft
+                            // _usually_ shows.
+                            let y_1 = y + (2.0 * (n_heading.to_radians()).cos());
+                            let x_1 = x + (2.0 * (n_heading.to_radians()).sin());
+
+                            // draw the line out from the aircraft at an angle
+                            let y_2 = y + (LENGTH * (n_heading.to_radians()).cos());
+                            let x_2 = x + (LENGTH * (n_heading.to_radians()).sin());
+
+                            // draw dot on location
+                            ctx.draw(&Line {
+                                x1: x_1,
+                                x2: x_2,
+                                y1: y_1,
+                                y2: y_2,
+                                color: Color::Blue,
+                            });
+
+                            // repeat for the other side (addition, so just modding)
+                            let n_heading = (heading + angle) % 360.0;
+                            let y_1 = y + (2.0 * (n_heading.to_radians()).cos());
+                            let x_1 = x + (2.0 * (n_heading.to_radians()).sin());
+                            let y_2 = y + (LENGTH * (n_heading.to_radians()).cos());
+                            let x_2 = x + (LENGTH * (n_heading.to_radians()).sin());
+
+                            // draw dot on location
+                            ctx.draw(&Line {
+                                x1: x_1,
+                                x2: x_2,
+                                y1: y_1,
+                                y2: y_2,
+                                color: Color::Blue,
+                            });
+                        }
+
+                        let name = if settings.opts.disable_lat_long {
+                            format!("{key}").into_boxed_str()
                         } else {
-                            (360.0 + heading) - ANGLE
-                        };
-                        //let n_heading = (heading - 40.0) % 360.0;
-
-                        let (y_1, x_1) = {
-                            (
-                                y + (2.0 * (n_heading.to_radians()).cos()),
-                                x + (2.0 * (n_heading.to_radians()).sin()),
-                            )
+                            format!("{key} ({}, {})", position.latitude, position.longitude)
+                                .into_boxed_str()
                         };
 
-                        let (y_2, x_2) = {
-                            (
-                                y + (LENGTH * (n_heading.to_radians()).cos()),
-                                x + (LENGTH * (n_heading.to_radians()).sin()),
-                            )
-                        };
-
-                        info!(heading);
-                        info!(x_1, y_1);
-                        info!(x_2, y_2);
-
-                        // draw dot on location
-                        ctx.draw(&Line {
-                            x1: x_1,
-                            x2: x_2,
-                            y1: y_1,
-                            y2: y_2,
-                            color: Color::Blue,
-                        });
-
-                        let n_heading = (heading + ANGLE) % 360.0;
-                        let (y_1, x_1) = {
-                            (
-                                y + (2.0 * (n_heading.to_radians()).cos()),
-                                x + (2.0 * (n_heading.to_radians()).sin()),
-                            )
-                        };
-                        let (y_2, x_2) = {
-                            (
-                                y + (LENGTH * (n_heading.to_radians()).cos()),
-                                x + (LENGTH * (n_heading.to_radians()).sin()),
-                            )
-                        };
-
-                        // draw dot on location
-                        ctx.draw(&Line {
-                            x1: x_1,
-                            x2: x_2,
-                            y1: y_1,
-                            y2: y_2,
-                            color: Color::Blue,
-                        });
-                    }
-
-                    let name = if settings.opts.disable_lat_long {
-                        format!("{key}").into_boxed_str()
-                    } else {
-                        format!("{key} ({}, {})", position.latitude, position.longitude)
-                            .into_boxed_str()
-                    };
-
-                    if !settings.opts.disable_icao {
-                        // draw plane ICAO name
-                        ctx.print(
-                            x,
-                            y + 20.0,
-                            Span::styled(name.to_string(), Style::default().fg(Color::White)),
-                        );
+                        if !settings.opts.disable_icao {
+                            // draw plane ICAO name
+                            ctx.print(
+                                x,
+                                y + 20.0,
+                                Span::styled(name.to_string(), Style::default().fg(Color::White)),
+                            );
+                        }
                     }
                 }
             }
@@ -962,11 +954,8 @@ fn build_tab_coverage<A: tui::backend::Backend>(
                 };
 
                 // draw dot on location
-                ctx.draw(&Line {
-                    x1: x,
-                    x2: x + 50.0,
-                    y1: y,
-                    y2: y + 50.0,
+                ctx.draw(&Points {
+                    coords: &[(x, y)],
                     color: Color::Rgb(color_number, color_number, color_number),
                 });
             }

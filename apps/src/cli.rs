@@ -73,6 +73,14 @@ pub struct Opts {
     #[clap(long)]
     pub disable_lat_long: bool,
 
+    /// Disable output of icao address of airplane
+    #[clap(long)]
+    pub disable_icao: bool,
+
+    /// Disbale display of angles on aircraft within Map display showing the direction of the aircraft.
+    #[clap(long)]
+    pub disable_heading: bool,
+
     /// Zoom level of Radar and Coverage (-=zoom out/+=zoom in)
     #[clap(long, default_value = ".12")]
     pub scale: f64,
@@ -111,10 +119,6 @@ pub struct Opts {
     /// comma seperated filter for --airports timezone data, such as: "America/Chicago,America/New_York"
     #[clap(long)]
     pub airports_tz_filter: Option<String>,
-
-    /// Disable output of icao address of airplane
-    #[clap(long)]
-    pub disable_icao: bool,
 }
 
 #[cfg(test)]
@@ -141,6 +145,8 @@ mod tests {
             limit_parsing: false,
             airports: None,
             airports_tz_filter: None,
+            disable_icao: false,
+            show_heading: false,
         };
         assert_eq!(exp_opt, opt);
 
@@ -180,6 +186,8 @@ mod tests {
             limit_parsing: false,
             airports: None,
             airports_tz_filter: None,
+            disable_icao: false,
+            show_heading: false,
         };
         assert_eq!(exp_opt, opt);
     }
