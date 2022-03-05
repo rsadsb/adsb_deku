@@ -1005,7 +1005,10 @@ fn build_tab_stats<A: tui::backend::Backend>(
         let distance = format!("{:.3}", value.kilo_distance.unwrap());
         let datetime: chrono::DateTime<chrono::Local> = time.into();
         let date_str = datetime.format("%m/%d/%Y %T");
-        (date_str.to_string(), format!("[{key}]: {distance}km {lat},{lon}"))
+        (
+            date_str.to_string(),
+            format!("[{key}]: {distance}km {lat},{lon}"),
+        )
     } else {
         ("None".to_string(), "".to_string())
     };
@@ -1025,7 +1028,11 @@ fn build_tab_stats<A: tui::backend::Backend>(
         .style(Style::default().fg(Color::White))
         .header(Row::new(vec!["Type", "Time", "Value"]).bottom_margin(1))
         .block(Block::default().title("Stats").borders(Borders::ALL))
-        .widths(&[Constraint::Length(20), Constraint::Length(20), Constraint::Length(200)])
+        .widths(&[
+            Constraint::Length(20),
+            Constraint::Length(20),
+            Constraint::Length(200),
+        ])
         .column_spacing(1);
     f.render_widget(table, chunks[1]);
 }
