@@ -73,6 +73,14 @@ pub struct Opts {
     #[clap(long)]
     pub disable_lat_long: bool,
 
+    /// Disable output of icao address of airplane
+    #[clap(long)]
+    pub disable_icao: bool,
+
+    /// Disbale display of angles on aircraft within Map display showing the direction of the aircraft.
+    #[clap(long)]
+    pub disable_heading: bool,
+
     /// Zoom level of Radar and Coverage (-=zoom out/+=zoom in)
     #[clap(long, default_value = ".12")]
     pub scale: f64,
@@ -137,6 +145,8 @@ mod tests {
             limit_parsing: false,
             airports: None,
             airports_tz_filter: None,
+            disable_icao: false,
+            disable_heading: false,
         };
         assert_eq!(exp_opt, opt);
 
@@ -176,6 +186,8 @@ mod tests {
             limit_parsing: false,
             airports: None,
             airports_tz_filter: None,
+            disable_icao: false,
+            disable_heading: false,
         };
         assert_eq!(exp_opt, opt);
     }

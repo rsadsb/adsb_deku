@@ -574,7 +574,7 @@ fn handle_keyevent(
             if let Some(selected) = airplanes_state.selected() {
                 let key = adsb_airplanes.0.keys().nth(selected).unwrap();
                 let pos = adsb_airplanes.aircraft_details(*key);
-                if let Some((position, _, _)) = pos {
+                if let Some((position, _, _, _)) = pos {
                     settings.custom_lat = Some(position.latitude);
                     settings.custom_long = Some(position.longitude);
                     settings.tab_selection = Tab::Map;
@@ -838,28 +838,85 @@ fn build_tab_map<A: tui::backend::Backend>(
             // draw ADSB tab airplanes
             for key in adsb_airplanes.0.keys() {
                 let value = adsb_airplanes.aircraft_details(*key);
-                if let Some((position, _, _)) = value {
+                if let Some((position, _, _, heading)) = value {
                     let (x, y) = settings.to_xy(position.latitude, position.longitude);
 
                     // draw dot on location
                     ctx.draw(&Points {
                         coords: &[(x, y)],
-                        color: Color::White,
+                        color: Color::Green,
                     });
 
-                    let name = if settings.opts.disable_lat_long {
-                        format!("{key}").into_boxed_str()
-                    } else {
-                        format!("{key} ({}, {})", position.latitude, position.longitude)
-                            .into_boxed_str()
-                    };
+                    // make wings for the angle directions facing toward the heading. This tried to
+                    // account for the angles not showing up around the 90 degree mark, of which I
+                    // add degrees of the angle before displaying
+                    if !settings.opts.disable_heading {
+                        if let Some(heading) = heading {
+                            const ANGLE: f64 = 20.0;
+                            const LENGTH: f64 = 8.0;
 
-                    // draw plane ICAO name
-                    ctx.print(
-                        x,
-                        y,
-                        Span::styled(name.to_string(), Style::default().fg(Color::White)),
-                    );
+                            let addition_heading = (heading % 90.0) / 10.0;
+                            let angle: f64 = ANGLE + addition_heading;
+
+                            let heading = heading + 180.0 % 360.0;
+                            // wrap around the angle since we are are subtracting
+                            let n_heading = if heading > angle {
+                                heading - angle
+                            } else {
+                                (360.0 + heading) - angle
+                            };
+
+                            // move the first point out, so that the green point of the aircraft
+                            // _usually_ shows.
+                            let y_1 = y + (2.0 * (n_heading.to_radians()).cos());
+                            let x_1 = x + (2.0 * (n_heading.to_radians()).sin());
+
+                            // draw the line out from the aircraft at an angle
+                            let y_2 = y + (LENGTH * (n_heading.to_radians()).cos());
+                            let x_2 = x + (LENGTH * (n_heading.to_radians()).sin());
+
+                            // draw dot on location
+                            ctx.draw(&Line {
+                                x1: x_1,
+                                x2: x_2,
+                                y1: y_1,
+                                y2: y_2,
+                                color: Color::Blue,
+                            });
+
+                            // repeat for the other side (addition, so just modding)
+                            let n_heading = (heading + angle) % 360.0;
+                            let y_1 = y + (2.0 * (n_heading.to_radians()).cos());
+                            let x_1 = x + (2.0 * (n_heading.to_radians()).sin());
+                            let y_2 = y + (LENGTH * (n_heading.to_radians()).cos());
+                            let x_2 = x + (LENGTH * (n_heading.to_radians()).sin());
+
+                            // draw dot on location
+                            ctx.draw(&Line {
+                                x1: x_1,
+                                x2: x_2,
+                                y1: y_1,
+                                y2: y_2,
+                                color: Color::Blue,
+                            });
+                        }
+
+                        let name = if settings.opts.disable_lat_long {
+                            format!("{key}").into_boxed_str()
+                        } else {
+                            format!("{key} ({}, {})", position.latitude, position.longitude)
+                                .into_boxed_str()
+                        };
+
+                        if !settings.opts.disable_icao {
+                            // draw plane ICAO name
+                            ctx.print(
+                                x,
+                                y + 20.0,
+                                Span::styled(name.to_string(), Style::default().fg(Color::White)),
+                            );
+                        }
+                    }
                 }
             }
 
@@ -924,17 +981,23 @@ fn build_tab_airplanes<A: tui::backend::Backend>(
         let mut lon = empty.clone();
         let mut alt = empty.clone();
         let mut s_kilo_distance = empty.clone();
-        if let Some((position, altitude, kilo_distance)) = pos {
+        if let Some((position, altitude, kilo_distance, _)) = pos {
             lat = format!("{:.3}", position.latitude);
             lon = format!("{:.3}", position.longitude);
             s_kilo_distance = format!("{}", kilo_distance);
-            alt = format!("{altitude}");
+            alt = altitude.to_string();
         }
+        let heading = if let Some(heading) = state.heading {
+            format!("{heading:.1}")
+        } else {
+            "".to_string()
+        };
         rows.push(Row::new(vec![
             format!("{key}"),
             state.callsign.as_ref().unwrap_or(&empty).clone(),
             lat,
             lon,
+            heading,
             format!("{alt:>8}"),
             state
                 .vert_speed
@@ -965,6 +1028,7 @@ fn build_tab_airplanes<A: tui::backend::Backend>(
                 "Call sign",
                 "Lat",
                 "Long",
+                "Heading",
                 "Altitude",
                 "   FPM",
                 "Speed",
@@ -981,8 +1045,9 @@ fn build_tab_airplanes<A: tui::backend::Backend>(
         .widths(&[
             Constraint::Length(6),
             Constraint::Length(9),
-            Constraint::Length(8),
-            Constraint::Length(8),
+            Constraint::Length(7),
+            Constraint::Length(7),
+            Constraint::Length(7),
             Constraint::Length(8),
             Constraint::Length(6),
             Constraint::Length(5),
