@@ -146,7 +146,7 @@ mod tests {
             airports: None,
             airports_tz_filter: None,
             disable_icao: false,
-            show_heading: false,
+            disable_heading: false,
         };
         assert_eq!(exp_opt, opt);
 
@@ -187,7 +187,7 @@ mod tests {
             airports: None,
             airports_tz_filter: None,
             disable_icao: false,
-            show_heading: false,
+            disable_heading: false,
         };
         assert_eq!(exp_opt, opt);
     }
