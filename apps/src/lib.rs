@@ -7,7 +7,7 @@ use adsb_deku::{cpr, Altitude, CPRFormat, Frame, DF, ICAO};
 use tracing::{debug, info, warn};
 
 // Max distance from the receiver to the aircraft
-const MAX_RECEIVER_DISTANCE: f64 = 300.0;
+const MAX_RECEIVER_DISTANCE: f64 = 400.0;
 
 // Max obsurd distance an aircraft travelled between messages
 const MAX_AIRCRAFT_DISTANCE: f64 = 100.0;
