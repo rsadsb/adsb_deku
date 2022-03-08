@@ -100,7 +100,7 @@ pub struct Opts {
     pub gpsd_ip: String,
 
     /// Seconds since last message from airplane, triggers removal of airplane after time is up
-    #[clap(long, default_value = "60")]
+    #[clap(long, default_value = "120")]
     pub filter_time: u64,
 
     #[clap(long, default_value = "logs")]
