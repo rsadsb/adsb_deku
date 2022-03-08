@@ -830,6 +830,7 @@ fn build_tab_map<A: tui::backend::Backend>(
         .x_bounds([MAX_PLOT_LOW, MAX_PLOT_HIGH])
         .y_bounds([MAX_PLOT_LOW, MAX_PLOT_HIGH])
         .paint(|ctx| {
+            draw_lines(ctx);
             ctx.layer();
 
             // draw locations
@@ -935,8 +936,6 @@ fn build_tab_map<A: tui::backend::Backend>(
                     }
                 }
             }
-
-            draw_lines(ctx);
         });
     f.render_widget(canvas, chunks[1]);
 }
