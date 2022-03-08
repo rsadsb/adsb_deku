@@ -30,6 +30,7 @@ pub struct AirplaneState {
     pub on_ground: Option<bool>,
     pub num_messages: u64,
     pub last_time: SystemTime,
+    pub track: Option<Vec<AirplaneCoor>>,
 }
 
 impl Default for AirplaneState {
@@ -44,11 +45,12 @@ impl Default for AirplaneState {
             on_ground: None,
             num_messages: 0,
             last_time: SystemTime::now(),
+            track: None,
         }
     }
 }
 
-#[derive(Debug, Default, Clone, Copy)]
+#[derive(Debug, Default, Clone, Copy, PartialEq)]
 pub struct AirplaneCoor {
     /// [odd, even]
     pub altitudes: [Option<Altitude>; 2],
@@ -225,7 +227,17 @@ impl Airplanes {
         };
         // update the position from the new even/odd message if it's a good new position
         if temp_coords.update_position(lat_long) {
-            state.coords = temp_coords;
+            // don't bother updating if it's the same coords
+            if state.coords != temp_coords {
+                // update track
+                if let Some(track) = &mut state.track {
+                    track.push(state.coords);
+                } else {
+                    state.track = Some(vec![state.coords]);
+                }
+                // update new position
+                state.coords = temp_coords;
+            }
         } else {
             // clear record
             state.coords = AirplaneCoor::default();
@@ -233,15 +245,32 @@ impl Airplanes {
     }
 
     // return display detail of aircraft
+    // TODO: this is getting greatly out of hand, clean up return for this
     #[must_use]
-    pub fn aircraft_details(&self, icao: ICAO) -> Option<(cpr::Position, u32, f64, Option<f64>)> {
+    pub fn aircraft_details(
+        &self,
+        icao: ICAO,
+    ) -> Option<(
+        cpr::Position,
+        u32,
+        f64,
+        Option<f64>,
+        &Option<Vec<AirplaneCoor>>,
+    )> {
         match self.0.get(&icao) {
             Some(airplane_state) => {
+                let track = &airplane_state.track;
                 let coor = &airplane_state.coords;
                 if let (Some(position), Some(altitude), Some(kilo_distance)) =
                     (&coor.position, coor.altitude(), coor.kilo_distance)
                 {
-                    Some((*position, altitude, kilo_distance, airplane_state.heading))
+                    Some((
+                        *position,
+                        altitude,
+                        kilo_distance,
+                        airplane_state.heading,
+                        track,
+                    ))
                 } else {
                     None
                 }
