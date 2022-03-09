@@ -831,7 +831,6 @@ fn build_tab_map<A: tui::backend::Backend>(
         .y_bounds([MAX_PLOT_LOW, MAX_PLOT_HIGH])
         .paint(|ctx| {
             draw_lines(ctx);
-            ctx.layer();
 
             // draw locations
             draw_locations(ctx, settings);
@@ -841,12 +840,6 @@ fn build_tab_map<A: tui::backend::Backend>(
                 let value = adsb_airplanes.aircraft_details(*key);
                 if let Some((position, _, _, heading, track)) = value {
                     let (x, y) = settings.to_xy(position.latitude, position.longitude);
-
-                    // draw dot on location
-                    ctx.draw(&Points {
-                        coords: &[(x, y)],
-                        color: Color::Green,
-                    });
 
                     // draw previous positions ("track")
                     if !settings.opts.disable_track {
@@ -933,6 +926,12 @@ fn build_tab_map<A: tui::backend::Backend>(
                                 Span::styled(name.to_string(), Style::default().fg(Color::White)),
                             );
                         }
+
+                        // draw dot on actual lat/lon
+                        ctx.draw(&Points {
+                            coords: &[(x, y)],
+                            color: Color::Blue,
+                        });
                     }
                 }
             }
@@ -952,8 +951,6 @@ fn build_tab_coverage<A: tui::backend::Backend>(
         .x_bounds([MAX_PLOT_LOW, MAX_PLOT_HIGH])
         .y_bounds([MAX_PLOT_LOW, MAX_PLOT_HIGH])
         .paint(|ctx| {
-            ctx.layer();
-
             // draw locations
             draw_locations(ctx, settings);
 
