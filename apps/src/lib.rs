@@ -247,6 +247,7 @@ impl Airplanes {
     // return display detail of aircraft
     // TODO: this is getting greatly out of hand, clean up return for this
     #[must_use]
+    #[allow(clippy::type_complexity)]
     pub fn aircraft_details(
         &self,
         icao: ICAO,
