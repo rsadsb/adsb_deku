@@ -23,6 +23,7 @@ use crossterm::terminal::enable_raw_mode;
 use crossterm::ExecutableCommand;
 use gpsd_proto::{get_data, handshake, ResponseData};
 use rsadsb_apps::{AirplaneCoor, Airplanes};
+use time::UtcOffset;
 use tracing::{debug, error, info, trace};
 use tracing_subscriber::EnvFilter;
 use tui::backend::{Backend, CrosstermBackend};
@@ -146,10 +147,12 @@ struct Settings<'a> {
     last_mouse_dragging: Option<(u16, u16)>,
     /// Parsed list of airport locations
     airports: Option<Vec<Airport>>,
+    /// DateTime offset
+    utc_offset: UtcOffset,
 }
 
 impl<'a> Settings<'a> {
-    fn new(opts: Opts) -> Self {
+    fn new(opts: Opts, utc_offset: UtcOffset) -> Self {
         Self {
             quit: None,
             tab_selection: Tab::Map,
@@ -161,6 +164,7 @@ impl<'a> Settings<'a> {
             opts,
             last_mouse_dragging: None,
             airports: None,
+            utc_offset,
         }
     }
 
@@ -247,6 +251,9 @@ struct TuiInfo {
 }
 
 fn main() -> Result<()> {
+    // grab the local offset from localtime_r while we are a single thread for safety
+    let utc_offset = time::OffsetDateTime::now_local().unwrap().offset();
+
     // Parse arguments
     let opts = Opts::parse();
 
@@ -300,7 +307,7 @@ see https://github.com/rsadsb/adsb_deku#serverdemodulationexternal-applications 
     let filter_time = opts.filter_time;
 
     // create settings, dropping opts to prevent bad usage of variable
-    let mut settings = Settings::new(opts.clone());
+    let mut settings = Settings::new(opts.clone(), utc_offset);
     drop(opts);
 
     let mut airports = vec![];
@@ -815,7 +822,7 @@ fn draw_bottom_chunks<A: tui::backend::Backend>(
         Tab::Map => build_tab_map(f, bottom_chunks, settings, adsb_airplanes),
         Tab::Coverage => build_tab_coverage(f, bottom_chunks, settings, coverage_airplanes),
         Tab::Airplanes => build_tab_airplanes(f, bottom_chunks, adsb_airplanes, airplanes_state),
-        Tab::Stats => build_tab_stats(f, bottom_chunks, stats),
+        Tab::Stats => build_tab_stats(f, bottom_chunks, stats, settings),
         Tab::Help => build_tab_help(f, &bottom_chunks),
     }
 
@@ -1081,17 +1088,24 @@ fn build_tab_stats<A: tui::backend::Backend>(
     f: &mut tui::Frame<A>,
     chunks: Vec<Rect>,
     stats: &Stats,
+    settings: &Settings,
 ) {
+    let format =
+        time::format_description::parse("[month]/[day]/[year] [hour]:[minute]:[second]").unwrap();
     let mut rows: Vec<Row> = vec![];
     let (time, value) = if let Some((time, key, value)) = stats.most_distance {
         let position = value.position.unwrap();
         let lat = format!("{:.3}", position.latitude);
         let lon = format!("{:.3}", position.longitude);
         let distance = format!("{:.3}", value.kilo_distance.unwrap());
-        let datetime: chrono::DateTime<chrono::Local> = time.into();
-        let date_str = datetime.format("%m/%d/%Y %T");
+
+        // display time
+        let datetime = time::OffsetDateTime::from(time);
         (
-            date_str.to_string(),
+            datetime
+                .to_offset(settings.utc_offset)
+                .format(&format)
+                .unwrap(),
             format!("[{key}]: {distance}km {lat},{lon}"),
         )
     } else {
@@ -1100,9 +1114,15 @@ fn build_tab_stats<A: tui::backend::Backend>(
     rows.push(Row::new(vec!["Max Distance", &time, &value]));
 
     let (time, value) = if let Some((time, most_airplanes)) = stats.most_airplanes {
-        let datetime: chrono::DateTime<chrono::Local> = time.into();
-        let date_str = datetime.format("%m/%d/%Y %T");
-        (date_str.to_string(), most_airplanes.to_string())
+        // display time
+        let datetime = time::OffsetDateTime::from(time);
+        (
+            datetime
+                .to_offset(settings.utc_offset)
+                .format(&format)
+                .unwrap(),
+            most_airplanes.to_string(),
+        )
     } else {
         ("None".to_string(), "".to_string())
     };
