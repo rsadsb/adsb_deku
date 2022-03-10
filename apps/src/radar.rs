@@ -549,6 +549,10 @@ fn handle_keyevent(
                 settings.quit = Some("user requested action: quit");
             }
         },
+        (KeyCode::Char('l'), _) => settings.opts.disable_lat_long ^= true,
+        (KeyCode::Char('i'), _) => settings.opts.disable_icao ^= true,
+        (KeyCode::Char('h'), _) => settings.opts.disable_heading ^= true,
+        (KeyCode::Char('t'), _) => settings.opts.disable_track ^= true,
         // Map and Coverage
         (KeyCode::Char('-'), Tab::Map | Tab::Coverage) => settings.scale_increase(),
         (KeyCode::Char('+'), Tab::Map | Tab::Coverage) => settings.scale_decrease(),
@@ -574,7 +578,7 @@ fn handle_keyevent(
             if let Some(selected) = airplanes_state.selected() {
                 let key = adsb_airplanes.0.keys().nth(selected).unwrap();
                 let pos = adsb_airplanes.aircraft_details(*key);
-                if let Some((position, _, _, _)) = pos {
+                if let Some((position, _, _, _, _)) = pos {
                     settings.custom_lat = Some(position.latitude);
                     settings.custom_long = Some(position.longitude);
                     settings.tab_selection = Tab::Map;
@@ -812,7 +816,7 @@ fn draw_bottom_chunks<A: tui::backend::Backend>(
         Tab::Coverage => build_tab_coverage(f, bottom_chunks, settings, coverage_airplanes),
         Tab::Airplanes => build_tab_airplanes(f, bottom_chunks, adsb_airplanes, airplanes_state),
         Tab::Stats => build_tab_stats(f, bottom_chunks, stats),
-        Tab::Help => build_tab_help(f, bottom_chunks),
+        Tab::Help => build_tab_help(f, &bottom_chunks),
     }
 
     tui_info
@@ -830,7 +834,7 @@ fn build_tab_map<A: tui::backend::Backend>(
         .x_bounds([MAX_PLOT_LOW, MAX_PLOT_HIGH])
         .y_bounds([MAX_PLOT_LOW, MAX_PLOT_HIGH])
         .paint(|ctx| {
-            ctx.layer();
+            draw_lines(ctx);
 
             // draw locations
             draw_locations(ctx, settings);
@@ -838,14 +842,26 @@ fn build_tab_map<A: tui::backend::Backend>(
             // draw ADSB tab airplanes
             for key in adsb_airplanes.0.keys() {
                 let value = adsb_airplanes.aircraft_details(*key);
-                if let Some((position, _, _, heading)) = value {
+                if let Some((position, _, _, heading, track)) = value {
                     let (x, y) = settings.to_xy(position.latitude, position.longitude);
 
-                    // draw dot on location
-                    ctx.draw(&Points {
-                        coords: &[(x, y)],
-                        color: Color::Green,
-                    });
+                    // draw previous positions ("track")
+                    if !settings.opts.disable_track {
+                        if let Some(track) = track {
+                            for coor in track {
+                                if let Some(position) = coor.position {
+                                    let (x, y) =
+                                        settings.to_xy(position.latitude, position.longitude);
+
+                                    // draw dot on location
+                                    ctx.draw(&Points {
+                                        coords: &[(x, y)],
+                                        color: Color::White,
+                                    });
+                                }
+                            }
+                        }
+                    }
 
                     // make wings for the angle directions facing toward the heading. This tried to
                     // account for the angles not showing up around the 90 degree mark, of which I
@@ -875,7 +891,6 @@ fn build_tab_map<A: tui::backend::Backend>(
                             let y_2 = y + (LENGTH * (n_heading.to_radians()).cos());
                             let x_2 = x + (LENGTH * (n_heading.to_radians()).sin());
 
-                            // draw dot on location
                             ctx.draw(&Line {
                                 x1: x_1,
                                 x2: x_2,
@@ -891,7 +906,6 @@ fn build_tab_map<A: tui::backend::Backend>(
                             let y_2 = y + (LENGTH * (n_heading.to_radians()).cos());
                             let x_2 = x + (LENGTH * (n_heading.to_radians()).sin());
 
-                            // draw dot on location
                             ctx.draw(&Line {
                                 x1: x_1,
                                 x2: x_2,
@@ -900,27 +914,31 @@ fn build_tab_map<A: tui::backend::Backend>(
                                 color: Color::Blue,
                             });
                         }
-
-                        let name = if settings.opts.disable_lat_long {
-                            format!("{key}").into_boxed_str()
-                        } else {
-                            format!("{key} ({}, {})", position.latitude, position.longitude)
-                                .into_boxed_str()
-                        };
-
-                        if !settings.opts.disable_icao {
-                            // draw plane ICAO name
-                            ctx.print(
-                                x,
-                                y + 20.0,
-                                Span::styled(name.to_string(), Style::default().fg(Color::White)),
-                            );
-                        }
                     }
+
+                    let name = if settings.opts.disable_lat_long {
+                        format!("{key}").into_boxed_str()
+                    } else {
+                        format!("{key} ({}, {})", position.latitude, position.longitude)
+                            .into_boxed_str()
+                    };
+
+                    if !settings.opts.disable_icao {
+                        // draw plane ICAO name
+                        ctx.print(
+                            x,
+                            y + 20.0,
+                            Span::styled(name.to_string(), Style::default().fg(Color::White)),
+                        );
+                    }
+
+                    // draw dot on actual lat/lon
+                    ctx.draw(&Points {
+                        coords: &[(x, y)],
+                        color: Color::Blue,
+                    });
                 }
             }
-
-            draw_lines(ctx);
         });
     f.render_widget(canvas, chunks[1]);
 }
@@ -937,8 +955,6 @@ fn build_tab_coverage<A: tui::backend::Backend>(
         .x_bounds([MAX_PLOT_LOW, MAX_PLOT_HIGH])
         .y_bounds([MAX_PLOT_LOW, MAX_PLOT_HIGH])
         .paint(|ctx| {
-            ctx.layer();
-
             // draw locations
             draw_locations(ctx, settings);
 
@@ -981,7 +997,7 @@ fn build_tab_airplanes<A: tui::backend::Backend>(
         let mut lon = empty.clone();
         let mut alt = empty.clone();
         let mut s_kilo_distance = empty.clone();
-        if let Some((position, altitude, kilo_distance, _)) = pos {
+        if let Some((position, altitude, kilo_distance, _, _)) = pos {
             lat = format!("{:.3}", position.latitude);
             lon = format!("{:.3}", position.longitude);
             s_kilo_distance = format!("{}", kilo_distance);
@@ -1107,7 +1123,7 @@ fn build_tab_stats<A: tui::backend::Backend>(
 }
 
 /// Render Help tab for tui display
-fn build_tab_help<A: tui::backend::Backend>(f: &mut tui::Frame<A>, chunks: Vec<Rect>) {
+fn build_tab_help<A: tui::backend::Backend>(f: &mut tui::Frame<A>, chunks: &[Rect]) {
     let horizontal_chunks = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([
@@ -1135,6 +1151,10 @@ fn build_tab_help<A: tui::backend::Backend>(f: &mut tui::Frame<A>, chunks: Vec<R
         Row::new(vec!["F3", "Move to Airplanes screen"]),
         Row::new(vec!["F4", "Move to Stats screen"]),
         Row::new(vec!["F5", "Move to Help screen"]),
+        Row::new(vec!["l", "control --disable-lat-long"]),
+        Row::new(vec!["i", "control --disable-icao"]),
+        Row::new(vec!["h", "control --disable-heading"]),
+        Row::new(vec!["t", "control --disable-track"]),
         Row::new(vec!["TAB", "Move to Next screen"]),
         Row::new(vec!["q", "Quit this app"]),
         Row::new(vec!["ctrl+c", "Quit this app"]),
@@ -1174,7 +1194,7 @@ fn build_tab_help<A: tui::backend::Backend>(f: &mut tui::Frame<A>, chunks: Vec<R
     f.render_widget(table, vertical_chunks[2]);
 
     // Third help section
-    let rows = vec![
+    let rows = [
         Row::new(vec!["Up", "Move selection upward"]),
         Row::new(vec!["Down", "Move selection downward"]),
         Row::new(vec!["Enter", "Center Map tab on selected aircraft"]),
@@ -1225,10 +1245,10 @@ fn draw_locations(ctx: &mut tui::widgets::canvas::Context<'_>, settings: &Settin
         ctx.print(
             x,
             y,
-            Span::styled(location.name.to_string(), Style::default().fg(Color::Green)),
+            Span::styled(location.name.clone(), Style::default().fg(Color::Green)),
         );
     }
-    if let Some(airports) = &settings.airports {
+    if let Some(ref airports) = settings.airports {
         for Airport { icao, lat, lon, .. } in airports {
             let (x, y) = settings.to_xy(*lat, *lon);
 

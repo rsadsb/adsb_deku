@@ -65,23 +65,27 @@ pub struct Opts {
     #[clap(long)]
     pub long: f64,
 
-    /// Vector of location [(name, lat, long),..]
+    /// Vector of location [(name, lat, long),..] to display on Map
     #[clap(long, multiple_values(true))]
     pub locations: Vec<Location>,
 
-    /// Disable output of latitude and longitude on display
+    /// Disable output of latitude and longitude on Map
     #[clap(long)]
     pub disable_lat_long: bool,
 
-    /// Disable output of icao address of airplane
+    /// Disable output of icao address of airplane on Map
     #[clap(long)]
     pub disable_icao: bool,
 
-    /// Disbale display of angles on aircraft within Map display showing the direction of the aircraft.
+    /// Disable display of angles on aircraft within Map display showing the direction of the aircraft.
     #[clap(long)]
     pub disable_heading: bool,
 
-    /// Zoom level of Radar and Coverage (-=zoom out/+=zoom in)
+    /// Disable display of previous positions of aircraft on Map
+    #[clap(long)]
+    pub disable_track: bool,
+
+    /// Zoom level of Map and Coverage (-=zoom out/+=zoom in)
     #[clap(long, default_value = ".12")]
     pub scale: f64,
 
@@ -96,7 +100,7 @@ pub struct Opts {
     pub gpsd_ip: String,
 
     /// Seconds since last message from airplane, triggers removal of airplane after time is up
-    #[clap(long, default_value = "30")]
+    #[clap(long, default_value = "120")]
     pub filter_time: u64,
 
     #[clap(long, default_value = "logs")]
@@ -139,7 +143,7 @@ mod tests {
             scale: 0.12,
             gpsd: false,
             gpsd_ip: "localhost".to_string(),
-            filter_time: 30,
+            filter_time: 120,
             log_folder: "logs".to_string(),
             touchscreen: false,
             limit_parsing: false,
@@ -147,6 +151,7 @@ mod tests {
             airports_tz_filter: None,
             disable_icao: false,
             disable_heading: false,
+            disable_track: false,
         };
         assert_eq!(exp_opt, opt);
 
@@ -180,7 +185,7 @@ mod tests {
             scale: 0.12,
             gpsd: false,
             gpsd_ip: "localhost".to_string(),
-            filter_time: 30,
+            filter_time: 120,
             log_folder: "logs".to_string(),
             touchscreen: false,
             limit_parsing: false,
@@ -188,6 +193,7 @@ mod tests {
             airports_tz_filter: None,
             disable_icao: false,
             disable_heading: false,
+            disable_track: false,
         };
         assert_eq!(exp_opt, opt);
     }
