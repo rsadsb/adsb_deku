@@ -549,6 +549,10 @@ fn handle_keyevent(
                 settings.quit = Some("user requested action: quit");
             }
         },
+        (KeyCode::Char('l'), _) => settings.opts.disable_lat_long ^= true,
+        (KeyCode::Char('i'), _) => settings.opts.disable_icao ^= true,
+        (KeyCode::Char('h'), _) => settings.opts.disable_heading ^= true,
+        (KeyCode::Char('t'), _) => settings.opts.disable_track ^= true,
         // Map and Coverage
         (KeyCode::Char('-'), Tab::Map | Tab::Coverage) => settings.scale_increase(),
         (KeyCode::Char('+'), Tab::Map | Tab::Coverage) => settings.scale_decrease(),
@@ -910,29 +914,29 @@ fn build_tab_map<A: tui::backend::Backend>(
                                 color: Color::Blue,
                             });
                         }
-
-                        let name = if settings.opts.disable_lat_long {
-                            format!("{key}").into_boxed_str()
-                        } else {
-                            format!("{key} ({}, {})", position.latitude, position.longitude)
-                                .into_boxed_str()
-                        };
-
-                        if !settings.opts.disable_icao {
-                            // draw plane ICAO name
-                            ctx.print(
-                                x,
-                                y + 20.0,
-                                Span::styled(name.to_string(), Style::default().fg(Color::White)),
-                            );
-                        }
-
-                        // draw dot on actual lat/lon
-                        ctx.draw(&Points {
-                            coords: &[(x, y)],
-                            color: Color::Blue,
-                        });
                     }
+
+                    let name = if settings.opts.disable_lat_long {
+                        format!("{key}").into_boxed_str()
+                    } else {
+                        format!("{key} ({}, {})", position.latitude, position.longitude)
+                            .into_boxed_str()
+                    };
+
+                    if !settings.opts.disable_icao {
+                        // draw plane ICAO name
+                        ctx.print(
+                            x,
+                            y + 20.0,
+                            Span::styled(name.to_string(), Style::default().fg(Color::White)),
+                        );
+                    }
+
+                    // draw dot on actual lat/lon
+                    ctx.draw(&Points {
+                        coords: &[(x, y)],
+                        color: Color::Blue,
+                    });
                 }
             }
         });
@@ -1147,6 +1151,10 @@ fn build_tab_help<A: tui::backend::Backend>(f: &mut tui::Frame<A>, chunks: &[Rec
         Row::new(vec!["F3", "Move to Airplanes screen"]),
         Row::new(vec!["F4", "Move to Stats screen"]),
         Row::new(vec!["F5", "Move to Help screen"]),
+        Row::new(vec!["l", "control --disable-lat-long"]),
+        Row::new(vec!["i", "control --disable-icao"]),
+        Row::new(vec!["h", "control --disable-heading"]),
+        Row::new(vec!["t", "control --disable-track"]),
         Row::new(vec!["TAB", "Move to Next screen"]),
         Row::new(vec!["q", "Quit this app"]),
         Row::new(vec!["ctrl+c", "Quit this app"]),

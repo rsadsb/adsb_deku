@@ -81,7 +81,12 @@ This enables those features for platforms without keyboard and mouse usage.
 | F1       | Move to Radar screen       |
 | F2       | Move to Coverage screen    |
 | F3       | Move to Airplanes screen   |
-| F4       | Move to Help screen   |
+| F4       | Move to Stat screen        |
+| F5       | Move to Help screen        |
+| l        | control --disable-lat-long |
+| i        | control --disable-icao     |
+| h        | control --disable-heading  |
+| t        | control --disable-track    |
 | TAB      | Move to next tab           |
 | q        | Quit the app               |
 | ctrl + C | Quit the app               |
