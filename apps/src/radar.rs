@@ -62,6 +62,9 @@ const TUI_START_MARGIN: u16 = 1;
 /// width of tui top bar
 const TUI_BAR_WIDTH: u16 = 3;
 
+/// default precision of latitude, longitude, and distance
+const DEFAULT_PRECISION: usize = 3;
+
 /// Available top row Tabs
 #[derive(Copy, Clone)]
 enum Tab {
@@ -739,7 +742,7 @@ fn draw(
                 .block(
                     Block::default()
                         .title(format!(
-                            "rsadsb/radar(v{}) - ({:.3},{:.3}) {view_type}",
+                            "rsadsb/radar(v{}) - ({:.DEFAULT_PRECISION$},{:.DEFAULT_PRECISION$}) {view_type}",
                             version, lat, long
                         ))
                         .borders(Borders::ALL),
@@ -1095,9 +1098,9 @@ fn build_tab_stats<A: tui::backend::Backend>(
     let mut rows: Vec<Row> = vec![];
     let (time, value) = if let Some((time, key, value)) = stats.most_distance {
         let position = value.position.unwrap();
-        let lat = format!("{:.3}", position.latitude);
-        let lon = format!("{:.3}", position.longitude);
-        let distance = format!("{:.3}", value.kilo_distance.unwrap());
+        let lat = format!("{:.DEFAULT_PRECISION$}", position.latitude);
+        let lon = format!("{:.DEFAULT_PRECISION$}", position.longitude);
+        let distance = format!("{:.DEFAULT_PRECISION$}", value.kilo_distance.unwrap());
 
         // display time
         let datetime = time::OffsetDateTime::from(time);
