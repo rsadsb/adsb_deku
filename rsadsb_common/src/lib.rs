@@ -1,5 +1,4 @@
 #![doc = include_str!("../README.md")]
-
 #![cfg_attr(not(feature = "std"), no_std)]
 #![doc(html_logo_url = "https://raw.githubusercontent.com/rsadsb/adsb_deku/master/media/logo.png")]
 
@@ -74,6 +73,11 @@ impl Airplanes {
     /// BTreeMap::len()
     pub fn len(&self) -> usize {
         self.0.len()
+    }
+
+    /// BTreeMap::is_empty()
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
     }
 
     /// Increment message count of `ICAO`. If feature: `std`, set `last_time` to current time.
