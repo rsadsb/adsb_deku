@@ -7,17 +7,16 @@ This library is not published on `crates.io`. If needed, it could be published.
 Run `cargo doc` in this directory to generate documentation.
 
 ## Usage
-```rust
-    # use adsb_deku::Frame;
-    # use adsb_deku::deku::DekuContainerRead;
-    # use rsadsb_common::Airplanes;
-    #
-    # let lat = 0.0;
-    # let long = 0.0;
-    # let bytes = vec![];
+```rust, ignore
     let mut adsb_airplanes = Airplanes::new();
     if let Ok((bytes_left, frame)) = Frame::from_bytes((&bytes, 0)) {
         adsb_airplanes.action(frame, (lat, long));
     }
 ```
 
+## `no_std` support
+Add the following to your `Cargo.toml` file to enable `no_std` code only:
+```text
+default-features = false
+features = ["alloc"]
+```
