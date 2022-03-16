@@ -23,7 +23,7 @@ const MAX_RECEIVER_DISTANCE: f64 = 400.0;
 const MAX_AIRCRAFT_DISTANCE: f64 = 100.0;
 
 #[derive(Debug, Default)]
-pub struct Airplanes(pub BTreeMap<ICAO, AirplaneState>);
+pub struct Airplanes(BTreeMap<ICAO, AirplaneState>);
 
 impl fmt::Display for Airplanes {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -37,13 +37,42 @@ impl fmt::Display for Airplanes {
     }
 }
 
+/// public
 impl Airplanes {
     #[must_use]
     pub fn new() -> Self {
         Self(BTreeMap::new())
     }
 
-    /// Increment message count and update last time seen
+    /// Tuple `iter()` of all `(ICAO, AirplanesState)`
+    ///
+    /// BTreeMap::iter()
+    pub fn iter(&self) -> std::collections::btree_map::Iter<'_, ICAO, AirplaneState> {
+        self.0.iter()
+    }
+
+    /// Get all `ICAO` keys
+    ///
+    /// BTreeMap::keys()
+    pub fn keys(&self) -> std::collections::btree_map::Keys<'_, ICAO, AirplaneState> {
+        self.0.keys()
+    }
+
+    /// From `ICAO`, get `AirplaneState`
+    ///
+    /// BTreeMap::get()
+    pub fn get(&self, key: ICAO) -> Option<&AirplaneState> {
+        self.0.get(&key)
+    }
+
+    /// Amount of currently tracked airplanes
+    ///
+    /// BTreeMap::len()
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
+
+    /// Increment message count of `ICAO`. If feature: `std`, set `last_time` to current time.
     pub fn incr_messages(&mut self, icao: ICAO) {
         let mut state = self.0.entry(icao).or_insert_with(AirplaneState::default);
         state.num_messages += 1;
@@ -53,6 +82,12 @@ impl Airplanes {
         }
     }
 
+    // Update `Airplanes` with new `Frame`
+    //
+    // Take parsed `Frame` and read the `DF::ADSB` type and act upon the parsed message. This
+    // updates the field that the `ME` value equates to.
+    //
+    // `lat_long`: (latitude, longitude) of current receiver location
     pub fn action(&mut self, frame: Frame, lat_long: (f64, f64)) {
         if let DF::ADSB(ref adsb) = frame.df {
             match &adsb.me {
@@ -72,12 +107,80 @@ impl Airplanes {
         }
     }
 
+    /// from `ICAO` return details on that airplane
+    ///
+    /// position, altitude, and kilo_distance are required to be set to Some(value) in order for
+    /// this function to return any values from that `ICAO`. Other values from that `ICAO` are
+    /// optional and can be None. See `AirplaneDetails` for all the values this function returns.
+    #[must_use]
+    pub fn aircraft_details(&self, icao: ICAO) -> Option<AirplaneDetails> {
+        match self.get(icao) {
+            Some(airplane_state) => {
+                let track = &airplane_state.track;
+                let coor = &airplane_state.coords;
+                if let (Some(position), Some(altitude), Some(kilo_distance)) =
+                    (&coor.position, coor.altitude(), coor.kilo_distance)
+                {
+                    Some(
+                        AirplaneDetails {
+                            position: *position,
+                            altitude,
+                            kilo_distance,
+                            heading: airplane_state.heading,
+                            track: track.clone(),
+                        }
+                    )
+                } else {
+                    None
+                }
+            },
+            None => None,
+        }
+    }
+
+    /// return all latitude/longitude from Hashmap of current "seen" aircrafts
+    #[must_use]
+    pub fn all_lat_long_altitude(&self) -> Vec<(cpr::Position, ICAO)> {
+        let mut all_lat_long = vec![];
+        for (key, airplane_state) in self.iter() {
+            let coor = &airplane_state.coords;
+            if let Some(position) = &coor.position {
+                all_lat_long.push((*position, *key));
+            }
+        }
+
+        all_lat_long
+    }
+
+    /// Remove airplane after not active for a time
+    #[cfg(feature = "std")]
+    pub fn prune(&mut self, filter_time: u64) {
+        self.0.retain(|k, v| {
+            if let Ok(time) = v.last_time.elapsed() {
+                if time < std::time::Duration::from_secs(filter_time) {
+                    true
+                } else {
+                    info!("[{k}] non-active, removing");
+                    false
+                }
+            } else {
+                info!("[{k}] non-active(time error), removing");
+                false
+            }
+        });
+    }
+}
+
+/// private
+impl Airplanes {
+    /// update from `ME::AircraftIdentification`
     fn add_identification(&mut self, icao: ICAO, identification: &Identification) {
         let mut state = self.0.entry(icao).or_insert_with(AirplaneState::default);
         state.callsign = Some(identification.cn.clone());
         info!("[{icao}] with identification: {}", identification.cn);
     }
 
+    /// update from `ME::AirborneVelocity`
     fn add_airborne_velocity(&mut self, icao: ICAO, vel: &AirborneVelocity) {
         let mut state = self.0.entry(icao).or_insert_with(AirplaneState::default);
         if let Some((heading, ground_speed, vert_speed)) = vel.calculate() {
@@ -91,7 +194,7 @@ impl Airplanes {
         }
     }
 
-    /// Add `Altitude` from adsb frame
+    /// update from `ME::AirbornePosition{GNSSAltitude, BaroAltitude}`
     fn add_altitude(&mut self, icao: ICAO, altitude: &Altitude, lat_long: (f64, f64)) {
         let state = self.0.entry(icao).or_insert_with(AirplaneState::default);
         info!(
@@ -127,75 +230,19 @@ impl Airplanes {
         }
     }
 
-    // return display detail of aircraft
-    // TODO: this is getting greatly out of hand, clean up return for this
-    #[must_use]
-    #[allow(clippy::type_complexity)]
-    pub fn aircraft_details(
-        &self,
-        icao: ICAO,
-    ) -> Option<(
-        cpr::Position,
-        u32,
-        f64,
-        Option<f64>,
-        &Option<Vec<AirplaneCoor>>,
-    )> {
-        match self.0.get(&icao) {
-            Some(airplane_state) => {
-                let track = &airplane_state.track;
-                let coor = &airplane_state.coords;
-                if let (Some(position), Some(altitude), Some(kilo_distance)) =
-                    (&coor.position, coor.altitude(), coor.kilo_distance)
-                {
-                    Some((
-                        *position,
-                        altitude,
-                        kilo_distance,
-                        airplane_state.heading,
-                        track,
-                    ))
-                } else {
-                    None
-                }
-            },
-            None => None,
-        }
-    }
-
-    /// return all latitude/longitude from Hashmap of current "seen" aircrafts
-    #[must_use]
-    pub fn all_lat_long_altitude(&self) -> Vec<(cpr::Position, ICAO)> {
-        let mut all_lat_long = vec![];
-        for (key, airplane_state) in &self.0 {
-            let coor = &airplane_state.coords;
-            if let Some(position) = &coor.position {
-                all_lat_long.push((*position, *key));
-            }
-        }
-
-        all_lat_long
-    }
-
-    /// Remove airplane after not active for a time
-    #[cfg(feature = "std")]
-    pub fn prune(&mut self, filter_time: u64) {
-        self.0.retain(|k, v| {
-            if let Ok(time) = v.last_time.elapsed() {
-                if time < std::time::Duration::from_secs(filter_time) {
-                    true
-                } else {
-                    info!("[{k}] non-active, removing");
-                    false
-                }
-            } else {
-                info!("[{k}] non-active(time error), removing");
-                false
-            }
-        });
-    }
 }
 
+/// Generated by `Airplanes::aircraft_details()`
+#[derive(Debug)]
+pub struct AirplaneDetails {
+    pub position: cpr::Position,
+    pub altitude: u32,
+    pub kilo_distance: f64,
+    pub heading: Option<f64>,
+    pub track: Option<Vec<AirplaneCoor>>,
+}
+
+/// Value in BTreeMap of `Airplanes`
 #[derive(Debug)]
 pub struct AirplaneState {
     // TODO: rename to coor

@@ -10,7 +10,6 @@ use std::net::{SocketAddr, TcpStream};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, SystemTime};
 
-use rsadsb_common::AirplaneCoor;
 use adsb_deku::cpr::Position;
 use adsb_deku::deku::DekuContainerRead;
 use adsb_deku::{Frame, ICAO};
@@ -23,8 +22,8 @@ use crossterm::event::{
 use crossterm::terminal::enable_raw_mode;
 use crossterm::ExecutableCommand;
 use gpsd_proto::{get_data, handshake, ResponseData};
+use rsadsb_common::{AirplaneCoor, AirplaneDetails, Airplanes};
 use time::UtcOffset;
-use rsadsb_common::Airplanes;
 use tracing::{debug, error, info, trace};
 use tracing_subscriber::EnvFilter;
 use tui::backend::{Backend, CrosstermBackend};
@@ -106,7 +105,7 @@ impl Stats {
         } else {
             0.0
         };
-        for (key, state) in airplanes.0.iter() {
+        for (key, state) in airplanes.iter() {
             if let Some(distance) = state.coords.kilo_distance {
                 if distance > current_distance {
                     info!("new max distance: [{}]{:?}", key, state.coords);
@@ -116,7 +115,7 @@ impl Stats {
         }
 
         // Update most airplanes
-        let current_len = airplanes.0.len();
+        let current_len = airplanes.len();
         let most_airplanes = if let Some(most_airplanes) = self.most_airplanes {
             most_airplanes.1
         } else {
@@ -587,9 +586,9 @@ fn handle_keyevent(
         },
         (KeyCode::Enter, Tab::Airplanes) => {
             if let Some(selected) = airplanes_state.selected() {
-                let key = adsb_airplanes.0.keys().nth(selected).unwrap();
-                let pos = adsb_airplanes.aircraft_details(*key);
-                if let Some((position, _, _, _, _)) = pos {
+                let key = adsb_airplanes.keys().nth(selected).unwrap();
+                let aircraft_details = adsb_airplanes.aircraft_details(*key);
+                if let Some(AirplaneDetails { position, .. }) = aircraft_details {
                     settings.custom_lat = Some(position.latitude);
                     settings.custom_long = Some(position.longitude);
                     settings.tab_selection = Tab::Map;
@@ -720,7 +719,7 @@ fn draw(
                 .split(f.size());
 
             // render tabs
-            let airplane_len = format!("Airplanes({})", adsb_airplanes.0.len());
+            let airplane_len = format!("Airplanes({})", adsb_airplanes.len());
             let titles = ["Map", "Coverage", &airplane_len, "Stats", "Help"]
                 .iter()
                 .copied()
@@ -851,9 +850,15 @@ fn build_tab_map<A: tui::backend::Backend>(
             draw_locations(ctx, settings);
 
             // draw ADSB tab airplanes
-            for key in adsb_airplanes.0.keys() {
-                let value = adsb_airplanes.aircraft_details(*key);
-                if let Some((position, _, _, heading, track)) = value {
+            for key in adsb_airplanes.keys() {
+                let aircraft_details = adsb_airplanes.aircraft_details(*key);
+                if let Some(AirplaneDetails {
+                    position,
+                    heading,
+                    track,
+                    ..
+                }) = aircraft_details
+                {
                     let (x, y) = settings.to_xy(position.latitude, position.longitude);
 
                     // draw previous positions ("track")
@@ -1001,14 +1006,20 @@ fn build_tab_airplanes<A: tui::backend::Backend>(
     // make a vec of all strings to get a total amount of airplanes with
     // position information
     let empty = "".to_string();
-    for key in adsb_airplanes.0.keys() {
-        let state = adsb_airplanes.0.get(key).unwrap();
-        let pos = adsb_airplanes.aircraft_details(*key);
+    for key in adsb_airplanes.keys() {
+        let state = adsb_airplanes.get(*key).unwrap();
+        let aircraft_details = adsb_airplanes.aircraft_details(*key);
         let mut lat = empty.clone();
         let mut lon = empty.clone();
         let mut alt = empty.clone();
         let mut s_kilo_distance = empty.clone();
-        if let Some((position, altitude, kilo_distance, _, _)) = pos {
+        if let Some(AirplaneDetails {
+            position,
+            altitude,
+            kilo_distance,
+            ..
+        }) = aircraft_details
+        {
             lat = format!("{:.3}", position.latitude);
             lon = format!("{:.3}", position.longitude);
             s_kilo_distance = format!("{}", kilo_distance);
