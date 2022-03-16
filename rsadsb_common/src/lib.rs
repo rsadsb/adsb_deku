@@ -1,3 +1,5 @@
+#![doc = include_str!("../README.md")]
+
 #![cfg_attr(not(feature = "std"), no_std)]
 
 extern crate alloc;
@@ -22,6 +24,7 @@ const MAX_RECEIVER_DISTANCE: f64 = 400.0;
 // Max obsurd distance an aircraft travelled between messages
 const MAX_AIRCRAFT_DISTANCE: f64 = 100.0;
 
+/// BTreeMap of of all `ICAO` and `AirplaneState`
 #[derive(Debug, Default)]
 pub struct Airplanes(BTreeMap<ICAO, AirplaneState>);
 
