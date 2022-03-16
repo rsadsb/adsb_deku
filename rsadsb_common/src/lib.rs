@@ -47,14 +47,14 @@ impl Airplanes {
     /// Tuple `iter()` of all `(ICAO, AirplanesState)`
     ///
     /// BTreeMap::iter()
-    pub fn iter(&self) -> std::collections::btree_map::Iter<'_, ICAO, AirplaneState> {
+    pub fn iter(&self) -> alloc::collections::btree_map::Iter<'_, ICAO, AirplaneState> {
         self.0.iter()
     }
 
     /// Get all `ICAO` keys
     ///
     /// BTreeMap::keys()
-    pub fn keys(&self) -> std::collections::btree_map::Keys<'_, ICAO, AirplaneState> {
+    pub fn keys(&self) -> alloc::collections::btree_map::Keys<'_, ICAO, AirplaneState> {
         self.0.keys()
     }
 
