@@ -1,6 +1,7 @@
 #![doc = include_str!("../README.md")]
 
 #![cfg_attr(not(feature = "std"), no_std)]
+#![doc(html_logo_url = "https://raw.githubusercontent.com/rsadsb/adsb_deku/master/media/logo.png")]
 
 extern crate alloc;
 
