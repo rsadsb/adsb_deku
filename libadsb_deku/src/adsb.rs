@@ -3,7 +3,26 @@
 //! [`DF::ADSB`]: crate::DF::ADSB
 //! [`DF::TisB`]: crate::DF::TisB
 
-use std::fmt::Write;
+#[cfg(feature = "alloc")]
+use alloc::{fmt, format, string::String};
+#[cfg(feature = "alloc")]
+use core::{
+    clone::Clone,
+    cmp::PartialEq,
+    convert::From,
+    default::Default,
+    f64,
+    fmt::Write,
+    fmt::{Debug, Error},
+    marker::Copy,
+    option::{Option::None, Option::Some},
+    prelude::rust_2021::derive,
+    result,
+    result::Result::Ok,
+    stringify, write, writeln,
+};
+#[cfg(not(feature = "alloc"))]
+use std::{fmt, i64};
 
 use deku::bitvec::{BitSlice, Msb0};
 use deku::prelude::*;
@@ -26,10 +45,7 @@ pub struct ADSB {
 
 impl ADSB {
     /// `to_string` with DF.id() input
-    pub(crate) fn to_string(
-        &self,
-        address_type: &str,
-    ) -> Result<String, Box<dyn std::error::Error>> {
+    pub(crate) fn to_string(&self, address_type: &str) -> result::Result<String, Error> {
         let mut f = String::new();
         write!(
             f,
@@ -96,7 +112,7 @@ impl ME {
         address_type: &str,
         capability: Capability,
         is_transponder: bool,
-    ) -> Result<String, Box<dyn std::error::Error>> {
+    ) -> result::Result<String, Error> {
         let transponder = match is_transponder {
             true => " ",
             false => " (Non-Transponder) ",
@@ -154,11 +170,11 @@ impl ME {
                     if let Some((heading, ground_speed, vertical_rate)) =
                         airborne_velocity.calculate()
                     {
-                        writeln!(f, "  Heading:       {}", heading.ceil())?;
+                        writeln!(f, "  Heading:       {}", libm::ceil(heading))?;
                         writeln!(
                             f,
                             "  Speed:         {} kt groundspeed",
-                            ground_speed.floor()
+                            libm::floor(ground_speed)
                         )?;
                         writeln!(
                             f,
@@ -326,7 +342,7 @@ pub struct AirspeedDecoding {
     #[deku(
         endian = "big",
         bits = "10",
-        map = "|airspeed: u16| -> Result<_, DekuError> {Ok(if airspeed > 0 { airspeed - 1 } else { 0 })}"
+        map = "|airspeed: u16| -> result::Result<_, DekuError> {Ok(if airspeed > 0 { airspeed - 1 } else { 0 })}"
     )]
     pub airspeed: u16,
 }
@@ -385,8 +401,8 @@ pub struct OperationStatusAirborne {
     pub reserved1: u8,
 }
 
-impl std::fmt::Display for OperationStatusAirborne {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Display for OperationStatusAirborne {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f, "   Version:            {}", self.version_number)?;
         writeln!(f, "   Capability classes:{}", self.capability_class)?;
         writeln!(f, "   Operational modes: {}", self.operational_mode)?;
@@ -446,8 +462,8 @@ pub struct CapabilityClassAirborne {
     pub reserved2: u8,
 }
 
-impl std::fmt::Display for CapabilityClassAirborne {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Display for CapabilityClassAirborne {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if self.acas == 1 {
             write!(f, " ACAS")?;
         }
@@ -513,8 +529,8 @@ pub struct OperationStatusSurface {
     pub reserved1: u8,
 }
 
-impl std::fmt::Display for OperationStatusSurface {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Display for OperationStatusSurface {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f, "  Version:            {}", self.version_number)?;
         writeln!(f, "   NIC-A:              {}", self.nic_supplement_a)?;
         write!(f, "{}", self.capability_class)?;
@@ -585,8 +601,8 @@ pub struct CapabilityClassSurface {
     pub nic_supplement_c: u8,
 }
 
-impl std::fmt::Display for CapabilityClassSurface {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Display for CapabilityClassSurface {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f, "   NIC-C:              {}", self.nic_supplement_c)?;
         writeln!(f, "   NACv:               {}", self.nac_v)?;
         Ok(())
@@ -616,8 +632,8 @@ pub struct OperationalMode {
     system_design_assurance: u8,
 }
 
-impl std::fmt::Display for OperationalMode {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Display for OperationalMode {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if self.tcas_ra_active {
             write!(f, " TCAS")?;
         }
@@ -651,8 +667,8 @@ pub enum ADSBVersion {
     DOC9871AppendixC,
 }
 
-impl std::fmt::Display for ADSBVersion {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Display for ADSBVersion {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.deku_id().unwrap())
     }
 }
@@ -699,8 +715,8 @@ pub enum ControlField {
     Reserved(ADSB_ICAO),
 }
 
-impl std::fmt::Display for ControlField {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Display for ControlField {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::ADSB_ES_NT(adsb_icao) | Self::ADSB_ES_NT_ALT(adsb_icao) => {
                 write!(
@@ -819,8 +835,8 @@ pub enum EmergencyState {
     Reserved2            = 7,
 }
 
-impl std::fmt::Display for EmergencyState {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Display for EmergencyState {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match self {
             Self::None => "no emergency",
             Self::General => "general",
@@ -868,8 +884,8 @@ pub enum TypeCoding {
     A = 4,
 }
 
-impl std::fmt::Display for TypeCoding {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Display for TypeCoding {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
             "{}",
@@ -968,7 +984,7 @@ impl AirborneVelocity {
         if let AirborneVelocitySubType::GroundSpeedDecoding(ground_speed) = &self.sub_type {
             let v_ew = f64::from((ground_speed.ew_vel as i16 - 1) * ground_speed.ew_sign.value());
             let v_ns = f64::from((ground_speed.ns_vel as i16 - 1) * ground_speed.ns_sign.value());
-            let h = v_ew.atan2(v_ns) * (360.0 / (2.0 * std::f64::consts::PI));
+            let h = libm::atan2(v_ew, v_ns) * (360.0 / (2.0 * f64::consts::PI));
             let heading = if h < 0.0 { h + 360.0 } else { h };
 
             let vrate = self
@@ -978,7 +994,7 @@ impl AirborneVelocity {
                 .map(|v| (v as i16) * self.vrate_sign.value());
 
             if let Some(vrate) = vrate {
-                return Some((heading, v_ew.hypot(v_ns), vrate));
+                return Some((heading, libm::hypot(v_ew, v_ns), vrate));
             }
         }
         None
@@ -1024,7 +1040,7 @@ impl AirborneVelocitySubFields {
     fn read_v(
         rest: &BitSlice<Msb0, u8>,
         t: AirborneVelocityType,
-    ) -> Result<(&BitSlice<Msb0, u8>, u16), DekuError> {
+    ) -> result::Result<(&BitSlice<Msb0, u8>, u16), DekuError> {
         match t {
             AirborneVelocityType::Subsonic => {
                 u16::read(rest, (deku::ctx::Endian::Big, deku::ctx::Size::Bits(10)))
@@ -1080,8 +1096,8 @@ pub enum VerticalRateSource {
     GeometricAltitude          = 1,
 }
 
-impl std::fmt::Display for VerticalRateSource {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Display for VerticalRateSource {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
             "{}",

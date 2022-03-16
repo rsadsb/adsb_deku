@@ -1,4 +1,11 @@
 //This module includes functionality translated from mode_s.c
+#[cfg(feature = "alloc")]
+use core::{
+    convert::From,
+    result,
+    result::Result::{Err, Ok},
+};
+
 use deku::prelude::*;
 
 pub const CRC_TABLE: [u32; 256] = [
@@ -260,7 +267,7 @@ pub const CRC_TABLE: [u32; 256] = [
     0x00fa_0480,
 ];
 
-pub fn modes_checksum(message: &[u8], bits: usize) -> Result<u32, DekuError> {
+pub fn modes_checksum(message: &[u8], bits: usize) -> result::Result<u32, DekuError> {
     let mut rem: u32 = 0;
     let n = bits / 8;
 

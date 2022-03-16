@@ -26,6 +26,7 @@ dependencies = [
  "deku",
  "hex",
  "hexlit",
+ "libm",
 ]
 
 [[package]]
@@ -353,9 +354,9 @@ dependencies = [
 
 [[package]]
 name = "deku"
-version = "0.12.5"
+version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6636cb8b0811013ab93bc37b88b460ca637ce3bdc97fb68ca79d7d7df4f16cba"
+checksum = "532b5c81bae1d2b6f251de3918d2511cb927f63c990ab3befbf680f6654953ae"
 dependencies = [
  "bitvec",
  "deku_derive",
@@ -363,9 +364,9 @@ dependencies = [
 
 [[package]]
 name = "deku_derive"
-version = "0.12.5"
+version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9bf7f0f5c5d6b9cc189dea2a0fece14c26a0bbb9df7b52d2fe7b6dd300dae1a0"
+checksum = "3c4bbb40beff5b368edf0127a546c608f83462c31ccfab05d5f0f1f0457e7b16"
 dependencies = [
  "darling",
  "proc-macro-crate",
@@ -515,6 +516,12 @@ name = "libc"
 version = "0.2.117"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e74d72e0f9b65b5b4ca49a346af3976df0f9c61d550727f349ecd559f251a26c"
+
+[[package]]
+name = "libm"
+version = "0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "33a33a362ce288760ec6a508b94caaec573ae7d3bbbd91b87aa0bad4456839db"
 
 [[package]]
 name = "lock_api"
@@ -843,12 +850,22 @@ dependencies = [
  "csv",
  "gpsd_proto",
  "hex",
+ "rsadsb_common",
  "serde",
  "time",
  "tracing",
  "tracing-appender",
  "tracing-subscriber",
  "tui",
+]
+
+[[package]]
+name = "rsadsb_common"
+version = "0.5.1"
+dependencies = [
+ "adsb_deku",
+ "libm",
+ "tracing",
 ]
 
 [[package]]

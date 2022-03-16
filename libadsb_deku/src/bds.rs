@@ -1,5 +1,13 @@
 //! B-Definition Subfield for Comm-B Messages
 
+use alloc::format;
+use alloc::string::String;
+#[cfg(feature = "alloc")]
+use core::{
+    clone::Clone, cmp::PartialEq, fmt, fmt::Debug, prelude::rust_2021::derive, result::Result,
+    result::Result::Ok, writeln,
+};
+
 use deku::prelude::*;
 
 use crate::aircraft_identification_read;
@@ -23,8 +31,8 @@ pub enum BDS {
     Unknown([u8; 6]),
 }
 
-impl std::fmt::Display for BDS {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Display for BDS {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Empty(_) => {
                 writeln!(f, "Comm-B format: empty response")?;

@@ -1,3 +1,4 @@
+#![cfg_attr(not(feature = "std"), no_std)]
 #![doc(html_logo_url = "https://raw.githubusercontent.com/rsadsb/adsb_deku/master/media/logo.png")]
 /*!
 `adsb_deku` provides decoding for the [`ADS-B`] Downlink protocol by using the [`deku`] crate.
@@ -121,6 +122,26 @@ different `adsb_deku` uses. See the [`README.md`] for examples of use.
 /// re-export deku
 pub use deku;
 
+extern crate alloc;
+
+#[cfg(feature = "alloc")]
+use alloc::{fmt, format, string::String, vec, vec::Vec};
+#[cfg(feature = "alloc")]
+use core::{
+    clone::Clone,
+    cmp::Eq,
+    cmp::PartialEq,
+    default::Default,
+    fmt::Debug,
+    hash::Hash,
+    iter::IntoIterator,
+    marker::Copy,
+    prelude::rust_2021::derive,
+    result,
+    result::Result::{Err, Ok},
+    write, writeln,
+};
+
 pub mod adsb;
 pub mod bds;
 pub mod cpr;
@@ -150,7 +171,7 @@ impl Frame {
     fn read_crc<'a, 'b>(
         df: &'a DF,
         rest: &'b BitSlice<Msb0, u8>,
-    ) -> Result<(&'b BitSlice<Msb0, u8>, u32), DekuError> {
+    ) -> result::Result<(&'b BitSlice<Msb0, u8>, u32), DekuError> {
         const MODES_LONG_MSG_BYTES: usize = 14;
         const MODES_SHORT_MSG_BYTES: usize = 7;
 
@@ -170,8 +191,8 @@ impl Frame {
     }
 }
 
-impl std::fmt::Display for Frame {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Display for Frame {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let crc = self.crc;
         match &self.df {
             DF::ShortAirAirSurveillance { altitude, .. } => {
@@ -456,8 +477,8 @@ pub struct Altitude {
     pub lon_cpr: u32,
 }
 
-impl std::fmt::Display for Altitude {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Display for Altitude {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f, "  Altitude:      {} ft barometric", self.alt)?;
         writeln!(f, "  CPR type:      Airborne")?;
         writeln!(f, "  CPR odd flag:  {}", self.odd_flag)?;
@@ -469,7 +490,7 @@ impl std::fmt::Display for Altitude {
 
 impl Altitude {
     /// `decodeAC12Field`
-    fn read(rest: &BitSlice<Msb0, u8>) -> Result<(&BitSlice<Msb0, u8>, u32), DekuError> {
+    fn read(rest: &BitSlice<Msb0, u8>) -> result::Result<(&BitSlice<Msb0, u8>, u32), DekuError> {
         let (rest, num) = u32::read(rest, (deku::ctx::Endian::Big, deku::ctx::Size::Bits(12)))?;
 
         let q = num & 0x10;
@@ -524,8 +545,8 @@ impl Default for CPRFormat {
     }
 }
 
-impl std::fmt::Display for CPRFormat {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Display for CPRFormat {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
             "{}",
@@ -555,8 +576,8 @@ impl Sign {
     }
 }
 
-impl std::fmt::Display for Sign {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Display for Sign {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
             "{}",
@@ -573,7 +594,7 @@ impl std::fmt::Display for Sign {
 pub struct IdentityCode(#[deku(reader = "Self::read(deku::rest)")] pub u16);
 
 impl IdentityCode {
-    fn read(rest: &BitSlice<Msb0, u8>) -> Result<(&BitSlice<Msb0, u8>, u16), DekuError> {
+    fn read(rest: &BitSlice<Msb0, u8>) -> result::Result<(&BitSlice<Msb0, u8>, u16), DekuError> {
         let (rest, num) = u32::read(rest, (deku::ctx::Endian::Big, deku::ctx::Size::Bits(13)))?;
 
         let c1 = (num & 0b1_0000_0000_0000) >> 12;
@@ -600,11 +621,11 @@ impl IdentityCode {
 }
 
 /// ICAO Address; Mode S transponder code
-#[derive(Debug, PartialEq, DekuRead, Hash, Eq, Copy, Clone)]
+#[derive(Debug, PartialEq, PartialOrd, DekuRead, Hash, Eq, Copy, Clone, Ord)]
 pub struct ICAO(pub [u8; 3]);
 
-impl std::fmt::Display for ICAO {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Display for ICAO {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{:02x}", self.0[0])?;
         write!(f, "{:02x}", self.0[1])?;
         write!(f, "{:02x}", self.0[2])?;
@@ -663,8 +684,8 @@ pub enum FlightStatus {
     NotAssigned              = 0b111,
 }
 
-impl std::fmt::Display for FlightStatus {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Display for FlightStatus {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
             "{}",
@@ -687,7 +708,7 @@ pub struct AC13Field(#[deku(reader = "Self::read(deku::rest)")] pub u32);
 
 impl AC13Field {
     // TODO Add unit
-    fn read(rest: &BitSlice<Msb0, u8>) -> Result<(&BitSlice<Msb0, u8>, u32), DekuError> {
+    fn read(rest: &BitSlice<Msb0, u8>) -> result::Result<(&BitSlice<Msb0, u8>, u32), DekuError> {
         let (rest, num) = u32::read(rest, (deku::ctx::Endian::Big, deku::ctx::Size::Bits(13)))?;
 
         let m_bit = num & 0x0040;
@@ -736,8 +757,8 @@ pub enum Capability {
     AG_UNCERTAIN3 = 0x07,
 }
 
-impl std::fmt::Display for Capability {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Display for Capability {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
             "{}",
@@ -757,7 +778,7 @@ const CHAR_LOOKUP: &[u8; 64] = b"#ABCDEFGHIJKLMNOPQRSTUVWXYZ##### ##############
 
 pub(crate) fn aircraft_identification_read(
     rest: &BitSlice<Msb0, u8>,
-) -> Result<(&BitSlice<Msb0, u8>, String), DekuError> {
+) -> result::Result<(&BitSlice<Msb0, u8>, String), DekuError> {
     let mut inside_rest = rest;
 
     let mut chars = vec![];

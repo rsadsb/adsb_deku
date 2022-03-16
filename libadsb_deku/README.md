@@ -111,3 +111,9 @@ lax_messsages           time:   [605.73 ms 606.80 ms 607.89 ms]
 ## Derivation
 Derived from Aeronautical Telecommunications Volume IV: Surveillance and Collision Avoidance Systems, Fifth Edition and ICAO 9871.
 
+## `no_std` support
+Add the following to your `Cargo.toml` file to enable `no_std` code only:
+```text
+default-features = false
+features = ["alloc"]
+```

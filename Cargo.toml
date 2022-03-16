@@ -1,5 +1,5 @@
 [workspace]
-members = ["apps", "libadsb_deku"]
+members = ["apps", "libadsb_deku", "rsadsb_common"]
 
 [profile.release]
 strip = true

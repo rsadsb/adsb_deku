@@ -1,5 +1,11 @@
 //! Mode AC Conversion methods
 
+#[cfg(feature = "alloc")]
+use core::{
+    result,
+    result::Result::{Err, Ok},
+};
+
 pub(crate) fn decode_id13_field(id13_field: u32) -> u32 {
     let mut hex_gillham: u32 = 0;
 
@@ -44,7 +50,7 @@ pub(crate) fn decode_id13_field(id13_field: u32) -> u32 {
     hex_gillham
 }
 
-pub(crate) fn mode_a_to_mode_c(mode_a: u32) -> Result<u32, &'static str> {
+pub(crate) fn mode_a_to_mode_c(mode_a: u32) -> result::Result<u32, &'static str> {
     let mut five_hundreds: u32 = 0;
     let mut one_hundreds: u32 = 0;
 

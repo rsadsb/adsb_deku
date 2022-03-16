@@ -13,8 +13,14 @@ path = "src/radar.rs"
 name = "1090"
 path = "src/1090.rs"
 
+[features]
+default = ["std"]
+std = ["adsb_deku/std", "alloc"]
+alloc = ["adsb_deku/alloc"]
+
 [dependencies]
 adsb_deku = { path = "../libadsb_deku", version = "0.5" }
+rsadsb_common = { path = "../rsadsb_common", version = "0.5" }
 hex = "0.4"
 crossterm = "0.22"
 clap = {version = "3.1.0", features = ["color", "derive", "wrap_help"]}
