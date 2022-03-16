@@ -439,7 +439,7 @@ impl fmt::Display for OperationStatusAirborne {
 /// [`ME::AircraftOperationStatus`]
 #[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
 pub struct CapabilityClassAirborne {
-    #[deku(bits = "2")]
+    #[deku(bits = "2", assert_eq = "0")]
     pub reserved0: u8,
 
     /// TCAS Operational
@@ -447,11 +447,14 @@ pub struct CapabilityClassAirborne {
     pub acas: u8,
 
     /// 1090ES IN
+    ///
+    /// bit 12
     #[deku(bits = "1")]
     pub cdti: u8,
 
-    #[deku(bits = "2")]
+    #[deku(bits = "2", assert_eq = "0")]
     pub reserved1: u8,
+
     #[deku(bits = "1")]
     pub arv: u8,
     #[deku(bits = "1")]
@@ -490,12 +493,14 @@ impl fmt::Display for CapabilityClassAirborne {
 pub struct OperationStatusSurface {
     /// CC (14 bits)
     pub capability_class: CapabilityClassSurface,
+
     /// CC L/W codes
     #[deku(bits = "4")]
     pub lw_codes: u8,
 
     /// OM
     pub operational_mode: OperationalMode,
+
     /// OM last 8 bits (diff for airborne/surface)
     // TODO: parse:
     // http://www.anteni.net/adsb/Doc/1090-WP30-18-DRAFT_DO-260B-V42.pdf
@@ -677,111 +682,84 @@ impl fmt::Display for ADSBVersion {
 ///
 /// reference: ICAO 9871
 #[derive(Debug, PartialEq, DekuRead, Clone)]
-#[deku(type = "u8", bits = "3")]
-#[allow(non_camel_case_types)]
-pub enum ControlField {
-    /// ADS-B Message from a non-transponder device
-    #[deku(id = "0")]
-    ADSB_ES_NT(ADSB_ICAO),
-
-    /// Reserved for ADS-B for ES/NT devices for alternate address space
-    #[deku(id = "1")]
-    ADSB_ES_NT_ALT(ADSB_ICAO),
-
-    /// Code 2, Fine Format TIS-B Message
-    #[deku(id = "2")]
-    TISB_FINE(ADSB_ICAO),
-
-    /// Code 3, Coarse Format TIS-B Message
-    #[deku(id = "3")]
-    TISB_COARSE(ADSB_ICAO),
-
-    /// Code 4, Coarse Format TIS-B Message
-    #[deku(id = "4")]
-    TISB_MANAGE(ADSB_ICAO),
-
-    /// Code 5, TIS-B Message for replay ADS-B Message
-    ///
-    /// Anonymous 24-bit addresses
-    #[deku(id = "5")]
-    TISB_ADSB_RELAY(ADSB_ICAO),
-
-    /// Code 6, TIS-B Message, Same as DF=17
-    #[deku(id = "6")]
-    TISB_ADSB(ADSB_ICAO),
-
-    /// Code 7, Reserved
-    #[deku(id = "7")]
-    Reserved(ADSB_ICAO),
-}
-
-impl fmt::Display for ControlField {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::ADSB_ES_NT(adsb_icao) | Self::ADSB_ES_NT_ALT(adsb_icao) => {
-                write!(
-                    f,
-                    "{}",
-                    adsb_icao
-                        .me
-                        .to_string(adsb_icao.aa, "(ADS-B)", Capability::AG_UNCERTAIN3, false,)
-                        .unwrap()
-                )?;
-            },
-            Self::TISB_COARSE(adsb_icao)
-            | Self::TISB_ADSB_RELAY(adsb_icao)
-            | Self::TISB_FINE(adsb_icao) => {
-                write!(
-                    f,
-                    "{}",
-                    adsb_icao
-                        .me
-                        .to_string(adsb_icao.aa, "(TIS-B)", Capability::AG_UNCERTAIN3, false,)
-                        .unwrap()
-                )?;
-            },
-            Self::TISB_MANAGE(tisb_manage) => {
-                write!(f, " Address:   {} (ADS-R)", tisb_manage.aa)?;
-            },
-            Self::TISB_ADSB(tisb_adsb) => {
-                write!(
-                    f,
-                    "{}",
-                    tisb_adsb
-                        .me
-                        .to_string(tisb_adsb.aa, "(ADS-R)", Capability::AG_UNCERTAIN3, false,)
-                        .unwrap()
-                )?;
-            },
-            Self::Reserved(tisb_adsb) => {
-                write!(
-                    f,
-                    "{}",
-                    tisb_adsb
-                        .me
-                        .to_string(
-                            tisb_adsb.aa,
-                            "(unknown addressing scheme)",
-                            Capability::AG_UNCERTAIN3,
-                            false,
-                        )
-                        .unwrap()
-                )?;
-            },
-        }
-        Ok(())
-    }
-}
-
-/// [`crate::DF::TisB`] Containing ICAO
-#[derive(Debug, PartialEq, DekuRead, Clone)]
-#[allow(non_camel_case_types)]
-pub struct ADSB_ICAO {
+pub struct ControlField {
+    t: ControlFieldType,
     /// AA: Address, Announced
     pub aa: ICAO,
     /// ME: message, extended quitter
     pub me: ME,
 }
+
+impl std::fmt::Display for ControlField {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            self.me
+                .to_string(
+                    self.aa,
+                    &format!("{}", self.t),
+                    Capability::AG_UNCERTAIN3,
+                    false,
+                )
+                .unwrap()
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, DekuRead, Clone)]
+#[deku(type = "u8", bits = "3")]
+#[allow(non_camel_case_types)]
+pub enum ControlFieldType {
+    /// ADS-B Message from a non-transponder device
+    #[deku(id = "0")]
+    ADSB_ES_NT,
+
+    /// Reserved for ADS-B for ES/NT devices for alternate address space
+    #[deku(id = "1")]
+    ADSB_ES_NT_ALT,
+
+    /// Code 2, Fine Format TIS-B Message
+    #[deku(id = "2")]
+    TISB_FINE,
+
+    /// Code 3, Coarse Format TIS-B Message
+    #[deku(id = "3")]
+    TISB_COARSE,
+
+    /// Code 4, Coarse Format TIS-B Message
+    #[deku(id = "4")]
+    TISB_MANAGE,
+
+    /// Code 5, TIS-B Message for replay ADS-B Message
+    ///
+    /// Anonymous 24-bit addresses
+    #[deku(id = "5")]
+    TISB_ADSB_RELAY,
+
+    /// Code 6, TIS-B Message, Same as DF=17
+    #[deku(id = "6")]
+    TISB_ADSB,
+
+    /// Code 7, Reserved
+    #[deku(id = "7")]
+    Reserved,
+}
+
+impl std::fmt::Display for ControlFieldType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let s_type = match self {
+            Self::ADSB_ES_NT | Self::ADSB_ES_NT_ALT => "(ADS-B)",
+            Self::TISB_COARSE | Self::TISB_ADSB_RELAY | Self::TISB_FINE => "(TIS-B)",
+            Self::TISB_MANAGE => "(ADS-R)",
+            Self::TISB_ADSB => "(ADS-R)",
+            Self::Reserved => "(unknown addressing scheme)",
+        };
+        write!(f, "{s_type}")
+    }
+}
+
+/// [`crate::DF::TisB`] Containing ICAO
 
 #[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
 #[deku(type = "u8", bits = "1")]
