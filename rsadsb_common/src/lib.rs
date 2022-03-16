@@ -85,12 +85,12 @@ impl Airplanes {
         }
     }
 
-    // Update `Airplanes` with new `Frame`
-    //
-    // Take parsed `Frame` and read the `DF::ADSB` type and act upon the parsed message. This
-    // updates the field that the `ME` value equates to.
-    //
-    // `lat_long`: (latitude, longitude) of current receiver location
+    /// Update `Airplanes` with new `Frame`
+    ///
+    /// Take parsed `Frame` and read the `DF::ADSB` type and act upon the parsed message. This
+    /// updates the field that the `ME` value equates to.
+    ///
+    /// `lat_long`: (latitude, longitude) of current receiver location
     pub fn action(&mut self, frame: Frame, lat_long: (f64, f64)) {
         if let DF::ADSB(ref adsb) = frame.df {
             match &adsb.me {
