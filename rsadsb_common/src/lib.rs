@@ -24,7 +24,10 @@ const MAX_RECEIVER_DISTANCE: f64 = 400.0;
 // Max obsurd distance an aircraft travelled between messages
 const MAX_AIRCRAFT_DISTANCE: f64 = 100.0;
 
-/// BTreeMap of of all `ICAO` and `AirplaneState`
+/// `BTreeMap` of of all currently tracked `ICAO` and `AirplaneState`.
+///
+/// Currently tracked means that within calling [`Self::action`], an aircraft is added to this data
+/// structure.
 #[derive(Debug, Default)]
 pub struct Airplanes(BTreeMap<ICAO, AirplaneState>);
 
@@ -40,7 +43,7 @@ impl fmt::Display for Airplanes {
     }
 }
 
-/// public
+// public
 impl Airplanes {
     #[must_use]
     pub fn new() -> Self {
@@ -49,33 +52,36 @@ impl Airplanes {
 
     /// Tuple `iter()` of all `(ICAO, AirplanesState)`
     ///
-    /// BTreeMap::iter()
+    /// equivalent [`BTreeMap::iter`]
     pub fn iter(&self) -> alloc::collections::btree_map::Iter<'_, ICAO, AirplaneState> {
         self.0.iter()
     }
 
     /// Get all `ICAO` keys
     ///
-    /// BTreeMap::keys()
+    /// equivalent [`BTreeMap::keys`]
     pub fn keys(&self) -> alloc::collections::btree_map::Keys<'_, ICAO, AirplaneState> {
         self.0.keys()
     }
 
     /// From `ICAO`, get `AirplaneState`
     ///
-    /// BTreeMap::get()
+    /// equivalent [`BTreeMap::get`]
+    #[must_use]
     pub fn get(&self, key: ICAO) -> Option<&AirplaneState> {
         self.0.get(&key)
     }
 
     /// Amount of currently tracked airplanes
     ///
-    /// BTreeMap::len()
+    /// equivalent [`BTreeMap::len`]
+    #[must_use]
     pub fn len(&self) -> usize {
         self.0.len()
     }
 
-    /// BTreeMap::is_empty()
+    /// equivalent [`BTreeMap::is_empty`]
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
@@ -93,7 +99,8 @@ impl Airplanes {
     /// Update `Airplanes` with new `Frame`
     ///
     /// Take parsed `Frame` and read the `DF::ADSB` type and act upon the parsed message. This
-    /// updates the field that the `ME` value equates to.
+    /// updates the field that the `ME` value equates to within [`Self`]. This also adds
+    /// airplanes (`ICAO` and `AirplaneState`) when a new aircraft is detected.
     ///
     /// `lat_long`: (latitude, longitude) of current receiver location
     pub fn action(&mut self, frame: Frame, lat_long: (f64, f64)) {
@@ -117,9 +124,9 @@ impl Airplanes {
 
     /// from `ICAO` return details on that airplane
     ///
-    /// position, altitude, and kilo_distance are required to be set to Some(value) in order for
+    /// position, altitude, and `kilo_distance` are required to be set to Some(value) in order for
     /// this function to return any values from that `ICAO`. Other values from that `ICAO` are
-    /// optional and can be None. See `AirplaneDetails` for all the values this function returns.
+    /// optional and can be None. See [`AirplaneDetails`] for all the values this function returns.
     #[must_use]
     pub fn aircraft_details(&self, icao: ICAO) -> Option<AirplaneDetails> {
         match self.get(icao) {
@@ -144,21 +151,21 @@ impl Airplanes {
         }
     }
 
-    /// return all latitude/longitude from Hashmap of current "seen" aircrafts
+    /// Return all aircraft that currently have a [`Position`]
     #[must_use]
-    pub fn all_lat_long_altitude(&self) -> Vec<(cpr::Position, ICAO)> {
+    pub fn all_position(&self) -> Vec<(ICAO, cpr::Position)> {
         let mut all_lat_long = vec![];
         for (key, airplane_state) in self.iter() {
             let coor = &airplane_state.coords;
             if let Some(position) = &coor.position {
-                all_lat_long.push((*position, *key));
+                all_lat_long.push((*key, *position));
             }
         }
 
         all_lat_long
     }
 
-    /// Remove airplane after not active for a time
+    /// Remove airplanes that have not been seen since `filter_time` seconds
     #[cfg(feature = "std")]
     pub fn prune(&mut self, filter_time: u64) {
         self.0.retain(|k, v| {
@@ -177,7 +184,7 @@ impl Airplanes {
     }
 }
 
-/// private
+// private
 impl Airplanes {
     /// update from `ME::AircraftIdentification`
     fn add_identification(&mut self, icao: ICAO, identification: &Identification) {
@@ -247,7 +254,7 @@ pub struct AirplaneDetails {
     pub track: Option<Vec<AirplaneCoor>>,
 }
 
-/// Value in BTreeMap of `Airplanes`
+/// Value in `BTreeMap` of `Airplanes`
 #[derive(Debug)]
 pub struct AirplaneState {
     // TODO: rename to coor

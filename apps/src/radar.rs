@@ -333,57 +333,15 @@ see https://github.com/rsadsb/adsb_deku#serverdemodulationexternal-applications 
 
         // start thread
         std::thread::spawn(move || {
-            let gpsd_port = 2947;
-            if let Ok(stream) =
-                TcpStream::connect((gpsd_ip.clone(), gpsd_port)).with_context(|| {
-                    format!("unable to connect to gpsd server @ {gpsd_ip}:{gpsd_port}")
-                })
-            {
-                let mut reader = BufReader::new(&stream);
-                let mut writer = BufWriter::new(&stream);
-                handshake(&mut reader, &mut writer).unwrap();
-                info!("[gpsd] connected");
-
-                // keep looping while reading new messages looking for GGA messages which are the
-                // normal GPS messages from the NMEA messages.
-                loop {
-                    if let Ok(ResponseData::Tpv(data)) = get_data(&mut reader) {
-                        // only update if the operator hasn't set a lat/long position already
-                        if let Ok(mut lat_long) = cloned_gps_lat_long.lock() {
-                            if let (Some(lat), Some(lon)) = (data.lat, data.lon) {
-                                info!("[gpsd] lat: {lat},  long:{lon}");
-                                *lat_long = Some((lat, lon));
-                            }
-                        }
-                    }
-                }
-            } else {
-                error!("could not connect to gpsd");
-            }
+            gpsd_thread(gpsd_ip, cloned_gps_lat_long);
         });
     }
 
     let mut stats = Stats::default();
 
     info!("tui setup");
-    loop {
-        // cleanup and quit if required
-        if let Some(reason) = settings.quit {
-            terminal.clear()?;
-            let mut stdout = io::stdout();
-            crossterm::execute!(
-                stdout,
-                crossterm::terminal::LeaveAlternateScreen,
-                crossterm::event::DisableMouseCapture
-            )?;
-            crossterm::terminal::disable_raw_mode()?;
-            terminal.show_cursor()?;
-            println!("radar: {}", reason);
-            break;
-        }
-        input.clear();
-
-        // update lat/long from gpsd thread
+    while settings.quit.is_none() {
+        // check the Mutex from the gpsd thread, update lat/long
         if let Ok(lat_long) = gps_lat_long.lock() {
             if let Some((lat, long)) = *lat_long {
                 settings.lat = lat as f64;
@@ -437,56 +395,10 @@ see https://github.com/rsadsb/adsb_deku#serverdemodulationexternal-applications 
                 }
             }
         }
-
-        // add lat and long to coverage vector if not existing
-        // TODO: this should be in a function
-        let all_lat_long = adsb_airplanes.all_lat_long_altitude();
-        for (
-            Position {
-                latitude,
-                longitude,
-                ..
-            },
-            all_icao,
-        ) in all_lat_long
-        {
-            let latitude = (latitude * COVERAGE_MASK).round() / COVERAGE_MASK;
-            let longitude = (longitude * COVERAGE_MASK).round() / COVERAGE_MASK;
-
-            // Add number to seen number if found already
-            let mut found = false;
-            for coverage in &mut coverage_airplanes {
-                // Reduce the precision of the coverage/heatmap display (XX.XX)
-                //
-                // This is so that more airplanes are seen as being in the same spot and are
-                // colored so that is made clear to the user. If this is to accurate you will never
-                // see airplanes in the "same" spot
-                let (lat, long, seen_number, icao) = coverage;
-                let lat = (*lat * COVERAGE_MASK).round() / COVERAGE_MASK;
-                let long = (*long * COVERAGE_MASK).round() / COVERAGE_MASK;
-
-                // Found already, but it is a diff icao? if so, update to new icao and add to
-                // seen_number for the color to be more "white" later on
-                if (latitude, longitude) == (lat, long) && (all_icao != *icao) {
-                    *seen_number += 1;
-                    *icao = all_icao;
-                    found = true;
-                    break;
-                }
-
-                if (latitude, longitude) == (lat, long) {
-                    found = true;
-                    break;
-                }
-            }
-
-            // If an airplane wasn't seen in this position, add a new entry
-            if !found {
-                coverage_airplanes.push((latitude, longitude, 0, all_icao));
-            }
-        }
-
         input.clear();
+
+        populate_coverage(&adsb_airplanes, &mut coverage_airplanes);
+
         // remove airplanes that timed-out
         adsb_airplanes.prune(filter_time);
 
@@ -531,8 +443,74 @@ see https://github.com/rsadsb/adsb_deku#serverdemodulationexternal-applications 
             }
         }
     }
-    info!("quitting");
+
+    // cleanup and quit
+    //
+    // PANIC: this won't panic, because main loop will continue until this is Some
+    let reason = settings.quit.unwrap();
+    terminal.clear()?;
+    let mut stdout = io::stdout();
+    crossterm::execute!(
+        stdout,
+        crossterm::terminal::LeaveAlternateScreen,
+        crossterm::event::DisableMouseCapture
+    )?;
+    crossterm::terminal::disable_raw_mode()?;
+    terminal.show_cursor()?;
+    println!("radar: {}", reason);
+    info!("quitting: {}", reason);
     Ok(())
+}
+
+// add lat and long to coverage vector if not existing
+fn populate_coverage(
+    adsb_airplanes: &Airplanes,
+    coverage_airplanes: &mut Vec<(f64, f64, u32, ICAO)>,
+) {
+    let all_position = adsb_airplanes.all_position();
+    for (
+        all_icao,
+        Position {
+            latitude,
+            longitude,
+            ..
+        },
+    ) in all_position
+    {
+        let latitude = (latitude * COVERAGE_MASK).round() / COVERAGE_MASK;
+        let longitude = (longitude * COVERAGE_MASK).round() / COVERAGE_MASK;
+
+        // Add number to seen number if found already
+        let mut found = false;
+        for (lat, long, seen_number, icao) in coverage_airplanes.iter_mut() {
+            // Reduce the precision of the coverage/heatmap display (XX.XX)
+            //
+            // This is so that more airplanes are seen as being in the same spot and are
+            // colored so that is made clear to the user. If this is to accurate you will never
+            // see airplanes in the "same" spot
+            let lat = (*lat * COVERAGE_MASK).round() / COVERAGE_MASK;
+            let long = (*long * COVERAGE_MASK).round() / COVERAGE_MASK;
+
+            // Found already, but it is a diff icao? if so, update to new icao and add to
+            // seen_number for the color to be more "white" later on
+            if (latitude, longitude) == (lat, long) && (all_icao != *icao) {
+                *seen_number += 1;
+                *icao = all_icao;
+                found = true;
+                break;
+            }
+
+            if (latitude, longitude) == (lat, long) {
+                found = true;
+                break;
+            }
+        }
+
+        // If an airplane wasn't seen in this position, add a new entry
+        if !found {
+            coverage_airplanes.push((latitude, longitude, 0, all_icao));
+        }
+    }
 }
 
 /// Handle a `KeyEvent`
@@ -1300,5 +1278,35 @@ fn draw_locations(ctx: &mut tui::widgets::canvas::Context<'_>, settings: &Settin
                 Span::styled(icao.to_string(), Style::default().fg(Color::Green)),
             );
         }
+    }
+}
+
+/// function ran withint a thread for updating `gps_lat_long` when the gpsd shows a new lat_long
+/// position.
+fn gpsd_thread(gpsd_ip: String, gps_lat_long: Arc<Mutex<Option<(f64, f64)>>>) {
+    let gpsd_port = 2947;
+    if let Ok(stream) = TcpStream::connect((gpsd_ip.clone(), gpsd_port))
+        .with_context(|| format!("unable to connect to gpsd server @ {gpsd_ip}:{gpsd_port}"))
+    {
+        let mut reader = BufReader::new(&stream);
+        let mut writer = BufWriter::new(&stream);
+        handshake(&mut reader, &mut writer).unwrap();
+        info!("[gpsd] connected");
+
+        // keep looping while reading new messages looking for GGA messages which are the
+        // normal GPS messages from the NMEA messages.
+        loop {
+            if let Ok(ResponseData::Tpv(data)) = get_data(&mut reader) {
+                // only update if the operator hasn't set a lat/long position already
+                if let Ok(mut lat_long) = gps_lat_long.lock() {
+                    if let (Some(lat), Some(lon)) = (data.lat, data.lon) {
+                        info!("[gpsd] lat: {lat},  long:{lon}");
+                        *lat_long = Some((lat, lon));
+                    }
+                }
+            }
+        }
+    } else {
+        error!("could not connect to gpsd");
     }
 }
