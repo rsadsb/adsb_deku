@@ -333,33 +333,7 @@ see https://github.com/rsadsb/adsb_deku#serverdemodulationexternal-applications 
 
         // start thread
         std::thread::spawn(move || {
-            let gpsd_port = 2947;
-            if let Ok(stream) =
-                TcpStream::connect((gpsd_ip.clone(), gpsd_port)).with_context(|| {
-                    format!("unable to connect to gpsd server @ {gpsd_ip}:{gpsd_port}")
-                })
-            {
-                let mut reader = BufReader::new(&stream);
-                let mut writer = BufWriter::new(&stream);
-                handshake(&mut reader, &mut writer).unwrap();
-                info!("[gpsd] connected");
-
-                // keep looping while reading new messages looking for GGA messages which are the
-                // normal GPS messages from the NMEA messages.
-                loop {
-                    if let Ok(ResponseData::Tpv(data)) = get_data(&mut reader) {
-                        // only update if the operator hasn't set a lat/long position already
-                        if let Ok(mut lat_long) = cloned_gps_lat_long.lock() {
-                            if let (Some(lat), Some(lon)) = (data.lat, data.lon) {
-                                info!("[gpsd] lat: {lat},  long:{lon}");
-                                *lat_long = Some((lat, lon));
-                            }
-                        }
-                    }
-                }
-            } else {
-                error!("could not connect to gpsd");
-            }
+            gpsd_thread(gpsd_ip, cloned_gps_lat_long);
         });
     }
 
@@ -1302,5 +1276,35 @@ fn draw_locations(ctx: &mut tui::widgets::canvas::Context<'_>, settings: &Settin
                 Span::styled(icao.to_string(), Style::default().fg(Color::Green)),
             );
         }
+    }
+}
+
+/// function ran withint a thread for updating `gps_lat_long` when the gpsd shows a new lat_long
+/// position.
+fn gpsd_thread(gpsd_ip: String, gps_lat_long: Arc<Mutex<Option<(f64, f64)>>>) {
+    let gpsd_port = 2947;
+    if let Ok(stream) = TcpStream::connect((gpsd_ip.clone(), gpsd_port))
+        .with_context(|| format!("unable to connect to gpsd server @ {gpsd_ip}:{gpsd_port}"))
+    {
+        let mut reader = BufReader::new(&stream);
+        let mut writer = BufWriter::new(&stream);
+        handshake(&mut reader, &mut writer).unwrap();
+        info!("[gpsd] connected");
+
+        // keep looping while reading new messages looking for GGA messages which are the
+        // normal GPS messages from the NMEA messages.
+        loop {
+            if let Ok(ResponseData::Tpv(data)) = get_data(&mut reader) {
+                // only update if the operator hasn't set a lat/long position already
+                if let Ok(mut lat_long) = gps_lat_long.lock() {
+                    if let (Some(lat), Some(lon)) = (data.lat, data.lon) {
+                        info!("[gpsd] lat: {lat},  long:{lon}");
+                        *lat_long = Some((lat, lon));
+                    }
+                }
+            }
+        }
+    } else {
+        error!("could not connect to gpsd");
     }
 }
