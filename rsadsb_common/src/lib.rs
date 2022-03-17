@@ -67,19 +67,22 @@ impl Airplanes {
     /// From `ICAO`, get `AirplaneState`
     ///
     /// equivalent [`BTreeMap::get`]
-    #[must_use] pub fn get(&self, key: ICAO) -> Option<&AirplaneState> {
+    #[must_use]
+    pub fn get(&self, key: ICAO) -> Option<&AirplaneState> {
         self.0.get(&key)
     }
 
     /// Amount of currently tracked airplanes
     ///
     /// equivalent [`BTreeMap::len`]
-    #[must_use] pub fn len(&self) -> usize {
+    #[must_use]
+    pub fn len(&self) -> usize {
         self.0.len()
     }
 
     /// equivalent [`BTreeMap::is_empty`]
-    #[must_use] pub fn is_empty(&self) -> bool {
+    #[must_use]
+    pub fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
 
