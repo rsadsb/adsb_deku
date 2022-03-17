@@ -148,14 +148,14 @@ impl Airplanes {
         }
     }
 
-    /// return all latitude/longitude from Hashmap of current "seen" aircrafts
+    /// Return all aircraft that currently have a [`Position`]
     #[must_use]
-    pub fn all_lat_long_altitude(&self) -> Vec<(cpr::Position, ICAO)> {
+    pub fn all_position(&self) -> Vec<(ICAO, cpr::Position)> {
         let mut all_lat_long = vec![];
         for (key, airplane_state) in self.iter() {
             let coor = &airplane_state.coords;
             if let Some(position) = &coor.position {
-                all_lat_long.push((*position, *key));
+                all_lat_long.push((*key, *position));
             }
         }
 

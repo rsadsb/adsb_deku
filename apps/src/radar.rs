@@ -440,15 +440,15 @@ see https://github.com/rsadsb/adsb_deku#serverdemodulationexternal-applications 
 
         // add lat and long to coverage vector if not existing
         // TODO: this should be in a function
-        let all_lat_long = adsb_airplanes.all_lat_long_altitude();
+        let all_position = adsb_airplanes.all_position();
         for (
+            all_icao,
             Position {
                 latitude,
                 longitude,
                 ..
             },
-            all_icao,
-        ) in all_lat_long
+        ) in all_position
         {
             let latitude = (latitude * COVERAGE_MASK).round() / COVERAGE_MASK;
             let longitude = (longitude * COVERAGE_MASK).round() / COVERAGE_MASK;
