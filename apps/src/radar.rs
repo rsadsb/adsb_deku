@@ -395,56 +395,10 @@ see https://github.com/rsadsb/adsb_deku#serverdemodulationexternal-applications 
                 }
             }
         }
-
-        // add lat and long to coverage vector if not existing
-        // TODO: this should be in a function
-        let all_position = adsb_airplanes.all_position();
-        for (
-            all_icao,
-            Position {
-                latitude,
-                longitude,
-                ..
-            },
-        ) in all_position
-        {
-            let latitude = (latitude * COVERAGE_MASK).round() / COVERAGE_MASK;
-            let longitude = (longitude * COVERAGE_MASK).round() / COVERAGE_MASK;
-
-            // Add number to seen number if found already
-            let mut found = false;
-            for coverage in &mut coverage_airplanes {
-                // Reduce the precision of the coverage/heatmap display (XX.XX)
-                //
-                // This is so that more airplanes are seen as being in the same spot and are
-                // colored so that is made clear to the user. If this is to accurate you will never
-                // see airplanes in the "same" spot
-                let (lat, long, seen_number, icao) = coverage;
-                let lat = (*lat * COVERAGE_MASK).round() / COVERAGE_MASK;
-                let long = (*long * COVERAGE_MASK).round() / COVERAGE_MASK;
-
-                // Found already, but it is a diff icao? if so, update to new icao and add to
-                // seen_number for the color to be more "white" later on
-                if (latitude, longitude) == (lat, long) && (all_icao != *icao) {
-                    *seen_number += 1;
-                    *icao = all_icao;
-                    found = true;
-                    break;
-                }
-
-                if (latitude, longitude) == (lat, long) {
-                    found = true;
-                    break;
-                }
-            }
-
-            // If an airplane wasn't seen in this position, add a new entry
-            if !found {
-                coverage_airplanes.push((latitude, longitude, 0, all_icao));
-            }
-        }
-
         input.clear();
+
+        populate_coverage(&adsb_airplanes, &mut coverage_airplanes);
+
         // remove airplanes that timed-out
         adsb_airplanes.prune(filter_time);
 
@@ -488,9 +442,6 @@ see https://github.com/rsadsb/adsb_deku#serverdemodulationexternal-applications 
                 break;
             }
         }
-
-        // clear input
-        input.clear();
     }
 
     // cleanup and quit
@@ -509,6 +460,57 @@ see https://github.com/rsadsb/adsb_deku#serverdemodulationexternal-applications 
     println!("radar: {}", reason);
     info!("quitting: {}", reason);
     Ok(())
+}
+
+// add lat and long to coverage vector if not existing
+fn populate_coverage(
+    adsb_airplanes: &Airplanes,
+    coverage_airplanes: &mut Vec<(f64, f64, u32, ICAO)>,
+) {
+    let all_position = adsb_airplanes.all_position();
+    for (
+        all_icao,
+        Position {
+            latitude,
+            longitude,
+            ..
+        },
+    ) in all_position
+    {
+        let latitude = (latitude * COVERAGE_MASK).round() / COVERAGE_MASK;
+        let longitude = (longitude * COVERAGE_MASK).round() / COVERAGE_MASK;
+
+        // Add number to seen number if found already
+        let mut found = false;
+        for (lat, long, seen_number, icao) in coverage_airplanes.iter_mut() {
+            // Reduce the precision of the coverage/heatmap display (XX.XX)
+            //
+            // This is so that more airplanes are seen as being in the same spot and are
+            // colored so that is made clear to the user. If this is to accurate you will never
+            // see airplanes in the "same" spot
+            let lat = (*lat * COVERAGE_MASK).round() / COVERAGE_MASK;
+            let long = (*long * COVERAGE_MASK).round() / COVERAGE_MASK;
+
+            // Found already, but it is a diff icao? if so, update to new icao and add to
+            // seen_number for the color to be more "white" later on
+            if (latitude, longitude) == (lat, long) && (all_icao != *icao) {
+                *seen_number += 1;
+                *icao = all_icao;
+                found = true;
+                break;
+            }
+
+            if (latitude, longitude) == (lat, long) {
+                found = true;
+                break;
+            }
+        }
+
+        // If an airplane wasn't seen in this position, add a new entry
+        if !found {
+            coverage_airplanes.push((latitude, longitude, 0, all_icao));
+        }
+    }
 }
 
 /// Handle a `KeyEvent`
