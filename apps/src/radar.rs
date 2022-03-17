@@ -366,24 +366,8 @@ see https://github.com/rsadsb/adsb_deku#serverdemodulationexternal-applications 
     let mut stats = Stats::default();
 
     info!("tui setup");
-    loop {
-        // cleanup and quit if required
-        if let Some(reason) = settings.quit {
-            terminal.clear()?;
-            let mut stdout = io::stdout();
-            crossterm::execute!(
-                stdout,
-                crossterm::terminal::LeaveAlternateScreen,
-                crossterm::event::DisableMouseCapture
-            )?;
-            crossterm::terminal::disable_raw_mode()?;
-            terminal.show_cursor()?;
-            println!("radar: {}", reason);
-            break;
-        }
-        input.clear();
-
-        // update lat/long from gpsd thread
+    while settings.quit.is_none() {
+        // check the Mutex from the gpsd thread, update lat/long
         if let Ok(lat_long) = gps_lat_long.lock() {
             if let Some((lat, long)) = *lat_long {
                 settings.lat = lat as f64;
@@ -530,8 +514,26 @@ see https://github.com/rsadsb/adsb_deku#serverdemodulationexternal-applications 
                 break;
             }
         }
+
+        // clear input
+        input.clear();
     }
-    info!("quitting");
+
+    // cleanup and quit
+    //
+    // PANIC: this won't panic, because main loop will continue until this is Some
+    let reason = settings.quit.unwrap();
+    terminal.clear()?;
+    let mut stdout = io::stdout();
+    crossterm::execute!(
+        stdout,
+        crossterm::terminal::LeaveAlternateScreen,
+        crossterm::event::DisableMouseCapture
+    )?;
+    crossterm::terminal::disable_raw_mode()?;
+    terminal.show_cursor()?;
+    println!("radar: {}", reason);
+    info!("quitting: {}", reason);
     Ok(())
 }
 
