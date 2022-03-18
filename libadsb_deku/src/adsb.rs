@@ -690,8 +690,8 @@ pub struct ControlField {
     pub me: ME,
 }
 
-impl std::fmt::Display for ControlField {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Display for ControlField {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
             "{}",
@@ -746,8 +746,8 @@ pub enum ControlFieldType {
     Reserved,
 }
 
-impl std::fmt::Display for ControlFieldType {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Display for ControlFieldType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s_type = match self {
             Self::ADSB_ES_NT | Self::ADSB_ES_NT_ALT => "(ADS-B)",
             Self::TISB_COARSE | Self::TISB_ADSB_RELAY | Self::TISB_FINE => "(TIS-B)",

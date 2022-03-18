@@ -1,5 +1,6 @@
 [workspace]
 members = ["apps", "libadsb_deku", "rsadsb_common"]
+exclude = ["ensure_no_std"]
 
 [profile.release]
 strip = true
