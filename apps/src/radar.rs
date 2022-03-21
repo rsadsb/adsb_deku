@@ -998,13 +998,13 @@ fn build_tab_airplanes<A: tui::backend::Backend>(
             ..
         }) = aircraft_details
         {
-            lat = format!("{:.3}", position.latitude);
-            lon = format!("{:.3}", position.longitude);
-            s_kilo_distance = format!("{}", kilo_distance);
+            lat = format!("{:.DEFAULT_PRECISION$}", position.latitude);
+            lon = format!("{:.DEFAULT_PRECISION$}", position.longitude);
+            s_kilo_distance = format!("{:.DEFAULT_PRECISION$}", kilo_distance);
             alt = altitude.to_string();
         }
         let heading = if let Some(heading) = state.heading {
-            format!("{heading:.1}")
+            format!("{heading:>7.1}")
         } else {
             "".to_string()
         };
@@ -1022,7 +1022,7 @@ fn build_tab_airplanes<A: tui::backend::Backend>(
                 .speed
                 .map_or_else(|| "".into(), |v| format!("{v:>5.0}")),
             format!("{:>8}", s_kilo_distance),
-            format!("{:>8}", state.num_messages),
+            format!("{:>4}", state.num_messages),
         ]));
     }
 
@@ -1049,7 +1049,7 @@ fn build_tab_airplanes<A: tui::backend::Backend>(
                 "   FPM",
                 "Speed",
                 "Distance",
-                "    Msgs",
+                "Msgs",
             ])
             .bottom_margin(1),
         )
@@ -1067,8 +1067,8 @@ fn build_tab_airplanes<A: tui::backend::Backend>(
             Constraint::Length(8),
             Constraint::Length(6),
             Constraint::Length(5),
+            Constraint::Length(8),
             Constraint::Length(6),
-            Constraint::Length(7),
         ])
         .column_spacing(1)
         .highlight_style(Style::default().add_modifier(Modifier::BOLD))
