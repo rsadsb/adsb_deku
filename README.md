@@ -13,7 +13,7 @@ See [rsadsb-v0.5.0](https://rsadsb.github.io/v0.5.0.html) for latest major relea
 
 This library uses [deku](https://github.com/sharksforarms/deku) for deserialization of protocol.
 
-![Radar Example](media/peek_2022_02_06_02_640_640.gif)
+![Radar Example](media/03_20_22.gif)
 
 ## Applications
 
