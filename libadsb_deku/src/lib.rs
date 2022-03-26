@@ -698,12 +698,10 @@ impl fmt::Display for FlightStatus {
             f,
             "{}",
             match self {
-                Self::NoAlertNoSPIAirborne => "airborne?",
+                Self::NoAlertNoSPIAirborne | Self::AlertSPIAirborneGround | Self::NoAlertSPIAirborneGround => "airborne?",
                 Self::NoAlertNoSPIOnGround => "ground?",
                 Self::AlertNoSPIAirborne => "airborne",
                 Self::AlertNoSPIOnGround => "ground",
-                Self::AlertSPIAirborneGround => "airborne?",
-                Self::NoAlertSPIAirborneGround => "airborne?",
                 _ => "reserved",
             }
         )
@@ -771,12 +769,12 @@ impl fmt::Display for Capability {
             f,
             "{}",
             match self {
-                Capability::AG_UNCERTAIN => "uncertain1",
-                Capability::Reserved => "reserved",
-                Capability::AG_GROUND => "ground",
-                Capability::AG_AIRBORNE => "airborne",
-                Capability::AG_UNCERTAIN2 => "uncertain2",
-                Capability::AG_UNCERTAIN3 => "airborne?",
+                Self::AG_UNCERTAIN => "uncertain1",
+                Self::Reserved => "reserved",
+                Self::AG_GROUND => "ground",
+                Self::AG_AIRBORNE => "airborne",
+                Self::AG_UNCERTAIN2 => "uncertain2",
+                Self::AG_UNCERTAIN3 => "airborne?",
             }
         )
     }

@@ -47,7 +47,7 @@ mod scale {
     pub const CHANGE: f64 = 1.1;
 
     /// Value used as mutiplier in map scaling for projection
-    pub const DEFAULT: f64 = 500000.0;
+    pub const DEFAULT: f64 = 500_000.0;
 }
 
 /// Accuracy of latitude/longitude for Coverage is affected by this variable.
@@ -878,12 +878,12 @@ fn build_tab_map<A: tui::backend::Backend>(
 
                             // move the first point out, so that the green point of the aircraft
                             // _usually_ shows.
-                            let y_1 = y + (2.0 * (n_heading.to_radians()).cos()) as f64;
-                            let x_1 = x + (2.0 * (n_heading.to_radians()).sin()) as f64;
+                            let y_1 = y + f64::from(2.0 * (n_heading.to_radians()).cos());
+                            let x_1 = x + f64::from(2.0 * (n_heading.to_radians()).sin());
 
                             // draw the line out from the aircraft at an angle
-                            let y_2 = y + (LENGTH * (n_heading.to_radians()).cos()) as f64;
-                            let x_2 = x + (LENGTH * (n_heading.to_radians()).sin()) as f64;
+                            let y_2 = y + f64::from(LENGTH * (n_heading.to_radians()).cos());
+                            let x_2 = x + f64::from(LENGTH * (n_heading.to_radians()).sin());
 
                             ctx.draw(&Line {
                                 x1: x_1,
@@ -895,10 +895,10 @@ fn build_tab_map<A: tui::backend::Backend>(
 
                             // repeat for the other side (addition, so just modding)
                             let n_heading = (heading + angle) % 360.0;
-                            let y_1 = y + (2.0 * (n_heading.to_radians()).cos()) as f64;
-                            let x_1 = x + (2.0 * (n_heading.to_radians()).sin()) as f64;
-                            let y_2 = y + (LENGTH * (n_heading.to_radians()).cos()) as f64;
-                            let x_2 = x + (LENGTH * (n_heading.to_radians()).sin()) as f64;
+                            let y_1 = y + f64::from(2.0 * (n_heading.to_radians()).cos());
+                            let x_1 = x + f64::from(2.0 * (n_heading.to_radians()).sin());
+                            let y_2 = y + f64::from(LENGTH * (n_heading.to_radians()).cos());
+                            let x_2 = x + f64::from(LENGTH * (n_heading.to_radians()).sin());
 
                             ctx.draw(&Line {
                                 x1: x_1,
@@ -1281,7 +1281,7 @@ fn draw_locations(ctx: &mut tui::widgets::canvas::Context<'_>, settings: &Settin
     }
 }
 
-/// function ran withint a thread for updating `gps_lat_long` when the gpsd shows a new lat_long
+/// function ran withint a thread for updating `gps_lat_long` when the gpsd shows a new `lat_long`
 /// position.
 fn gpsd_thread(gpsd_ip: String, gps_lat_long: Arc<Mutex<Option<(f64, f64)>>>) {
     let gpsd_port = 2947;

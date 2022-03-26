@@ -751,26 +751,10 @@ impl fmt::Display for ControlFieldType {
         let s_type = match self {
             Self::ADSB_ES_NT | Self::ADSB_ES_NT_ALT => "(ADS-B)",
             Self::TISB_COARSE | Self::TISB_ADSB_RELAY | Self::TISB_FINE => "(TIS-B)",
-            Self::TISB_MANAGE => "(ADS-R)",
-            Self::TISB_ADSB => "(ADS-R)",
+            Self::TISB_MANAGE | Self::TISB_ADSB => "(ADS-R)",
             Self::Reserved => "(unknown addressing scheme)",
         };
         write!(f, "{s_type}")
-    }
-}
-
-/// [`crate::DF::TisB`] Containing ICAO
-
-#[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
-#[deku(type = "u8", bits = "1")]
-pub enum Unit {
-    Meter = 0,
-    Feet  = 1,
-}
-
-impl Default for Unit {
-    fn default() -> Self {
-        Self::Meter
     }
 }
 

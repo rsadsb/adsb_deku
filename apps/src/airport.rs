@@ -17,13 +17,13 @@ pub struct Airport {
 }
 
 impl Airport {
-    pub fn from_file(filename: &str, time_zones: &Option<String>) -> Vec<Airport> {
+    pub fn from_file(filename: &str, time_zones: &Option<String>) -> Vec<Self> {
         let mut airports = vec![];
         let f = File::open(filename).unwrap();
 
         let mut rdr = csv::Reader::from_reader(f);
         for result in rdr.deserialize() {
-            let record: Airport = result.unwrap();
+            let record: Self = result.unwrap();
 
             if let Some(ref time_zones) = time_zones {
                 for tz in time_zones.split(',') {
