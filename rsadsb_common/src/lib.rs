@@ -202,7 +202,7 @@ impl Airplanes {
                 heading, ground_speed, vert_speed
             );
             state.heading = Some(heading);
-            state.speed = Some(ground_speed);
+            state.speed = Some(ground_speed as f32);
             state.vert_speed = Some(vert_speed);
         }
     }
@@ -211,7 +211,7 @@ impl Airplanes {
     fn add_altitude(&mut self, icao: ICAO, altitude: &Altitude, lat_long: (f64, f64)) {
         let state = self.0.entry(icao).or_insert_with(AirplaneState::default);
         info!(
-            "[{icao}] with altitude: {}, cpr lat: {}, cpr long: {}",
+            "[{icao}] with altitude: {:?}, cpr lat: {}, cpr long: {}",
             altitude.alt, altitude.lat_cpr, altitude.lon_cpr
         );
         let mut temp_coords = match altitude.odd_flag {
@@ -248,9 +248,9 @@ impl Airplanes {
 #[derive(Debug)]
 pub struct AirplaneDetails {
     pub position: cpr::Position,
-    pub altitude: u32,
+    pub altitude: u16,
     pub kilo_distance: f64,
-    pub heading: Option<f64>,
+    pub heading: Option<f32>,
     pub track: Option<Vec<AirplaneCoor>>,
 }
 
@@ -265,13 +265,15 @@ pub struct AirplaneState {
     ///
     /// 0 = Straight up
     /// 90 = Right, and so on
-    pub heading: Option<f64>,
-    /// speed from `adsb::AirborneVelocity::calculate()`
-    pub speed: Option<f64>,
+    pub heading: Option<f32>,
+    /// ground_speed from `adsb::AirborneVelocity::calculate()`
+    ///
+    /// Stored as a f64 in that library but we store as f32 for size reasons in this library
+    pub speed: Option<f32>,
     /// vert_speed from `adsb::AirborneVelocity::calculate()`
     pub vert_speed: Option<i16>,
     pub on_ground: Option<bool>,
-    pub num_messages: u64,
+    pub num_messages: u32,
     #[cfg(feature = "std")]
     pub last_time: SystemTime,
     pub track: Option<Vec<AirplaneCoor>>,
@@ -357,9 +359,11 @@ impl AirplaneCoor {
     }
 
     /// Return altitude from Odd Altitude
-    fn altitude(&self) -> Option<u32> {
+    fn altitude(&self) -> Option<u16> {
         if let Some(odd) = self.altitudes[0] {
-            return Some(odd.alt);
+            if let Some(alt) = odd.alt {
+                return Some(alt);
+            }
         }
         None
     }

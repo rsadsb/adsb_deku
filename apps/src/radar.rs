@@ -862,11 +862,11 @@ fn build_tab_map<A: tui::backend::Backend>(
                     // add degrees of the angle before displaying
                     if !settings.opts.disable_heading {
                         if let Some(heading) = heading {
-                            const ANGLE: f64 = 20.0;
-                            const LENGTH: f64 = 8.0;
+                            const ANGLE: f32 = 20.0;
+                            const LENGTH: f32 = 8.0;
 
                             let addition_heading = (heading % 90.0) / 10.0;
-                            let angle: f64 = ANGLE + addition_heading;
+                            let angle: f32 = ANGLE + addition_heading;
 
                             let heading = heading + 180.0 % 360.0;
                             // wrap around the angle since we are are subtracting
@@ -878,12 +878,12 @@ fn build_tab_map<A: tui::backend::Backend>(
 
                             // move the first point out, so that the green point of the aircraft
                             // _usually_ shows.
-                            let y_1 = y + (2.0 * (n_heading.to_radians()).cos());
-                            let x_1 = x + (2.0 * (n_heading.to_radians()).sin());
+                            let y_1 = y + (2.0 * (n_heading.to_radians()).cos()) as f64;
+                            let x_1 = x + (2.0 * (n_heading.to_radians()).sin()) as f64;
 
                             // draw the line out from the aircraft at an angle
-                            let y_2 = y + (LENGTH * (n_heading.to_radians()).cos());
-                            let x_2 = x + (LENGTH * (n_heading.to_radians()).sin());
+                            let y_2 = y + (LENGTH * (n_heading.to_radians()).cos()) as f64;
+                            let x_2 = x + (LENGTH * (n_heading.to_radians()).sin()) as f64;
 
                             ctx.draw(&Line {
                                 x1: x_1,
@@ -895,10 +895,10 @@ fn build_tab_map<A: tui::backend::Backend>(
 
                             // repeat for the other side (addition, so just modding)
                             let n_heading = (heading + angle) % 360.0;
-                            let y_1 = y + (2.0 * (n_heading.to_radians()).cos());
-                            let x_1 = x + (2.0 * (n_heading.to_radians()).sin());
-                            let y_2 = y + (LENGTH * (n_heading.to_radians()).cos());
-                            let x_2 = x + (LENGTH * (n_heading.to_radians()).sin());
+                            let y_1 = y + (2.0 * (n_heading.to_radians()).cos()) as f64;
+                            let x_1 = x + (2.0 * (n_heading.to_radians()).sin()) as f64;
+                            let y_2 = y + (LENGTH * (n_heading.to_radians()).cos()) as f64;
+                            let x_2 = x + (LENGTH * (n_heading.to_radians()).sin()) as f64;
 
                             ctx.draw(&Line {
                                 x1: x_1,

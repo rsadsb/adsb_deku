@@ -170,7 +170,7 @@ impl ME {
                     if let Some((heading, ground_speed, vertical_rate)) =
                         airborne_velocity.calculate()
                     {
-                        writeln!(f, "  Heading:       {}", libm::ceil(heading))?;
+                        writeln!(f, "  Heading:       {}", libm::ceil(heading as f64))?;
                         writeln!(
                             f,
                             "  Speed:         {} kt groundspeed",
@@ -903,7 +903,7 @@ pub struct TargetStateAndStatusInformation {
     #[deku(
         bits = "9",
         endian = "big",
-        map = "|heading: u32| -> Result<_, DekuError> {Ok(heading as f32 * 180.0 / 256.0)}"
+        map = "|heading: u16| -> Result<_, DekuError> {Ok(heading as f32 * 180.0 / 256.0)}"
     )]
     pub heading: f32,
     #[deku(bits = "4")]
@@ -956,9 +956,9 @@ pub struct AirborneVelocity {
 }
 
 impl AirborneVelocity {
-    /// Return effective (heading, `ground_speed`, `vertical_rate`) for groundspeed
+    /// Return effective (`heading`, `ground_speed`, `vertical_rate`) for groundspeed
     #[must_use]
-    pub fn calculate(&self) -> Option<(f64, f64, i16)> {
+    pub fn calculate(&self) -> Option<(f32, f64, i16)> {
         if let AirborneVelocitySubType::GroundSpeedDecoding(ground_speed) = &self.sub_type {
             let v_ew = f64::from((ground_speed.ew_vel as i16 - 1) * ground_speed.ew_sign.value());
             let v_ns = f64::from((ground_speed.ns_vel as i16 - 1) * ground_speed.ns_sign.value());
@@ -972,7 +972,7 @@ impl AirborneVelocity {
                 .map(|v| (v as i16) * self.vrate_sign.value());
 
             if let Some(vrate) = vrate {
-                return Some((heading, libm::hypot(v_ew, v_ns), vrate));
+                return Some((heading as f32, libm::hypot(v_ew, v_ns), vrate));
             }
         }
         None
