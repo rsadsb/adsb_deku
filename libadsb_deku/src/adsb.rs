@@ -10,7 +10,6 @@ use core::{
     clone::Clone,
     cmp::PartialEq,
     convert::From,
-    default::Default,
     f64,
     fmt::Write,
     fmt::{Debug, Error},
