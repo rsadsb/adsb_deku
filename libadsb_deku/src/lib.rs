@@ -698,7 +698,9 @@ impl fmt::Display for FlightStatus {
             f,
             "{}",
             match self {
-                Self::NoAlertNoSPIAirborne | Self::AlertSPIAirborneGround | Self::NoAlertSPIAirborneGround => "airborne?",
+                Self::NoAlertNoSPIAirborne
+                | Self::AlertSPIAirborneGround
+                | Self::NoAlertSPIAirborneGround => "airborne?",
                 Self::NoAlertNoSPIOnGround => "ground?",
                 Self::AlertNoSPIAirborne => "airborne",
                 Self::AlertNoSPIOnGround => "ground",
