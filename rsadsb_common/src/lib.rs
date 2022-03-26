@@ -388,10 +388,12 @@ impl AirplaneCoor {
         let x_lat = libm::sin((lat2_rad - lat1_rad) / 2.00);
         let x_long = libm::sin((long2_rad - long1_rad) / 2.00);
 
+        // this clippy lint will dis-allow mul_add, this isn't available for `no_std`
+        #[allow(clippy::suboptimal_flops)]
         let a = x_lat * x_lat
             + libm::cos(lat1_rad)
                 * libm::cos(lat2_rad)
-                * libm::powf(libm::sin(x_long) as f32, 2.0) as f64;
+                * f64::from(libm::powf(libm::sin(x_long) as f32, 2.0));
 
         let c = 2.0 * libm::atan2(libm::sqrt(a), libm::sqrt(1.0 - a));
 
