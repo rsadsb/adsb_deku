@@ -125,7 +125,7 @@ pub use deku;
 extern crate alloc;
 
 #[cfg(feature = "alloc")]
-use alloc::{fmt, format, string::String, vec, vec::Vec};
+use alloc::{fmt, format, string::String, string::ToString, vec, vec::Vec};
 #[cfg(feature = "alloc")]
 use core::{
     clone::Clone,
@@ -465,7 +465,7 @@ pub struct Altitude {
     #[deku(bits = "1")]
     pub saf_or_imf: u8,
     #[deku(reader = "Self::read(deku::rest)")]
-    pub alt: u32,
+    pub alt: Option<u16>,
     /// UTC sync or not
     #[deku(bits = "1")]
     pub t: bool,
@@ -479,7 +479,12 @@ pub struct Altitude {
 
 impl fmt::Display for Altitude {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        writeln!(f, "  Altitude:      {} ft barometric", self.alt)?;
+        let altitude = if let Some(altitude) = self.alt {
+            format!("{} ft barometric", altitude)
+        } else {
+            "None".to_string()
+        };
+        writeln!(f, "  Altitude:      {}", altitude)?;
         writeln!(f, "  CPR type:      Airborne")?;
         writeln!(f, "  CPR odd flag:  {}", self.odd_flag)?;
         writeln!(f, "  CPR latitude:  ({})", self.lat_cpr)?;
@@ -490,7 +495,9 @@ impl fmt::Display for Altitude {
 
 impl Altitude {
     /// `decodeAC12Field`
-    fn read(rest: &BitSlice<Msb0, u8>) -> result::Result<(&BitSlice<Msb0, u8>, u32), DekuError> {
+    fn read(
+        rest: &BitSlice<Msb0, u8>,
+    ) -> result::Result<(&BitSlice<Msb0, u8>, Option<u16>), DekuError> {
         let (rest, num) = u32::read(rest, (deku::ctx::Endian::Big, deku::ctx::Size::Bits(12)))?;
 
         let q = num & 0x10;
@@ -499,17 +506,18 @@ impl Altitude {
             let n = ((num & 0x0fe0) >> 1) | (num & 0x000f);
             let n = n * 25;
             if n > 1000 {
-                Ok((rest, (n - 1000) as u32))
+                // TODO: maybe replace with Result->Option
+                Ok((rest, u16::try_from(n - 1000).ok()))
             } else {
-                Ok((rest, 0))
+                Ok((rest, None))
             }
         } else {
             let mut n = ((num & 0x0fc0) << 1) | (num & 0x003f);
             n = mode_ac::decode_id13_field(n);
             if let Ok(n) = mode_ac::mode_a_to_mode_c(n) {
-                Ok((rest, ((n as u32) * 100)))
+                Ok((rest, u16::try_from(n * 100).ok()))
             } else {
-                Ok((rest, (0)))
+                Ok((rest, None))
             }
         }
     }
@@ -690,12 +698,12 @@ impl fmt::Display for FlightStatus {
             f,
             "{}",
             match self {
-                Self::NoAlertNoSPIAirborne => "airborne?",
+                Self::NoAlertNoSPIAirborne
+                | Self::AlertSPIAirborneGround
+                | Self::NoAlertSPIAirborneGround => "airborne?",
                 Self::NoAlertNoSPIOnGround => "ground?",
                 Self::AlertNoSPIAirborne => "airborne",
                 Self::AlertNoSPIOnGround => "ground",
-                Self::AlertSPIAirborneGround => "airborne?",
-                Self::NoAlertSPIAirborneGround => "airborne?",
                 _ => "reserved",
             }
         )
@@ -704,11 +712,11 @@ impl fmt::Display for FlightStatus {
 
 /// 13 bit encoded altitude
 #[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
-pub struct AC13Field(#[deku(reader = "Self::read(deku::rest)")] pub u32);
+pub struct AC13Field(#[deku(reader = "Self::read(deku::rest)")] pub u16);
 
 impl AC13Field {
     // TODO Add unit
-    fn read(rest: &BitSlice<Msb0, u8>) -> result::Result<(&BitSlice<Msb0, u8>, u32), DekuError> {
+    fn read(rest: &BitSlice<Msb0, u8>) -> result::Result<(&BitSlice<Msb0, u8>, u16), DekuError> {
         let (rest, num) = u32::read(rest, (deku::ctx::Endian::Big, deku::ctx::Size::Bits(13)))?;
 
         let m_bit = num & 0x0040;
@@ -721,7 +729,7 @@ impl AC13Field {
             let n = ((num & 0x1f80) >> 2) | ((num & 0x0020) >> 1) | (num & 0x000f);
             let n = n as u32 * 25;
             if n > 1000 {
-                Ok((rest, n - 1000))
+                Ok((rest, (n - 1000) as u16))
             } else {
                 // TODO: add error
                 Ok((rest, 0))
@@ -729,7 +737,7 @@ impl AC13Field {
         } else {
             // TODO 11 bit gillham coded altitude
             if let Ok(n) = mode_ac::mode_a_to_mode_c(mode_ac::decode_id13_field(num)) {
-                Ok((rest, (100 * n)))
+                Ok((rest, (100 * n) as u16))
             } else {
                 Ok((rest, 0))
             }
@@ -763,12 +771,12 @@ impl fmt::Display for Capability {
             f,
             "{}",
             match self {
-                Capability::AG_UNCERTAIN => "uncertain1",
-                Capability::Reserved => "reserved",
-                Capability::AG_GROUND => "ground",
-                Capability::AG_AIRBORNE => "airborne",
-                Capability::AG_UNCERTAIN2 => "uncertain2",
-                Capability::AG_UNCERTAIN3 => "airborne?",
+                Self::AG_UNCERTAIN => "uncertain1",
+                Self::Reserved => "reserved",
+                Self::AG_GROUND => "ground",
+                Self::AG_AIRBORNE => "airborne",
+                Self::AG_UNCERTAIN2 => "uncertain2",
+                Self::AG_UNCERTAIN3 => "airborne?",
             }
         )
     }
