@@ -462,7 +462,11 @@ see https://github.com/rsadsb/adsb_deku#serverdemodulationexternal-applications 
     Ok(())
 }
 
-// add lat and long to coverage vector if not existing
+// Add to the coverage tab data structure `coverage_airplanes`.
+//
+// Two events cause an addition:
+// 1: New plot from a lat/long position that didn't exist before
+// 2: New ICAO(plane) at a previously seen location
 fn populate_coverage(
     adsb_airplanes: &Airplanes,
     coverage_airplanes: &mut Vec<(f64, f64, u32, ICAO)>,
@@ -1127,7 +1131,7 @@ fn build_tab_stats<A: tui::backend::Backend>(
         .header(Row::new(vec!["Type", "Time", "Value"]).bottom_margin(1))
         .block(Block::default().title("Stats").borders(Borders::ALL))
         .widths(&[
-            Constraint::Length(20),
+            Constraint::Length(14),
             Constraint::Length(20),
             Constraint::Length(200),
         ])
