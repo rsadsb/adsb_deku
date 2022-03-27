@@ -68,11 +68,11 @@ const DEFAULT_PRECISION: usize = 3;
 /// Available top row Tabs
 #[derive(Copy, Clone)]
 enum Tab {
-    Map       = 0,
-    Coverage  = 1,
-    Airplanes = 2,
-    Stats     = 3,
-    Help      = 4,
+    Map,
+    Coverage,
+    Airplanes,
+    Stats,
+    Help,
 }
 
 impl Tab {
