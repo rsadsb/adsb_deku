@@ -18,10 +18,11 @@ use adsb_deku::adsb::{AirborneVelocity, Identification, ME};
 use adsb_deku::{cpr, Altitude, CPRFormat, Frame, DF, ICAO};
 use tracing::{debug, info, warn};
 
-// Max distance from the receiver to the aircraft
-const MAX_RECEIVER_DISTANCE: f64 = 400.0;
+// Max kilometer distance from the receiver to the aircraft. Any distance greater then this is
+// considered a "bad" new position and is not tracked.
+const MAX_RECEIVER_DISTANCE: f64 = 500.0;
 
-// Max obsurd distance an aircraft travelled between messages
+// Max absurd distance an aircraft travelled between messages
 const MAX_AIRCRAFT_DISTANCE: f64 = 100.0;
 
 /// `BTreeMap` of of all currently tracked `ICAO` and `AirplaneState`.
