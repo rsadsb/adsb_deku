@@ -557,7 +557,8 @@ fn handle_keyevent(
         (KeyCode::Up, Tab::Airplanes) => {
             let index = airplanes_state
                 .selected()
-                .map_or(0, |selected| selected - 1);
+                .and_then(|selected| selected.checked_sub(1))
+                .unwrap_or(0);
             airplanes_state.select(Some(index));
         },
         (KeyCode::Down, Tab::Airplanes) => {
