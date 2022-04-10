@@ -123,6 +123,10 @@ pub struct Opts {
     /// comma seperated filter for --airports timezone data, such as: "America/Chicago,America/New_York"
     #[clap(long)]
     pub airports_tz_filter: Option<String>,
+
+    /// retry TCP connection to dump1090 instance if connecton is lost/disconnected
+    #[clap(long)]
+    pub retry_tcp: bool,
 }
 
 #[cfg(test)]

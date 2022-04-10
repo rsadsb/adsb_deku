@@ -27,12 +27,12 @@ use time::UtcOffset;
 use tracing::{debug, error, info, trace};
 use tracing_subscriber::EnvFilter;
 use tui::backend::{Backend, CrosstermBackend};
-use tui::layout::{Constraint, Direction, Layout, Rect};
+use tui::layout::{Alignment, Constraint, Direction, Layout, Rect};
 use tui::style::{Color, Modifier, Style};
 use tui::symbols::DOT;
 use tui::text::{Span, Spans};
 use tui::widgets::canvas::{Canvas, Line, Points};
-use tui::widgets::{Block, Borders, Row, Table, TableState, Tabs};
+use tui::widgets::{Block, Borders, Paragraph, Row, Table, TableState, Tabs};
 use tui::Terminal;
 
 use crate::airport::Airport;
@@ -126,12 +126,35 @@ impl Stats {
     }
 }
 
+/// Enum representing any reason that the main event loop was exited
+enum QuitReason {
+    /// Tcp Disconnect from the dump1090 server. In the case of --retry-tcp, try to reconnect.
+    TcpDisconnect,
+    /// User used a tui method to exit the app, we do what the user wants
+    UserRequested,
+}
+
+impl std::fmt::Display for QuitReason {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::TcpDisconnect => {
+                writeln!(f, "TCP connection aborted, quitting radar tui")?;
+            },
+            Self::UserRequested => {
+                writeln!(f, "user requested quit")?;
+            },
+        }
+
+        Ok(())
+    }
+}
+
 /// After parsing from `Opts` contains more settings mutated in program
-struct Settings<'a> {
+struct Settings {
     /// opts from clap command line
     opts: Opts,
     /// when Some(), imply quitting with msg
-    quit: Option<&'a str>,
+    quit: Option<QuitReason>,
     /// mutable current map selection
     tab_selection: Tab,
     /// current scale from operator
@@ -152,7 +175,7 @@ struct Settings<'a> {
     utc_offset: UtcOffset,
 }
 
-impl<'a> Settings<'a> {
+impl Settings {
     fn new(opts: Opts, utc_offset: UtcOffset) -> Self {
         Self {
             quit: None,
@@ -277,19 +300,6 @@ fn main() -> Result<()> {
         version, opts
     );
 
-    // Setup non-blocking TcpStream
-    let socket = SocketAddr::from((opts.host, opts.port));
-    let host = opts.host;
-    let port = opts.port;
-    let stream = TcpStream::connect_timeout(&socket, Duration::from_secs(5)).with_context(|| {
-        format!(r#"could not open port to ADS-B client at {host}:{port}, try running https://github.com/rsadsb/dump1090_rs.
-see https://github.com/rsadsb/adsb_deku#serverdemodulationexternal-applications for more details"#)
-    })?;
-    stream
-        .set_read_timeout(Some(std::time::Duration::from_millis(50)))
-        .unwrap();
-    let mut reader = BufReader::new(stream);
-
     // empty containers
     let mut input = String::new();
     let mut coverage_airplanes: Vec<(f64, f64, u32, ICAO)> = Vec::new();
@@ -309,7 +319,14 @@ see https://github.com/rsadsb/adsb_deku#serverdemodulationexternal-applications 
 
     // create settings, dropping opts to prevent bad usage of variable
     let mut settings = Settings::new(opts.clone(), utc_offset);
-    drop(opts);
+
+    // Setup non-blocking TcpStream, display a tui display saying as such and setup the quit
+    // if the user wants to quit
+    let socket = SocketAddr::from((opts.host, opts.port));
+    let mut tcp_reader = match init_tcp_reader(&mut terminal, &mut settings, socket)? {
+        Some(tcp_reader) => tcp_reader,
+        None => return Ok(()),
+    };
 
     let mut airports = vec![];
     if let Some(airport) = &settings.opts.airports {
@@ -337,8 +354,33 @@ see https://github.com/rsadsb/adsb_deku#serverdemodulationexternal-applications 
 
     let mut stats = Stats::default();
 
+    // Startup main loop
     info!("tui setup");
-    while settings.quit.is_none() {
+    loop {
+        // check if we need to bail this main event loop
+        match settings.quit {
+            Some(QuitReason::TcpDisconnect) => {
+                // if --retry-tcp has been used, try to generate a new tcp connection
+                if settings.opts.retry_tcp {
+                    tcp_reader = match init_tcp_reader(&mut terminal, &mut settings, socket)? {
+                        // a new connection to a dump1090 instance has been found/set. use it
+                        Some(tcp_reader) => {
+                            settings.quit = None;
+                            tcp_reader
+                        },
+                        // the settings.quit has been set within init_tcp_reader. This continues
+                        // to the next loop, which checks for the settings.quit being set
+                        None => break,
+                    };
+                } else {
+                    // break out of event loop
+                    break;
+                }
+            },
+            Some(QuitReason::UserRequested) => break,
+            None => (),
+        }
+
         // check the Mutex from the gpsd thread, update lat/long
         if let Ok(lat_long) = gps_lat_long.lock() {
             if let Some((lat, long)) = *lat_long {
@@ -347,10 +389,10 @@ see https://github.com/rsadsb/adsb_deku#serverdemodulationexternal-applications 
             }
         }
 
-        if let Ok(len) = reader.read_line(&mut input) {
+        if let Ok(len) = tcp_reader.read_line(&mut input) {
             // a length of 0 would indicate a broken pipe/input, quit program
             if len == 0 {
-                settings.quit = Some("TCP connection aborted, quitting radar tui");
+                settings.quit = Some(QuitReason::TcpDisconnect);
                 continue;
             }
 
@@ -455,9 +497,72 @@ see https://github.com/rsadsb/adsb_deku#serverdemodulationexternal-applications 
     )?;
     crossterm::terminal::disable_raw_mode()?;
     terminal.show_cursor()?;
-    println!("radar: {}", reason);
+    println!("radar quitting: {}", reason);
     info!("quitting: {}", reason);
     Ok(())
+}
+
+/// Try and connect to a dump1090 instance while showing a tui display.
+///
+/// Returns:
+///   `Ok(Some(tcp_reader))`: Success, new tcp connection wrapped in a `BufReader`
+///   `Ok(None)`:             User quit method has been used
+///   `Err()`:                Some other system error has occurred
+fn init_tcp_reader(
+    terminal: &mut Terminal<CrosstermBackend<std::io::Stdout>>,
+    settings: &mut Settings,
+    socket: SocketAddr,
+) -> Result<Option<BufReader<TcpStream>>> {
+    let ip = socket.ip();
+    let port = socket.port();
+
+    // display a tui display
+    terminal.draw(|f| {
+        let chunks = Layout::default()
+            .direction(Direction::Vertical)
+            .margin(1)
+            .constraints([Constraint::Min(3), Constraint::Percentage(100)].as_ref())
+            .split(f.size());
+
+        let text = vec![Spans::from(format!(
+            "radar: Waiting for connection to {ip}:{port}"
+        ))];
+
+        let paragraph = Paragraph::new(text.clone()).alignment(Alignment::Left);
+        f.render_widget(paragraph, chunks[0]);
+    })?;
+
+    loop {
+        // handle keyboard events
+        if poll(Duration::from_millis(10))? {
+            if let Ok(Event::Key(key_event)) = read() {
+                let modifiers = key_event.modifiers;
+                let code = key_event.code;
+                match code {
+                    KeyCode::Char('q') => {
+                        settings.quit = Some(QuitReason::UserRequested);
+                        return Ok(None);
+                    },
+                    KeyCode::Char('c') => {
+                        if modifiers == crossterm::event::KeyModifiers::CONTROL {
+                            settings.quit = Some(QuitReason::UserRequested);
+                            return Ok(None);
+                        }
+                    },
+                    // unknown key
+                    _ => (),
+                }
+            }
+        }
+
+        // try and connect to initial dump1090 instance
+        if let Ok(stream) = TcpStream::connect_timeout(&socket, Duration::from_secs(10)) {
+            stream
+                .set_read_timeout(Some(std::time::Duration::from_millis(50)))
+                .unwrap();
+            return Ok(Some(BufReader::new(stream)));
+        }
+    }
 }
 
 // Add to the coverage tab data structure `coverage_airplanes`.
@@ -533,10 +638,10 @@ fn handle_keyevent(
         (KeyCode::F(4), _) => settings.tab_selection = Tab::Stats,
         (KeyCode::F(5), _) => settings.tab_selection = Tab::Help,
         (KeyCode::Tab, _) => settings.tab_selection = settings.tab_selection.next_tab(),
-        (KeyCode::Char('q'), _) => settings.quit = Some("user requested action: quit"),
+        (KeyCode::Char('q'), _) => settings.quit = Some(QuitReason::UserRequested),
         (KeyCode::Char('c'), _) => {
             if modifiers == crossterm::event::KeyModifiers::CONTROL {
-                settings.quit = Some("user requested action: quit");
+                settings.quit = Some(QuitReason::UserRequested);
             }
         },
         (KeyCode::Char('l'), _) => settings.opts.disable_lat_long ^= true,

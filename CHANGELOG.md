@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added Stats Tab, with `Max Distance` and `Most Airplanes`.
 - Fixed terminal escape codes for mouse control. Thanks ([@paunstefan](https://github.com/paunstefan)) ([!124](https://github.com/rsadsb/adsb_deku/pull/124))
 - Reduce precision of all `f32`s to 3. (for longitude, latitude, heading displays).
+- Add `--retry-tcp` for trying to connect to a dump1090 instance if it crashes.
 
 ### 1090
 - feat: Release binary is now stripped. ~1.2MB -> 440KB. MSRV is bumped to `1.59`.
