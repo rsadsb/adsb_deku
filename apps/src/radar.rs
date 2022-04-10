@@ -97,11 +97,10 @@ impl Stats {
     fn update(&mut self, airplanes: &Airplanes) {
         // Update most_distance
         let current_distance = self.most_distance.map_or(0.0, |most_distance| {
-            if let Some(kilo_distance) = most_distance.2.kilo_distance {
-                kilo_distance
-            } else {
-                0.0
-            }
+            most_distance
+                .2
+                .kilo_distance
+                .map_or(0.0, |kilo_distance| kilo_distance)
         });
         for (key, state) in airplanes.iter() {
             if let Some(distance) = state.coords.kilo_distance {
@@ -114,11 +113,10 @@ impl Stats {
 
         // Update most airplanes
         let current_len = airplanes.len();
-        let most_airplanes = if let Some(most_airplanes) = self.most_airplanes {
-            most_airplanes.1
-        } else {
-            0
-        };
+        let most_airplanes = self
+            .most_airplanes
+            .map_or(0, |most_airplanes| most_airplanes.1);
+
         if most_airplanes < current_len as u32 {
             info!("new most airplanes: {}", current_len);
             self.most_airplanes = Some((SystemTime::now(), current_len as u32));
@@ -331,7 +329,7 @@ see https://github.com/rsadsb/adsb_deku#serverdemodulationexternal-applications 
 
         // start thread
         std::thread::spawn(move || {
-            gpsd_thread(gpsd_ip, cloned_gps_lat_long);
+            gpsd_thread(&gpsd_ip, cloned_gps_lat_long);
         });
     }
 
@@ -1006,11 +1004,11 @@ fn build_tab_airplanes<A: tui::backend::Backend>(
             s_kilo_distance = format!("{:.DEFAULT_PRECISION$}", kilo_distance);
             alt = altitude.to_string();
         }
-        let heading = if let Some(heading) = state.heading {
-            format!("{heading:>7.1}")
-        } else {
-            "".to_string()
-        };
+
+        let heading = state
+            .heading
+            .map_or_else(|| "".to_string(), |heading| format!("{heading:>7.1}"));
+
         rows.push(Row::new(vec![
             format!("{key}"),
             state.callsign.as_ref().unwrap_or(&empty).clone(),
@@ -1286,9 +1284,9 @@ fn draw_locations(ctx: &mut tui::widgets::canvas::Context<'_>, settings: &Settin
 
 /// function ran withint a thread for updating `gps_lat_long` when the gpsd shows a new `lat_long`
 /// position.
-fn gpsd_thread(gpsd_ip: String, gps_lat_long: Arc<Mutex<Option<(f64, f64)>>>) {
+fn gpsd_thread(gpsd_ip: &str, gps_lat_long: Arc<Mutex<Option<(f64, f64)>>>) {
     let gpsd_port = 2947;
-    if let Ok(stream) = TcpStream::connect((gpsd_ip.clone(), gpsd_port))
+    if let Ok(stream) = TcpStream::connect((gpsd_ip, gpsd_port))
         .with_context(|| format!("unable to connect to gpsd server @ {gpsd_ip}:{gpsd_port}"))
     {
         let mut reader = BufReader::new(&stream);
