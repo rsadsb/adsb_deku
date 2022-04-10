@@ -96,15 +96,13 @@ struct Stats {
 impl Stats {
     fn update(&mut self, airplanes: &Airplanes) {
         // Update most_distance
-        let current_distance = if let Some(most_distance) = self.most_distance {
+        let current_distance = self.most_distance.map_or(0.0, |most_distance| {
             if let Some(kilo_distance) = most_distance.2.kilo_distance {
                 kilo_distance
             } else {
                 0.0
             }
-        } else {
-            0.0
-        };
+        });
         for (key, state) in airplanes.iter() {
             if let Some(distance) = state.coords.kilo_distance {
                 if distance > current_distance {
