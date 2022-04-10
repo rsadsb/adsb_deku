@@ -479,11 +479,10 @@ pub struct Altitude {
 
 impl fmt::Display for Altitude {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let altitude = if let Some(altitude) = self.alt {
-            format!("{} ft barometric", altitude)
-        } else {
-            "None".to_string()
-        };
+        let altitude = self.alt.map_or_else(
+            || "None".to_string(),
+            |altitude| format!("{} ft barometric", altitude),
+        );
         writeln!(f, "  Altitude:      {}", altitude)?;
         writeln!(f, "  CPR type:      Airborne")?;
         writeln!(f, "  CPR odd flag:  {}", self.odd_flag)?;
