@@ -156,6 +156,7 @@ mod tests {
             disable_icao: false,
             disable_heading: false,
             disable_track: false,
+            retry_tcp: false,
         };
         assert_eq!(exp_opt, opt);
 
@@ -198,6 +199,7 @@ mod tests {
             disable_icao: false,
             disable_heading: false,
             disable_track: false,
+            retry_tcp: false,
         };
         assert_eq!(exp_opt, opt);
     }
