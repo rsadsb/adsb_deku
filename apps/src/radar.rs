@@ -1189,8 +1189,7 @@ fn build_tab_stats<A: tui::backend::Backend>(
     stats: &Stats,
     settings: &Settings,
 ) {
-    let format =
-        time::format_description::parse("[month]/[day]/[year] [hour]:[minute]:[second]").unwrap();
+    let format = time::format_description::parse("[month]/[day] [hour]:[minute]:[second]").unwrap();
     let mut rows: Vec<Row> = vec![];
     let (time, value) = if let Some((time, key, value)) = stats.most_distance {
         let position = value.position.unwrap();
@@ -1230,11 +1229,11 @@ fn build_tab_stats<A: tui::backend::Backend>(
     // draw table
     let table = Table::new(rows)
         .style(Style::default().fg(Color::White))
-        .header(Row::new(vec!["Type", "Time", "Value"]).bottom_margin(1))
+        .header(Row::new(vec!["Type", "DateTime", "Value"]).bottom_margin(1))
         .block(Block::default().title("Stats").borders(Borders::ALL))
         .widths(&[
             Constraint::Length(14),
-            Constraint::Length(20),
+            Constraint::Length(15),
             Constraint::Length(200),
         ])
         .column_spacing(1);
