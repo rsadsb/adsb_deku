@@ -4,7 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-`adsb_deku` follows semvar when versioning, but `apps` are not required to follow the semvar convention.
+* `adsb_deku`(published library) follows semvar when versioning
+* `apps` follow semvar of `adsb_deku` 
 
 ## [Unreleased]
 ### rsadsb_common
@@ -16,23 +17,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### adsb_deku
 - `Altitude::alt` has been changed to the size of `u16`, and is now correctly enclosed in an `Option`.
 - `AC13Field::altitude` has been change to the size of `u16`.
-- Added asserts for empty were added to `CapabilityClassAirborne::{reserved0, reserved1}`.
+- Add asserts for empty `CapabilityClassAirborne::{reserved0, reserved1}`.
 - `ControlField` was refactored for TisB support, moving from an enum into `ME` and `ICAO` fields.
 - add `no_std` support through `--default-features = false` and `features = alloc`. See [rsadsb-embedded](https://github.com/wcampbell0x2a/rsadsb-embedded) for example usage.
 
 ### radar
-- feat: Release binary is now stripped. ~2.26MB -> ~1.24MB. MSRV is bumped to `1.59`.
-- removed unsecure `chrono` crate with secure `time` crate usage.
-- Added `track`, `heading` to Map tab.
+- Release binary is now stripped. ~2.26MB -> ~1.24MB. MSRV is bumped to `1.59`.
+- Remove unsecure `chrono` crate with secure `time` crate usage.
+- Add `track`, `heading` to Map tab.
    - `Track`: Display the previous positions of an aircraft since it was tracked. Use key: `t` to turn off, or 
      `--disable-track` cli option.
    - `Heading`: Display an arrow to show the direction of the tracked aircraft. Use key: `h` to turn off, or 
      `--disable-heading` cli option.
-- Added key: `i` to trigger disable of ICAO names above aircraft positions.
-- Added Stats Tab, with `Max Distance` and `Most Airplanes`.
-- Fixed terminal escape codes for mouse control. Thanks ([@paunstefan](https://github.com/paunstefan)) ([!124](https://github.com/rsadsb/adsb_deku/pull/124))
+- Add key: `i` to trigger disable of ICAO names above aircraft positions.
+- Add Stats Tab, with `Max Distance` and `Most Airplanes`.
+- Fix terminal escape codes for mouse control. Thanks ([@paunstefan](https://github.com/paunstefan)) ([!124](https://github.com/rsadsb/adsb_deku/pull/124)).
 - Reduce precision of all `f32`s to 3. (for longitude, latitude, heading displays).
-- Add `--retry-tcp` for trying to connect to a dump1090 instance if it crashes.
+- Add `--retry-tcp` for trying to connect to a dump1090 instance if it crashes. Add tui screen to alert user instead of crashing.
+- Fix usize overflow when selecting airplanes. Thanks ([@andelf](https://github.com/andelf)) ([!140](https://github.com/rsadsb/adsb_deku/pull/140)).
 
 ### 1090
 - feat: Release binary is now stripped. ~1.2MB -> 440KB. MSRV is bumped to `1.59`.
