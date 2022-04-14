@@ -8,10 +8,10 @@ Run `cargo doc` in this directory to generate documentation.
 
 ## Usage
 ```rust, ignore
-    let mut adsb_airplanes = Airplanes::new();
-    if let Ok((bytes_left, frame)) = Frame::from_bytes((&bytes, 0)) {
-        adsb_airplanes.action(frame, (lat, long));
-    }
+let mut adsb_airplanes = Airplanes::new();
+if let Ok((bytes_left, frame)) = Frame::from_bytes((&bytes, 0)) {
+    adsb_airplanes.action(frame, (lat, long));
+}
 ```
 
 ## `no_std` support
