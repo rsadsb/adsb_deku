@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `AC13Field::altitude` has been change to the size of `u16`.
 - Added asserts for empty were added to `CapabilityClassAirborne::{reserved0, reserved1}`.
 - `ControlField` was refactored for TisB support, moving from an enum into `ME` and `ICAO` fields.
-- add `no_std` support through `--default-features = false` and `features = alloc`. See [rsadsb-embedded](https://github.com/wcampbell0x2a/rsadsb-embedded) for example usage.
+- add `no_std` support through `--default-features = false` and `features = alloc`. See [rsadsb-embedded](https://github.com/rsadsb/rsadsb-embedded) for example usage.
 
 ### radar
 - feat: Release binary is now stripped. ~2.26MB -> ~1.24MB. MSRV is bumped to `1.59`.
@@ -82,17 +82,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add `AircraftStatusType::ACASRaBroadcast`
 - Add `OperationStatus::Reserved`
 - Add `AirborneVelocityMessage::{Reserved0(1), Reserved1(5..=7)}`
-- Assert `TargetStateAndStatus.subtype` == 1. This is currently tracked by: [#30](https://github.com/wcampbell0x2a/adsb_deku/issues/30)
+- Assert `TargetStateAndStatus.subtype` == 1. This is currently tracked by: [#30](https://github.com/rsadsb/adsb_deku/issues/30)
 - Rename `TargetStateAndStatusInformation.vnac` to `vnav`
 
 ### Apps
-- [radar] Use TAB key to change tabs ([@wiseman](https://github.com/wiseman)) ([!26](https://github.com/wcampbell0x2a/adsb_deku/pull/26))
-- [radar] Add Call sign, Speed, Vertical Speed, Number of messages to Table view. ([@wiseman](https://github.com/wiseman)) ([!29](https://github.com/wcampbell0x2a/adsb_deku/pull/29))
+- [radar] Use TAB key to change tabs ([@wiseman](https://github.com/wiseman)) ([!26](https://github.com/rsadsb/adsb_deku/pull/26))
+- [radar] Add Call sign, Speed, Vertical Speed, Number of messages to Table view. ([@wiseman](https://github.com/wiseman)) ([!29](https://github.com/rsadsb/adsb_deku/pull/29))
 - [radar] fix broken TCP pipe to ADS-B server, exiting correctly
 - [radar] *Coverage* Optimize render by reducing the size of Vec
 - [radar] Add `--gpsd` and `--gpsd-ip` for automatic updating of lat/long position from a gpsd daemon on port: 2947.
-- [radar] Add `--scale` to control scale of Radar and Coverage. Closes: [#36](https://github.com/wcampbell0x2a/adsb_deku/issues/36)
-- [radar] Show Airplanes (amount) in tui Titles. Closes: [#31](https://github.com/wcampbell0x2a/adsb_deku/issues/31)
+- [radar] Add `--scale` to control scale of Radar and Coverage. Closes: [#36](https://github.com/rsadsb/adsb_deku/issues/36)
+- [radar] Show Airplanes (amount) in tui Titles. Closes: [#31](https://github.com/rsadsb/adsb_deku/issues/31)
 - [radar] Add `--filter-time` for reducing the amount of mis-decodes. Reduces the default max time between messages from 60 to 10 seconds.
 - [1090] Remove `--disable-airplanes`. This feature differs from the radar implementation, and thus is outdated.
 - [radar] *Coverage* Add gradient of whitespace gray->white to denote how often an aircraft was seen. This functions as a heatmap of sorts.
@@ -111,15 +111,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [v0.3.0] 2021-10-31
 ### adsb_deku
-- Fix [#8](https://github.com/wcampbell0x2a/adsb_deku/issues/8) - Support `ME::AircraftOperationStatus` Surface Status message parsing
+- Fix [#8](https://github.com/rsadsb/adsb_deku/issues/8) - Support `ME::AircraftOperationStatus` Surface Status message parsing
 - Add `QNH` to `fmt::Display` for `ME::TargetStateAndStatusInformation`
 - Remove `NUC/NIC` from `fmt::Display` for `Altitude`
 - Fix/Add Emergency Status to `fmt::Display` for `ME::AircraftStatus`
-- Fix [#10](https://github.com/wcampbell0x2a/adsb_deku/issues/10) - Support `AirborneVelocity` Airspeed `fmt::Display`
-- Fix [#11](https://github.com/wcampbell0x2a/adsb_deku/issues/11) and [#12](https://github.com/wcampbell0x2a/adsb_deku/issues/12) - Add `ME::NoPosition` and `fmt::Display`
+- Fix [#10](https://github.com/rsadsb/adsb_deku/issues/10) - Support `AirborneVelocity` Airspeed `fmt::Display`
+- Fix [#11](https://github.com/rsadsb/adsb_deku/issues/11) and [#12](https://github.com/rsadsb/adsb_deku/issues/12) - Add `ME::NoPosition` and `fmt::Display`
 - Add `fmt::Display` for `ME::Reserved0`
 - Add `fmt::Display` for `ME::Reserved1`
-- Fix [#13](https://github.com/wcampbell0x2a/adsb_deku/issues/13) - Correct Altitude for Mode C Messages, thanks ([@wiseman](https://github.com/wiseman))
+- Fix [#13](https://github.com/rsadsb/adsb_deku/issues/13) - Correct Altitude for Mode C Messages, thanks ([@wiseman](https://github.com/wiseman))
 - Support some `BDS` fields for `Comm-B` messages
 - Add `ME::AircraftOperationalCoordination`
 
@@ -145,7 +145,7 @@ Allow selection in table with Up, Down, and Enter keys for moving to the `Map` t
 - [1090] Add `--panic-display` and `--panic-decode` for optional testing
 - [radar] Rename ADSB Tab to MAP
 - [radar] Remove blocking TcpStream, thus making tui work while waiting for new ADS-B message
-- [radar, 1090] Add --host and --port ([@wiseman](https://github.com/wiseman)) ([!1](https://github.com/wcampbell0x2a/adsb_deku/pull/1))
+- [radar, 1090] Add --host and --port ([@wiseman](https://github.com/wiseman)) ([!1](https://github.com/rsadsb/adsb_deku/pull/1))
 
 ## [v0.1.1] 2021-10-12
 ### Apps
