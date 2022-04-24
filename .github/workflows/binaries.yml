@@ -41,7 +41,7 @@ jobs:
         with:
           use-cross: true
           command: build
-          args: --bin ${{ matrix.bins }} --release --target ${{ matrix.targets }}
+          args: --bin ${{ matrix.bins }} --locked --release --target ${{ matrix.targets }}
 
       - name: archive
         run: |
