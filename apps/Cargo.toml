@@ -14,16 +14,16 @@ name = "1090"
 path = "src/1090.rs"
 
 [dependencies]
-adsb_deku = { path = "../libadsb_deku", version = "0.5" }
-rsadsb_common = { path = "../rsadsb_common", version = "0.5" }
-hex = "0.4"
-crossterm = "0.22"
+adsb_deku = { path = "../libadsb_deku", version = "0.5.0" }
+rsadsb_common = { path = "../rsadsb_common", version = "0.5.0" }
+hex = "0.4.0"
+crossterm = "0.22.0"
 clap = {version = "3.1.0", features = ["color", "derive", "wrap_help"]}
 tui = "0.18.0"
 gpsd_proto = "0.7.0"
-tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-tracing-appender = "0.2"
+tracing = "0.1.0"
+tracing-subscriber = { version = "0.3.0", features = ["env-filter"] }
+tracing-appender = "0.2.0"
 anyhow = { version = "1.0", features = ["backtrace"] }
 csv = { version = "1.0" }
 serde = { version = "1.0", features = ["derive"] }
