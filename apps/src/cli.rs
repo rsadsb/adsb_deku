@@ -89,7 +89,7 @@ pub struct Opts {
     #[clap(long, default_value = ".12")]
     pub scale: f64,
 
-    /// Enable automatic updating of lat/lon from gpsd(https://gpsd.io/) server.
+    /// Enable automatic updating of lat/lon from gpsd(<https://gpsd.io/>) server.
     ///
     /// This overwrites the `--lat` and `--long`
     #[clap(long)]
@@ -116,7 +116,7 @@ pub struct Opts {
     #[clap(long)]
     pub limit_parsing: bool,
 
-    /// Import downloaded csv file for FAA Airport from https://github.com/mborsetti/airportsdata
+    /// Import downloaded csv file for FAA Airport from <https://github.com/mborsetti/airportsdata>
     #[clap(long)]
     pub airports: Option<String>,
 
