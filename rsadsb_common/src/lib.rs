@@ -152,7 +152,7 @@ impl Airplanes {
         }
     }
 
-    /// Return all aircraft that currently have a [`Position`]
+    /// Return all aircraft that currently have a [`cpr::Position`]
     #[must_use]
     pub fn all_position(&self) -> Vec<(ICAO, cpr::Position)> {
         let mut all_lat_long = vec![];
