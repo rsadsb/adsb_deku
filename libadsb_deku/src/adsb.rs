@@ -50,8 +50,7 @@ impl ADSB {
             f,
             "{}",
             self.me
-                .to_string(self.icao, address_type, self.capability, true)
-                .unwrap()
+                .to_string(self.icao, address_type, self.capability, true)?
         )?;
         Ok(f)
     }
@@ -694,14 +693,12 @@ impl fmt::Display for ControlField {
         write!(
             f,
             "{}",
-            self.me
-                .to_string(
-                    self.aa,
-                    &format!("{}", self.t),
-                    Capability::AG_UNCERTAIN3,
-                    false,
-                )
-                .unwrap()
+            self.me.to_string(
+                self.aa,
+                &format!("{}", self.t),
+                Capability::AG_UNCERTAIN3,
+                false,
+            )?
         )
     }
 }
