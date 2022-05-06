@@ -14,6 +14,12 @@ use crate::coverage::{build_tab_coverage, populate_coverage};
 mod map;
 use crate::map::build_tab_map;
 
+mod stats;
+use crate::stats::build_tab_stats;
+
+mod help;
+use crate::help::build_tab_help;
+
 mod airplanes;
 use std::io::{self, BufRead, BufReader, BufWriter};
 use std::net::{SocketAddr, TcpStream};
@@ -41,7 +47,7 @@ use tui::style::{Color, Style};
 use tui::symbols::DOT;
 use tui::text::{Span, Spans};
 use tui::widgets::canvas::{Line, Points};
-use tui::widgets::{Block, Borders, Paragraph, Row, Table, TableState, Tabs};
+use tui::widgets::{Block, Borders, Paragraph, TableState, Tabs};
 use tui::Terminal;
 
 use crate::airplanes::build_tab_airplanes;
@@ -90,7 +96,7 @@ impl Tab {
 }
 
 #[derive(Debug, Default)]
-struct Stats {
+pub struct Stats {
     most_distance: Option<(SystemTime, ICAO, AirplaneCoor)>,
     most_airplanes: Option<(SystemTime, u32)>,
 }
@@ -861,154 +867,6 @@ fn draw_bottom_chunks<A: tui::backend::Backend>(
     }
 
     tui_info
-}
-
-/// Render Help tab for tui display
-fn build_tab_stats<A: tui::backend::Backend>(
-    f: &mut tui::Frame<A>,
-    chunks: Vec<Rect>,
-    stats: &Stats,
-    settings: &Settings,
-) {
-    let format = time::format_description::parse("[month]/[day] [hour]:[minute]:[second]").unwrap();
-    let mut rows: Vec<Row> = vec![];
-    let (time, value) = if let Some((time, key, value)) = stats.most_distance {
-        let position = value.position.unwrap();
-        let lat = format!("{:.DEFAULT_PRECISION$}", position.latitude);
-        let lon = format!("{:.DEFAULT_PRECISION$}", position.longitude);
-        let distance = format!("{:.DEFAULT_PRECISION$}", value.kilo_distance.unwrap());
-
-        // display time
-        let datetime = time::OffsetDateTime::from(time);
-        (
-            datetime
-                .to_offset(settings.utc_offset)
-                .format(&format)
-                .unwrap(),
-            format!("[{key}]: {distance}km {lat},{lon}"),
-        )
-    } else {
-        ("None".to_string(), "".to_string())
-    };
-    rows.push(Row::new(vec!["Max Distance", &time, &value]));
-
-    let (time, value) = if let Some((time, most_airplanes)) = stats.most_airplanes {
-        // display time
-        let datetime = time::OffsetDateTime::from(time);
-        (
-            datetime
-                .to_offset(settings.utc_offset)
-                .format(&format)
-                .unwrap(),
-            most_airplanes.to_string(),
-        )
-    } else {
-        ("None".to_string(), "".to_string())
-    };
-    rows.push(Row::new(vec!["Most Airplanes", &time, &value]));
-
-    // draw table
-    let table = Table::new(rows)
-        .style(Style::default().fg(Color::White))
-        .header(Row::new(vec!["Type", "DateTime", "Value"]).bottom_margin(1))
-        .block(Block::default().title("Stats").borders(Borders::ALL))
-        .widths(&[
-            Constraint::Length(14),
-            Constraint::Length(15),
-            Constraint::Length(200),
-        ])
-        .column_spacing(1);
-    f.render_widget(table, chunks[1]);
-}
-
-/// Render Help tab for tui display
-fn build_tab_help<A: tui::backend::Backend>(f: &mut tui::Frame<A>, chunks: &[Rect]) {
-    let horizontal_chunks = Layout::default()
-        .direction(Direction::Horizontal)
-        .constraints([
-            Constraint::Percentage(2),
-            Constraint::Percentage(96),
-            Constraint::Percentage(2),
-        ])
-        .split(chunks[1]);
-
-    let vertical_chunks = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints([
-            Constraint::Percentage(2),
-            Constraint::Percentage(30),
-            Constraint::Percentage(30),
-            Constraint::Percentage(30),
-            Constraint::Percentage(2),
-        ])
-        .split(horizontal_chunks[1]);
-
-    // First help section
-    let rows = vec![
-        Row::new(vec!["F1", "Move to Radar screen"]),
-        Row::new(vec!["F2", "Move to Coverage screen"]),
-        Row::new(vec!["F3", "Move to Airplanes screen"]),
-        Row::new(vec!["F4", "Move to Stats screen"]),
-        Row::new(vec!["F5", "Move to Help screen"]),
-        Row::new(vec!["l", "control --disable-lat-long"]),
-        Row::new(vec!["i", "control --disable-icao"]),
-        Row::new(vec!["h", "control --disable-heading"]),
-        Row::new(vec!["t", "control --disable-track"]),
-        Row::new(vec!["TAB", "Move to Next screen"]),
-        Row::new(vec!["q", "Quit this app"]),
-        Row::new(vec!["ctrl+c", "Quit this app"]),
-    ];
-    let table = Table::new(rows)
-        .style(Style::default().fg(Color::White))
-        .header(Row::new(vec!["Key", "Action"]).bottom_margin(1))
-        .widths(&[Constraint::Percentage(10), Constraint::Percentage(90)])
-        .column_spacing(1)
-        .block(
-            Block::default()
-                .title("Key Bindings - Any Tab")
-                .borders(Borders::ALL),
-        );
-    f.render_widget(table, vertical_chunks[1]);
-
-    // Second help section
-    let rows = vec![
-        Row::new(vec!["-", "Zoom out"]),
-        Row::new(vec!["+", "Zoom in"]),
-        Row::new(vec!["Up", "Move map up"]),
-        Row::new(vec!["Down", "Move map down"]),
-        Row::new(vec!["Left", "Move map left"]),
-        Row::new(vec!["Right", "Move map right"]),
-        Row::new(vec!["Enter", "Map position reset"]),
-    ];
-    let table = Table::new(rows)
-        .style(Style::default().fg(Color::White))
-        .header(Row::new(vec!["Key", "Action"]).bottom_margin(1))
-        .widths(&[Constraint::Percentage(10), Constraint::Percentage(90)])
-        .column_spacing(1)
-        .block(
-            Block::default()
-                .title("Key Bindings - Map or Coverage")
-                .borders(Borders::ALL),
-        );
-    f.render_widget(table, vertical_chunks[2]);
-
-    // Third help section
-    let rows = [
-        Row::new(vec!["Up", "Move selection upward"]),
-        Row::new(vec!["Down", "Move selection downward"]),
-        Row::new(vec!["Enter", "Center Map tab on selected aircraft"]),
-    ];
-    let table = Table::new(rows)
-        .style(Style::default().fg(Color::White))
-        .header(Row::new(vec!["Key", "Action"]).bottom_margin(1))
-        .widths(&[Constraint::Percentage(10), Constraint::Percentage(90)])
-        .column_spacing(1)
-        .block(
-            Block::default()
-                .title("Key Bindings - Airplanes")
-                .borders(Borders::ALL),
-        );
-    f.render_widget(table, vertical_chunks[3]);
 }
 
 /// Draw vertical and horizontal lines
