@@ -242,7 +242,7 @@ impl fmt::Display for Frame {
                 }
             },
             DF::ADSB(adsb) => {
-                write!(f, "{}", adsb.to_string("(Mode S / ADS-B)").unwrap())?;
+                write!(f, "{}", adsb.to_string("(Mode S / ADS-B)")?)?;
             },
             DF::TisB { cf, .. } => {
                 write!(f, "{}", cf)?;

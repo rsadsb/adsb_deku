@@ -37,7 +37,7 @@ impl fmt::Display for Airplanes {
         for key in self.0.keys() {
             let value = self.aircraft_details(*key);
             if let Some(value) = value {
-                writeln!(f, "{key}: {value:?}").unwrap();
+                writeln!(f, "{key}: {value:?}")?;
             }
         }
         Ok(())
