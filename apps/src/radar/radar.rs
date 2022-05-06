@@ -4,13 +4,13 @@
 
 mod airport;
 mod cli;
+mod coverage;
 
 use std::io::{self, BufRead, BufReader, BufWriter};
 use std::net::{SocketAddr, TcpStream};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, SystemTime};
 
-use adsb_deku::cpr::Position;
 use adsb_deku::deku::DekuContainerRead;
 use adsb_deku::{Frame, ICAO};
 use anyhow::{Context, Result};
@@ -37,6 +37,7 @@ use tui::Terminal;
 
 use crate::airport::Airport;
 use crate::cli::Opts;
+use crate::coverage::{populate_coverage, build_tab_coverage};
 
 /// Amount of zoom out from your original lat/long position
 const MAX_PLOT_HIGH: f64 = 400.0;
@@ -49,12 +50,6 @@ mod scale {
     /// Value used as mutiplier in map scaling for projection
     pub const DEFAULT: f64 = 500_000.0;
 }
-
-/// Accuracy of latitude/longitude for Coverage is affected by this variable.
-///
-/// ie: 83.912345 -> 83.91. This is specifically so we get more results hitting in the same
-/// position for the sake of an usable heatmap
-const COVERAGE_MASK: f64 = 100.0;
 
 /// tui top bar margin
 const TUI_START_MARGIN: u16 = 1;
@@ -148,7 +143,7 @@ impl std::fmt::Display for QuitReason {
 }
 
 /// After parsing from `Opts` contains more settings mutated in program
-struct Settings {
+pub struct Settings {
     /// opts from clap command line
     opts: Opts,
     /// when Some(), imply quitting with msg
@@ -559,61 +554,6 @@ fn init_tcp_reader(
                 .set_read_timeout(Some(std::time::Duration::from_millis(50)))
                 .unwrap();
             return Ok(Some(BufReader::new(stream)));
-        }
-    }
-}
-
-// Add to the coverage tab data structure `coverage_airplanes`.
-//
-// Two events cause an addition:
-// 1: New plot from a lat/long position that didn't exist before
-// 2: New ICAO(plane) at a previously seen location
-fn populate_coverage(
-    adsb_airplanes: &Airplanes,
-    coverage_airplanes: &mut Vec<(f64, f64, u32, ICAO)>,
-) {
-    let all_position = adsb_airplanes.all_position();
-    for (
-        all_icao,
-        Position {
-            latitude,
-            longitude,
-            ..
-        },
-    ) in all_position
-    {
-        let latitude = (latitude * COVERAGE_MASK).round() / COVERAGE_MASK;
-        let longitude = (longitude * COVERAGE_MASK).round() / COVERAGE_MASK;
-
-        // Add number to seen number if found already
-        let mut found = false;
-        for (lat, long, seen_number, icao) in coverage_airplanes.iter_mut() {
-            // Reduce the precision of the coverage/heatmap display (XX.XX)
-            //
-            // This is so that more airplanes are seen as being in the same spot and are
-            // colored so that is made clear to the user. If this is to accurate you will never
-            // see airplanes in the "same" spot
-            let lat = (*lat * COVERAGE_MASK).round() / COVERAGE_MASK;
-            let long = (*long * COVERAGE_MASK).round() / COVERAGE_MASK;
-
-            // Found already, but it is a diff icao? if so, update to new icao and add to
-            // seen_number for the color to be more "white" later on
-            if (latitude, longitude) == (lat, long) && (all_icao != *icao) {
-                *seen_number += 1;
-                *icao = all_icao;
-                found = true;
-                break;
-            }
-
-            if (latitude, longitude) == (lat, long) {
-                found = true;
-                break;
-            }
-        }
-
-        // If an airplane wasn't seen in this position, add a new entry
-        if !found {
-            coverage_airplanes.push((latitude, longitude, 0, all_icao));
         }
     }
 }
@@ -1042,43 +982,6 @@ fn build_tab_map<A: tui::backend::Backend>(
         });
     f.render_widget(canvas, chunks[1]);
 }
-
-/// Render Coverage tab for tui display
-fn build_tab_coverage<A: tui::backend::Backend>(
-    f: &mut tui::Frame<A>,
-    chunks: Vec<Rect>,
-    settings: &Settings,
-    coverage_airplanes: &[(f64, f64, u32, ICAO)],
-) {
-    let canvas = Canvas::default()
-        .block(Block::default().title("Coverage").borders(Borders::ALL))
-        .x_bounds([MAX_PLOT_LOW, MAX_PLOT_HIGH])
-        .y_bounds([MAX_PLOT_LOW, MAX_PLOT_HIGH])
-        .paint(|ctx| {
-            // draw locations
-            draw_locations(ctx, settings);
-
-            // draw ADSB tab airplanes
-            for (lat, long, seen_number, _) in coverage_airplanes.iter() {
-                let (x, y) = settings.to_xy(*lat, *long);
-
-                let number: u32 = 100 + *seen_number * 50;
-                let color_number: u8 = if number > u32::from(u8::MAX) {
-                    u8::MAX
-                } else {
-                    number as u8
-                };
-
-                // draw dot on location
-                ctx.draw(&Points {
-                    coords: &[(x, y)],
-                    color: Color::Rgb(color_number, color_number, color_number),
-                });
-            }
-        });
-    f.render_widget(canvas, chunks[1]);
-}
-
 /// Render Airplanes tab for tui display
 fn build_tab_airplanes<A: tui::backend::Backend>(
     f: &mut tui::Frame<A>,
@@ -1349,7 +1252,7 @@ fn draw_lines(ctx: &mut tui::widgets::canvas::Context<'_>) {
 }
 
 /// Draw locations on the map
-fn draw_locations(ctx: &mut tui::widgets::canvas::Context<'_>, settings: &Settings) {
+pub fn draw_locations(ctx: &mut tui::widgets::canvas::Context<'_>, settings: &Settings) {
     for location in &settings.opts.locations {
         let (x, y) = settings.to_xy(location.lat, location.long);
 
