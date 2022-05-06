@@ -12,6 +12,9 @@ mod coverage;
 use crate::coverage::{build_tab_coverage, populate_coverage};
 
 mod map;
+use crate::map::build_tab_map;
+
+mod airplanes;
 use std::io::{self, BufRead, BufReader, BufWriter};
 use std::net::{SocketAddr, TcpStream};
 use std::sync::{Arc, Mutex};
@@ -34,14 +37,14 @@ use tracing::{debug, error, info, trace};
 use tracing_subscriber::EnvFilter;
 use tui::backend::{Backend, CrosstermBackend};
 use tui::layout::{Alignment, Constraint, Direction, Layout, Rect};
-use tui::style::{Color, Modifier, Style};
+use tui::style::{Color, Style};
 use tui::symbols::DOT;
 use tui::text::{Span, Spans};
 use tui::widgets::canvas::{Line, Points};
 use tui::widgets::{Block, Borders, Paragraph, Row, Table, TableState, Tabs};
 use tui::Terminal;
 
-use crate::map::build_tab_map;
+use crate::airplanes::build_tab_airplanes;
 
 /// Amount of zoom out from your original lat/long position
 const MAX_PLOT_HIGH: f64 = 400.0;
@@ -858,109 +861,6 @@ fn draw_bottom_chunks<A: tui::backend::Backend>(
     }
 
     tui_info
-}
-
-/// Render Airplanes tab for tui display
-fn build_tab_airplanes<A: tui::backend::Backend>(
-    f: &mut tui::Frame<A>,
-    chunks: Vec<Rect>,
-    adsb_airplanes: &Airplanes,
-    airplanes_state: &mut TableState,
-) {
-    let mut rows = vec![];
-    // make a vec of all strings to get a total amount of airplanes with
-    // position information
-    let empty = "".to_string();
-    for key in adsb_airplanes.keys() {
-        let state = adsb_airplanes.get(*key).unwrap();
-        let aircraft_details = adsb_airplanes.aircraft_details(*key);
-        let mut lat = empty.clone();
-        let mut lon = empty.clone();
-        let mut alt = empty.clone();
-        let mut s_kilo_distance = empty.clone();
-        if let Some(AirplaneDetails {
-            position,
-            altitude,
-            kilo_distance,
-            ..
-        }) = aircraft_details
-        {
-            lat = format!("{:.DEFAULT_PRECISION$}", position.latitude);
-            lon = format!("{:.DEFAULT_PRECISION$}", position.longitude);
-            s_kilo_distance = format!("{:.DEFAULT_PRECISION$}", kilo_distance);
-            alt = altitude.to_string();
-        }
-
-        let heading = state
-            .heading
-            .map_or_else(|| "".to_string(), |heading| format!("{heading:>7.1}"));
-
-        rows.push(Row::new(vec![
-            format!("{key}"),
-            state.callsign.as_ref().unwrap_or(&empty).clone(),
-            lat,
-            lon,
-            heading,
-            format!("{alt:>8}"),
-            state
-                .vert_speed
-                .map_or_else(|| "".into(), |v| format!("{v:>6}")),
-            state
-                .speed
-                .map_or_else(|| "".into(), |v| format!("{v:>5.0}")),
-            format!("{:>8}", s_kilo_distance),
-            format!("{:>4}", state.num_messages),
-        ]));
-    }
-
-    let rows_len = rows.len();
-
-    // check the length of selected airplanes
-    if let Some(selected) = airplanes_state.selected() {
-        if selected > rows_len - 1 {
-            airplanes_state.select(Some(rows_len - 1));
-        }
-    }
-
-    // draw table
-    let table = Table::new(rows)
-        .style(Style::default().fg(Color::White))
-        .header(
-            Row::new(vec![
-                "ICAO",
-                "Call sign",
-                "Lat",
-                "Long",
-                "Heading",
-                "Altitude",
-                "   FPM",
-                "Speed",
-                "Distance",
-                "Msgs",
-            ])
-            .bottom_margin(1),
-        )
-        .block(
-            Block::default()
-                .title(format!("Airplanes({rows_len})"))
-                .borders(Borders::ALL),
-        )
-        .widths(&[
-            Constraint::Length(6),
-            Constraint::Length(9),
-            Constraint::Length(7),
-            Constraint::Length(7),
-            Constraint::Length(7),
-            Constraint::Length(8),
-            Constraint::Length(6),
-            Constraint::Length(5),
-            Constraint::Length(8),
-            Constraint::Length(6),
-        ])
-        .column_spacing(1)
-        .highlight_style(Style::default().add_modifier(Modifier::BOLD))
-        .highlight_symbol(">> ");
-    f.render_stateful_widget(table, chunks[1], &mut airplanes_state.clone());
 }
 
 /// Render Help tab for tui display
