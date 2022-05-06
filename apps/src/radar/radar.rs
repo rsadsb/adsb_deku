@@ -925,7 +925,7 @@ pub fn draw_locations(ctx: &mut tui::widgets::canvas::Context<'_>, settings: &Se
     }
 }
 
-/// function ran withint a thread for updating `gps_lat_long` when the gpsd shows a new `lat_long`
+/// function ran within a thread for updating `gps_lat_long` when the gpsd shows a new `lat_long`
 /// position.
 fn gpsd_thread(gpsd_ip: &str, gps_lat_long: Arc<Mutex<Option<(f64, f64)>>>) {
     let gpsd_port = 2947;
