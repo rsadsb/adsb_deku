@@ -3,14 +3,29 @@
 //! and testing your coverage.
 
 mod airport;
-mod cli;
+use crate::airport::Airport;
 
+mod cli;
+use crate::cli::Opts;
+
+mod coverage;
+use crate::coverage::{build_tab_coverage, populate_coverage};
+
+mod map;
+use crate::map::build_tab_map;
+
+mod stats;
+use crate::stats::build_tab_stats;
+
+mod help;
+use crate::help::build_tab_help;
+
+mod airplanes;
 use std::io::{self, BufRead, BufReader, BufWriter};
 use std::net::{SocketAddr, TcpStream};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, SystemTime};
 
-use adsb_deku::cpr::Position;
 use adsb_deku::deku::DekuContainerRead;
 use adsb_deku::{Frame, ICAO};
 use anyhow::{Context, Result};
@@ -28,15 +43,14 @@ use tracing::{debug, error, info, trace};
 use tracing_subscriber::EnvFilter;
 use tui::backend::{Backend, CrosstermBackend};
 use tui::layout::{Alignment, Constraint, Direction, Layout, Rect};
-use tui::style::{Color, Modifier, Style};
+use tui::style::{Color, Style};
 use tui::symbols::DOT;
 use tui::text::{Span, Spans};
-use tui::widgets::canvas::{Canvas, Line, Points};
-use tui::widgets::{Block, Borders, Paragraph, Row, Table, TableState, Tabs};
+use tui::widgets::canvas::{Line, Points};
+use tui::widgets::{Block, Borders, Paragraph, TableState, Tabs};
 use tui::Terminal;
 
-use crate::airport::Airport;
-use crate::cli::Opts;
+use crate::airplanes::build_tab_airplanes;
 
 /// Amount of zoom out from your original lat/long position
 const MAX_PLOT_HIGH: f64 = 400.0;
@@ -49,12 +63,6 @@ mod scale {
     /// Value used as mutiplier in map scaling for projection
     pub const DEFAULT: f64 = 500_000.0;
 }
-
-/// Accuracy of latitude/longitude for Coverage is affected by this variable.
-///
-/// ie: 83.912345 -> 83.91. This is specifically so we get more results hitting in the same
-/// position for the sake of an usable heatmap
-const COVERAGE_MASK: f64 = 100.0;
 
 /// tui top bar margin
 const TUI_START_MARGIN: u16 = 1;
@@ -88,7 +96,7 @@ impl Tab {
 }
 
 #[derive(Debug, Default)]
-struct Stats {
+pub struct Stats {
     most_distance: Option<(SystemTime, ICAO, AirplaneCoor)>,
     most_airplanes: Option<(SystemTime, u32)>,
 }
@@ -148,7 +156,7 @@ impl std::fmt::Display for QuitReason {
 }
 
 /// After parsing from `Opts` contains more settings mutated in program
-struct Settings {
+pub struct Settings {
     /// opts from clap command line
     opts: Opts,
     /// when Some(), imply quitting with msg
@@ -563,61 +571,6 @@ fn init_tcp_reader(
     }
 }
 
-// Add to the coverage tab data structure `coverage_airplanes`.
-//
-// Two events cause an addition:
-// 1: New plot from a lat/long position that didn't exist before
-// 2: New ICAO(plane) at a previously seen location
-fn populate_coverage(
-    adsb_airplanes: &Airplanes,
-    coverage_airplanes: &mut Vec<(f64, f64, u32, ICAO)>,
-) {
-    let all_position = adsb_airplanes.all_position();
-    for (
-        all_icao,
-        Position {
-            latitude,
-            longitude,
-            ..
-        },
-    ) in all_position
-    {
-        let latitude = (latitude * COVERAGE_MASK).round() / COVERAGE_MASK;
-        let longitude = (longitude * COVERAGE_MASK).round() / COVERAGE_MASK;
-
-        // Add number to seen number if found already
-        let mut found = false;
-        for (lat, long, seen_number, icao) in coverage_airplanes.iter_mut() {
-            // Reduce the precision of the coverage/heatmap display (XX.XX)
-            //
-            // This is so that more airplanes are seen as being in the same spot and are
-            // colored so that is made clear to the user. If this is to accurate you will never
-            // see airplanes in the "same" spot
-            let lat = (*lat * COVERAGE_MASK).round() / COVERAGE_MASK;
-            let long = (*long * COVERAGE_MASK).round() / COVERAGE_MASK;
-
-            // Found already, but it is a diff icao? if so, update to new icao and add to
-            // seen_number for the color to be more "white" later on
-            if (latitude, longitude) == (lat, long) && (all_icao != *icao) {
-                *seen_number += 1;
-                *icao = all_icao;
-                found = true;
-                break;
-            }
-
-            if (latitude, longitude) == (lat, long) {
-                found = true;
-                break;
-            }
-        }
-
-        // If an airplane wasn't seen in this position, add a new entry
-        if !found {
-            coverage_airplanes.push((latitude, longitude, 0, all_icao));
-        }
-    }
-}
-
 /// Handle a `KeyEvent`
 fn handle_keyevent(
     key_event: KeyEvent,
@@ -916,420 +869,6 @@ fn draw_bottom_chunks<A: tui::backend::Backend>(
     tui_info
 }
 
-/// Render Map tab for tui display
-fn build_tab_map<A: tui::backend::Backend>(
-    f: &mut tui::Frame<A>,
-    chunks: Vec<Rect>,
-    settings: &Settings,
-    adsb_airplanes: &Airplanes,
-) {
-    let canvas = Canvas::default()
-        .block(Block::default().title("Map").borders(Borders::ALL))
-        .x_bounds([MAX_PLOT_LOW, MAX_PLOT_HIGH])
-        .y_bounds([MAX_PLOT_LOW, MAX_PLOT_HIGH])
-        .paint(|ctx| {
-            draw_lines(ctx);
-
-            // draw locations
-            draw_locations(ctx, settings);
-
-            // draw ADSB tab airplanes
-            for key in adsb_airplanes.keys() {
-                let aircraft_details = adsb_airplanes.aircraft_details(*key);
-                if let Some(AirplaneDetails {
-                    position,
-                    heading,
-                    track,
-                    ..
-                }) = aircraft_details
-                {
-                    let (x, y) = settings.to_xy(position.latitude, position.longitude);
-
-                    // draw previous positions ("track")
-                    if !settings.opts.disable_track {
-                        if let Some(track) = track {
-                            for coor in track {
-                                if let Some(position) = coor.position {
-                                    let (x, y) =
-                                        settings.to_xy(position.latitude, position.longitude);
-
-                                    // draw dot on location
-                                    ctx.draw(&Points {
-                                        coords: &[(x, y)],
-                                        color: Color::White,
-                                    });
-                                }
-                            }
-                        }
-                    }
-
-                    // make wings for the angle directions facing toward the heading. This tried to
-                    // account for the angles not showing up around the 90 degree mark, of which I
-                    // add degrees of the angle before displaying
-                    if !settings.opts.disable_heading {
-                        if let Some(heading) = heading {
-                            const ANGLE: f32 = 20.0;
-                            const LENGTH: f32 = 8.0;
-
-                            let addition_heading = (heading % 90.0) / 10.0;
-                            let angle: f32 = ANGLE + addition_heading;
-
-                            let heading = heading + 180.0 % 360.0;
-                            // wrap around the angle since we are are subtracting
-                            let n_heading = if heading > angle {
-                                heading - angle
-                            } else {
-                                (360.0 + heading) - angle
-                            };
-
-                            // move the first point out, so that the green point of the aircraft
-                            // _usually_ shows.
-                            let y_1 = y + f64::from(2.0 * (n_heading.to_radians()).cos());
-                            let x_1 = x + f64::from(2.0 * (n_heading.to_radians()).sin());
-
-                            // draw the line out from the aircraft at an angle
-                            let y_2 = y + f64::from(LENGTH * (n_heading.to_radians()).cos());
-                            let x_2 = x + f64::from(LENGTH * (n_heading.to_radians()).sin());
-
-                            ctx.draw(&Line {
-                                x1: x_1,
-                                x2: x_2,
-                                y1: y_1,
-                                y2: y_2,
-                                color: Color::Blue,
-                            });
-
-                            // repeat for the other side (addition, so just modding)
-                            let n_heading = (heading + angle) % 360.0;
-                            let y_1 = y + f64::from(2.0 * (n_heading.to_radians()).cos());
-                            let x_1 = x + f64::from(2.0 * (n_heading.to_radians()).sin());
-                            let y_2 = y + f64::from(LENGTH * (n_heading.to_radians()).cos());
-                            let x_2 = x + f64::from(LENGTH * (n_heading.to_radians()).sin());
-
-                            ctx.draw(&Line {
-                                x1: x_1,
-                                x2: x_2,
-                                y1: y_1,
-                                y2: y_2,
-                                color: Color::Blue,
-                            });
-                        }
-                    }
-
-                    let name = if settings.opts.disable_lat_long {
-                        format!("{key}").into_boxed_str()
-                    } else {
-                        format!("{key} ({}, {})", position.latitude, position.longitude)
-                            .into_boxed_str()
-                    };
-
-                    if !settings.opts.disable_icao {
-                        // draw plane ICAO name
-                        ctx.print(
-                            x,
-                            y + 20.0,
-                            Span::styled(name.to_string(), Style::default().fg(Color::White)),
-                        );
-                    }
-
-                    // draw dot on actual lat/lon
-                    ctx.draw(&Points {
-                        coords: &[(x, y)],
-                        color: Color::Blue,
-                    });
-                }
-            }
-        });
-    f.render_widget(canvas, chunks[1]);
-}
-
-/// Render Coverage tab for tui display
-fn build_tab_coverage<A: tui::backend::Backend>(
-    f: &mut tui::Frame<A>,
-    chunks: Vec<Rect>,
-    settings: &Settings,
-    coverage_airplanes: &[(f64, f64, u32, ICAO)],
-) {
-    let canvas = Canvas::default()
-        .block(Block::default().title("Coverage").borders(Borders::ALL))
-        .x_bounds([MAX_PLOT_LOW, MAX_PLOT_HIGH])
-        .y_bounds([MAX_PLOT_LOW, MAX_PLOT_HIGH])
-        .paint(|ctx| {
-            // draw locations
-            draw_locations(ctx, settings);
-
-            // draw ADSB tab airplanes
-            for (lat, long, seen_number, _) in coverage_airplanes.iter() {
-                let (x, y) = settings.to_xy(*lat, *long);
-
-                let number: u32 = 100 + *seen_number * 50;
-                let color_number: u8 = if number > u32::from(u8::MAX) {
-                    u8::MAX
-                } else {
-                    number as u8
-                };
-
-                // draw dot on location
-                ctx.draw(&Points {
-                    coords: &[(x, y)],
-                    color: Color::Rgb(color_number, color_number, color_number),
-                });
-            }
-        });
-    f.render_widget(canvas, chunks[1]);
-}
-
-/// Render Airplanes tab for tui display
-fn build_tab_airplanes<A: tui::backend::Backend>(
-    f: &mut tui::Frame<A>,
-    chunks: Vec<Rect>,
-    adsb_airplanes: &Airplanes,
-    airplanes_state: &mut TableState,
-) {
-    let mut rows = vec![];
-    // make a vec of all strings to get a total amount of airplanes with
-    // position information
-    let empty = "".to_string();
-    for key in adsb_airplanes.keys() {
-        let state = adsb_airplanes.get(*key).unwrap();
-        let aircraft_details = adsb_airplanes.aircraft_details(*key);
-        let mut lat = empty.clone();
-        let mut lon = empty.clone();
-        let mut alt = empty.clone();
-        let mut s_kilo_distance = empty.clone();
-        if let Some(AirplaneDetails {
-            position,
-            altitude,
-            kilo_distance,
-            ..
-        }) = aircraft_details
-        {
-            lat = format!("{:.DEFAULT_PRECISION$}", position.latitude);
-            lon = format!("{:.DEFAULT_PRECISION$}", position.longitude);
-            s_kilo_distance = format!("{:.DEFAULT_PRECISION$}", kilo_distance);
-            alt = altitude.to_string();
-        }
-
-        let heading = state
-            .heading
-            .map_or_else(|| "".to_string(), |heading| format!("{heading:>7.1}"));
-
-        rows.push(Row::new(vec![
-            format!("{key}"),
-            state.callsign.as_ref().unwrap_or(&empty).clone(),
-            lat,
-            lon,
-            heading,
-            format!("{alt:>8}"),
-            state
-                .vert_speed
-                .map_or_else(|| "".into(), |v| format!("{v:>6}")),
-            state
-                .speed
-                .map_or_else(|| "".into(), |v| format!("{v:>5.0}")),
-            format!("{:>8}", s_kilo_distance),
-            format!("{:>4}", state.num_messages),
-        ]));
-    }
-
-    let rows_len = rows.len();
-
-    // check the length of selected airplanes
-    if let Some(selected) = airplanes_state.selected() {
-        if selected > rows_len - 1 {
-            airplanes_state.select(Some(rows_len - 1));
-        }
-    }
-
-    // draw table
-    let table = Table::new(rows)
-        .style(Style::default().fg(Color::White))
-        .header(
-            Row::new(vec![
-                "ICAO",
-                "Call sign",
-                "Lat",
-                "Long",
-                "Heading",
-                "Altitude",
-                "   FPM",
-                "Speed",
-                "Distance",
-                "Msgs",
-            ])
-            .bottom_margin(1),
-        )
-        .block(
-            Block::default()
-                .title(format!("Airplanes({rows_len})"))
-                .borders(Borders::ALL),
-        )
-        .widths(&[
-            Constraint::Length(6),
-            Constraint::Length(9),
-            Constraint::Length(7),
-            Constraint::Length(7),
-            Constraint::Length(7),
-            Constraint::Length(8),
-            Constraint::Length(6),
-            Constraint::Length(5),
-            Constraint::Length(8),
-            Constraint::Length(6),
-        ])
-        .column_spacing(1)
-        .highlight_style(Style::default().add_modifier(Modifier::BOLD))
-        .highlight_symbol(">> ");
-    f.render_stateful_widget(table, chunks[1], &mut airplanes_state.clone());
-}
-
-/// Render Help tab for tui display
-fn build_tab_stats<A: tui::backend::Backend>(
-    f: &mut tui::Frame<A>,
-    chunks: Vec<Rect>,
-    stats: &Stats,
-    settings: &Settings,
-) {
-    let format = time::format_description::parse("[month]/[day] [hour]:[minute]:[second]").unwrap();
-    let mut rows: Vec<Row> = vec![];
-    let (time, value) = if let Some((time, key, value)) = stats.most_distance {
-        let position = value.position.unwrap();
-        let lat = format!("{:.DEFAULT_PRECISION$}", position.latitude);
-        let lon = format!("{:.DEFAULT_PRECISION$}", position.longitude);
-        let distance = format!("{:.DEFAULT_PRECISION$}", value.kilo_distance.unwrap());
-
-        // display time
-        let datetime = time::OffsetDateTime::from(time);
-        (
-            datetime
-                .to_offset(settings.utc_offset)
-                .format(&format)
-                .unwrap(),
-            format!("[{key}]: {distance}km {lat},{lon}"),
-        )
-    } else {
-        ("None".to_string(), "".to_string())
-    };
-    rows.push(Row::new(vec!["Max Distance", &time, &value]));
-
-    let (time, value) = if let Some((time, most_airplanes)) = stats.most_airplanes {
-        // display time
-        let datetime = time::OffsetDateTime::from(time);
-        (
-            datetime
-                .to_offset(settings.utc_offset)
-                .format(&format)
-                .unwrap(),
-            most_airplanes.to_string(),
-        )
-    } else {
-        ("None".to_string(), "".to_string())
-    };
-    rows.push(Row::new(vec!["Most Airplanes", &time, &value]));
-
-    // draw table
-    let table = Table::new(rows)
-        .style(Style::default().fg(Color::White))
-        .header(Row::new(vec!["Type", "DateTime", "Value"]).bottom_margin(1))
-        .block(Block::default().title("Stats").borders(Borders::ALL))
-        .widths(&[
-            Constraint::Length(14),
-            Constraint::Length(15),
-            Constraint::Length(200),
-        ])
-        .column_spacing(1);
-    f.render_widget(table, chunks[1]);
-}
-
-/// Render Help tab for tui display
-fn build_tab_help<A: tui::backend::Backend>(f: &mut tui::Frame<A>, chunks: &[Rect]) {
-    let horizontal_chunks = Layout::default()
-        .direction(Direction::Horizontal)
-        .constraints([
-            Constraint::Percentage(2),
-            Constraint::Percentage(96),
-            Constraint::Percentage(2),
-        ])
-        .split(chunks[1]);
-
-    let vertical_chunks = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints([
-            Constraint::Percentage(2),
-            Constraint::Percentage(30),
-            Constraint::Percentage(30),
-            Constraint::Percentage(30),
-            Constraint::Percentage(2),
-        ])
-        .split(horizontal_chunks[1]);
-
-    // First help section
-    let rows = vec![
-        Row::new(vec!["F1", "Move to Radar screen"]),
-        Row::new(vec!["F2", "Move to Coverage screen"]),
-        Row::new(vec!["F3", "Move to Airplanes screen"]),
-        Row::new(vec!["F4", "Move to Stats screen"]),
-        Row::new(vec!["F5", "Move to Help screen"]),
-        Row::new(vec!["l", "control --disable-lat-long"]),
-        Row::new(vec!["i", "control --disable-icao"]),
-        Row::new(vec!["h", "control --disable-heading"]),
-        Row::new(vec!["t", "control --disable-track"]),
-        Row::new(vec!["TAB", "Move to Next screen"]),
-        Row::new(vec!["q", "Quit this app"]),
-        Row::new(vec!["ctrl+c", "Quit this app"]),
-    ];
-    let table = Table::new(rows)
-        .style(Style::default().fg(Color::White))
-        .header(Row::new(vec!["Key", "Action"]).bottom_margin(1))
-        .widths(&[Constraint::Percentage(10), Constraint::Percentage(90)])
-        .column_spacing(1)
-        .block(
-            Block::default()
-                .title("Key Bindings - Any Tab")
-                .borders(Borders::ALL),
-        );
-    f.render_widget(table, vertical_chunks[1]);
-
-    // Second help section
-    let rows = vec![
-        Row::new(vec!["-", "Zoom out"]),
-        Row::new(vec!["+", "Zoom in"]),
-        Row::new(vec!["Up", "Move map up"]),
-        Row::new(vec!["Down", "Move map down"]),
-        Row::new(vec!["Left", "Move map left"]),
-        Row::new(vec!["Right", "Move map right"]),
-        Row::new(vec!["Enter", "Map position reset"]),
-    ];
-    let table = Table::new(rows)
-        .style(Style::default().fg(Color::White))
-        .header(Row::new(vec!["Key", "Action"]).bottom_margin(1))
-        .widths(&[Constraint::Percentage(10), Constraint::Percentage(90)])
-        .column_spacing(1)
-        .block(
-            Block::default()
-                .title("Key Bindings - Map or Coverage")
-                .borders(Borders::ALL),
-        );
-    f.render_widget(table, vertical_chunks[2]);
-
-    // Third help section
-    let rows = [
-        Row::new(vec!["Up", "Move selection upward"]),
-        Row::new(vec!["Down", "Move selection downward"]),
-        Row::new(vec!["Enter", "Center Map tab on selected aircraft"]),
-    ];
-    let table = Table::new(rows)
-        .style(Style::default().fg(Color::White))
-        .header(Row::new(vec!["Key", "Action"]).bottom_margin(1))
-        .widths(&[Constraint::Percentage(10), Constraint::Percentage(90)])
-        .column_spacing(1)
-        .block(
-            Block::default()
-                .title("Key Bindings - Airplanes")
-                .borders(Borders::ALL),
-        );
-    f.render_widget(table, vertical_chunks[3]);
-}
-
 /// Draw vertical and horizontal lines
 fn draw_lines(ctx: &mut tui::widgets::canvas::Context<'_>) {
     ctx.draw(&Line {
@@ -1349,7 +888,7 @@ fn draw_lines(ctx: &mut tui::widgets::canvas::Context<'_>) {
 }
 
 /// Draw locations on the map
-fn draw_locations(ctx: &mut tui::widgets::canvas::Context<'_>, settings: &Settings) {
+pub fn draw_locations(ctx: &mut tui::widgets::canvas::Context<'_>, settings: &Settings) {
     for location in &settings.opts.locations {
         let (x, y) = settings.to_xy(location.lat, location.long);
 
@@ -1386,7 +925,7 @@ fn draw_locations(ctx: &mut tui::widgets::canvas::Context<'_>, settings: &Settin
     }
 }
 
-/// function ran withint a thread for updating `gps_lat_long` when the gpsd shows a new `lat_long`
+/// function ran within a thread for updating `gps_lat_long` when the gpsd shows a new `lat_long`
 /// position.
 fn gpsd_thread(gpsd_ip: &str, gps_lat_long: Arc<Mutex<Option<(f64, f64)>>>) {
     let gpsd_port = 2947;
