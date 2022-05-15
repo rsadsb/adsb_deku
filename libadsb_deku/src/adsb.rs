@@ -369,9 +369,8 @@ pub struct OperationStatusAirborne {
 
     /// OM
     pub operational_mode: OperationalMode,
-    /// OM last 8 bits (diff for airborne/surface)
-    reserved: u8,
 
+    #[deku(pad_bytes_before = "1")] // reserved: OM last 8 bits (diff for airborne/surface)
     pub version_number: ADSBVersion,
 
     #[deku(bits = "1")]
@@ -393,10 +392,8 @@ pub struct OperationStatusAirborne {
     pub horizontal_reference_direction: u8,
 
     #[deku(bits = "1")]
+    #[deku(pad_bits_after = "1")] // reserved
     pub sil_supplement: u8,
-
-    #[deku(bits = "1")]
-    pub reserved1: u8,
 }
 
 impl fmt::Display for OperationStatusAirborne {
@@ -458,9 +455,8 @@ pub struct CapabilityClassAirborne {
     #[deku(bits = "1")]
     pub ts: u8,
     #[deku(bits = "2")]
+    #[deku(pad_bits_after = "6")] //reserved
     pub tc: u8,
-    #[deku(bits = "6")]
-    pub reserved2: u8,
 }
 
 impl fmt::Display for CapabilityClassAirborne {
@@ -511,10 +507,8 @@ pub struct OperationStatusSurface {
     pub nic_supplement_a: u8,
 
     #[deku(bits = "4")]
+    #[deku(pad_bits_after = "2")] // reserved
     pub navigational_accuracy_category: u8,
-
-    #[deku(bits = "2")]
-    pub reserved0: u8,
 
     #[deku(bits = "2")]
     pub source_integrity_level: u8,
@@ -526,10 +520,8 @@ pub struct OperationStatusSurface {
     pub horizontal_reference_direction: u8,
 
     #[deku(bits = "1")]
+    #[deku(pad_bits_after = "1")] // reserved
     pub sil_supplement: u8,
-
-    #[deku(bits = "1")]
-    pub reserved1: u8,
 }
 
 impl fmt::Display for OperationStatusSurface {
@@ -582,10 +574,8 @@ pub struct CapabilityClassSurface {
 
     /// Aircraft has ADS-B 1090ES Receive Capability
     #[deku(bits = "1")]
+    #[deku(pad_bits_after = "2")] // reserved
     pub es1090: u8,
-
-    #[deku(bits = "2")]
-    pub reserved1: u8,
 
     /// Class B2 Ground Vehicle transmitting with less than 70 watts
     #[deku(bits = "1")]
@@ -819,9 +809,8 @@ pub struct OperationCodeSurface {
     #[deku(bits = "1")]
     pub b2_low: u8,
     #[deku(bits = "3")]
+    #[deku(pad_bits_before = "6")]
     pub lw: u8,
-    #[deku(bits = "6")]
-    pub reserved: u8,
 }
 
 #[derive(Debug, PartialEq, DekuRead, Clone)]
@@ -907,9 +896,8 @@ pub struct TargetStateAndStatusInformation {
     #[deku(bits = "1")]
     pub tcas: bool,
     #[deku(bits = "1")]
+    #[deku(pad_bits_after = "2")] // reserved
     pub lnav: bool,
-    #[deku(bits = "2")]
-    pub reserved: u8,
 }
 
 /// [`ME::AirborneVelocity`]
