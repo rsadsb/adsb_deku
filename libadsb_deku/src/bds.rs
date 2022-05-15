@@ -56,9 +56,8 @@ impl fmt::Display for BDS {
 #[derive(Debug, PartialEq, DekuRead, Clone)]
 pub struct DataLinkCapability {
     #[deku(bits = "1")]
+    #[deku(pad_bits_after = "5")] // reserved
     pub continuation_flag: bool,
-    #[deku(bits = "5")]
-    pub reserved0: u8,
     #[deku(bits = "1")]
     pub overlay_command_capability: bool,
     #[deku(bits = "1")]
