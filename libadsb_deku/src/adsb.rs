@@ -318,7 +318,7 @@ impl ME {
 }
 
 /// [`ME::AirborneVelocity`] && [`AirborneVelocitySubType::GroundSpeedDecoding`]
-#[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
 pub struct GroundSpeedDecoding {
     pub ew_sign: Sign,
     #[deku(endian = "big", bits = "10")]
@@ -329,7 +329,7 @@ pub struct GroundSpeedDecoding {
 }
 
 /// [`ME::AirborneVelocity`] && [`AirborneVelocitySubType::AirspeedDecoding`]
-#[derive(Debug, PartialEq, DekuRead, Clone)]
+#[derive(Debug, PartialEq, Eq, DekuRead, Clone)]
 pub struct AirspeedDecoding {
     #[deku(bits = "1")]
     pub status_heading: u8,
@@ -346,7 +346,7 @@ pub struct AirspeedDecoding {
 }
 
 /// Aircraft Operational Status Subtype
-#[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
 #[deku(type = "u8", bits = "3")]
 pub enum OperationStatus {
     #[deku(id = "0")]
@@ -362,7 +362,7 @@ pub enum OperationStatus {
 /// [`ME::AircraftOperationStatus`] && [`OperationStatus`] == 0
 ///
 /// Version 2 support only
-#[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
 pub struct OperationStatusAirborne {
     /// CC (16 bits)
     pub capability_class: CapabilityClassAirborne,
@@ -432,7 +432,7 @@ impl fmt::Display for OperationStatusAirborne {
 }
 
 /// [`ME::AircraftOperationStatus`]
-#[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
 pub struct CapabilityClassAirborne {
     #[deku(bits = "2", assert_eq = "0")]
     pub reserved0: u8,
@@ -483,7 +483,7 @@ impl fmt::Display for CapabilityClassAirborne {
 /// [`ME::AircraftOperationStatus`] && [`OperationStatus`] == 1
 ///
 /// Version 2 support only
-#[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
 pub struct OperationStatusSurface {
     /// CC (14 bits)
     pub capability_class: CapabilityClassSurface,
@@ -562,7 +562,7 @@ impl fmt::Display for OperationStatusSurface {
 }
 
 /// [`ME::AircraftOperationStatus`]
-#[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
 pub struct CapabilityClassSurface {
     /// 0, 0 in current version, reserved as id for later versions
     #[deku(bits = "2", assert_eq = "0")]
@@ -603,7 +603,7 @@ impl fmt::Display for CapabilityClassSurface {
 }
 
 /// `OperationMode` field not including the last 8 bits that are different for Surface/Airborne
-#[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
 pub struct OperationalMode {
     /// (0, 0) in Version 2, reserved for other values
     #[deku(bits = "2", assert_eq = "0")]
@@ -649,7 +649,7 @@ impl fmt::Display for OperationalMode {
 /// ADS-B Defined from different ICAO documents
 ///
 /// reference: ICAO 9871 (5.3.2.3)
-#[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
 #[deku(type = "u8", bits = "3")]
 pub enum ADSBVersion {
     #[deku(id = "0")]
@@ -693,7 +693,7 @@ impl fmt::Display for ControlField {
     }
 }
 
-#[derive(Debug, PartialEq, DekuRead, Clone)]
+#[derive(Debug, PartialEq, Eq, DekuRead, Clone)]
 #[deku(type = "u8", bits = "3")]
 #[allow(non_camel_case_types)]
 pub enum ControlFieldType {
@@ -745,7 +745,7 @@ impl fmt::Display for ControlFieldType {
 }
 
 /// Table: A-2-97
-#[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
 pub struct AircraftStatus {
     pub sub_type: AircraftStatusType,
     pub emergency_state: EmergencyState,
@@ -757,7 +757,7 @@ pub struct AircraftStatus {
     pub squawk: u32,
 }
 
-#[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
 #[deku(type = "u8", bits = "3")]
 pub enum AircraftStatusType {
     #[deku(id = "0")]
@@ -770,7 +770,7 @@ pub enum AircraftStatusType {
     Reserved,
 }
 
-#[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
 #[deku(type = "u8", bits = "3")]
 pub enum EmergencyState {
     None                 = 0,
@@ -800,7 +800,7 @@ impl fmt::Display for EmergencyState {
     }
 }
 
-#[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
 pub struct OperationCodeSurface {
     #[deku(bits = "1")]
     pub poe: u8,
@@ -813,7 +813,7 @@ pub struct OperationCodeSurface {
     pub lw: u8,
 }
 
-#[derive(Debug, PartialEq, DekuRead, Clone)]
+#[derive(Debug, PartialEq, Eq, DekuRead, Clone)]
 pub struct Identification {
     pub tc: TypeCoding,
     #[deku(bits = "3")]
@@ -822,7 +822,7 @@ pub struct Identification {
     pub cn: String,
 }
 
-#[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
 #[deku(type = "u8", bits = "5")]
 pub enum TypeCoding {
     D = 1,
@@ -901,7 +901,7 @@ pub struct TargetStateAndStatusInformation {
 }
 
 /// [`ME::AirborneVelocity`]
-#[derive(Debug, PartialEq, DekuRead, Clone)]
+#[derive(Debug, PartialEq, Eq, DekuRead, Clone)]
 pub struct AirborneVelocity {
     #[deku(bits = "3")]
     pub st: u8,
@@ -948,7 +948,7 @@ impl AirborneVelocity {
 }
 
 /// Airborne Velocity Message “Subtype” Code Field Encoding
-#[derive(Debug, PartialEq, DekuRead, Clone)]
+#[derive(Debug, PartialEq, Eq, DekuRead, Clone)]
 #[deku(ctx = "st: u8", id = "st")]
 pub enum AirborneVelocitySubType {
     #[deku(id = "0")]
@@ -964,14 +964,14 @@ pub enum AirborneVelocitySubType {
     Reserved1(#[deku(bits = "22")] u32),
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, DekuRead)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, DekuRead)]
 #[deku(type = "u8", bits = "3")]
 pub enum AirborneVelocityType {
     Subsonic   = 1,
     Supersonic = 3,
 }
 
-#[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
 #[deku(ctx = "t: AirborneVelocityType")]
 pub struct AirborneVelocitySubFields {
     pub dew: DirectionEW,
@@ -1000,42 +1000,42 @@ impl AirborneVelocitySubFields {
     }
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, DekuRead)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, DekuRead)]
 #[deku(type = "u8", bits = "1")]
 pub enum DirectionEW {
     WestToEast = 0,
     EastToWest = 1,
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, DekuRead)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, DekuRead)]
 #[deku(type = "u8", bits = "1")]
 pub enum DirectionNS {
     SouthToNorth = 0,
     NorthToSouth = 1,
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, DekuRead)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, DekuRead)]
 #[deku(type = "u8", bits = "1")]
 pub enum SourceBitVerticalRate {
     GNSS      = 0,
     Barometer = 1,
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, DekuRead)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, DekuRead)]
 #[deku(type = "u8", bits = "1")]
 pub enum SignBitVerticalRate {
     Up   = 0,
     Down = 1,
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, DekuRead)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, DekuRead)]
 #[deku(type = "u8", bits = "1")]
 pub enum SignBitGNSSBaroAltitudesDiff {
     Above = 0,
     Below = 1,
 }
 
-#[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
 #[deku(type = "u8", bits = "1")]
 pub enum VerticalRateSource {
     BarometricPressureAltitude = 0,
@@ -1055,7 +1055,7 @@ impl fmt::Display for VerticalRateSource {
     }
 }
 
-#[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
 pub struct SurfacePosition {
     #[deku(bits = "7")]
     pub mov: u8,
@@ -1071,7 +1071,7 @@ pub struct SurfacePosition {
     pub lon_cpr: u32,
 }
 
-#[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
 #[deku(type = "u8", bits = "1")]
 pub enum StatusForGroundTrack {
     Invalid = 0,

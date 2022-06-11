@@ -457,7 +457,7 @@ pub enum DF {
 }
 
 /// Latitude, Longitude and Altitude information
-#[derive(Debug, PartialEq, DekuRead, Default, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, DekuRead, Default, Copy, Clone)]
 pub struct Altitude {
     #[deku(bits = "5")]
     pub tc: u8,
@@ -523,7 +523,7 @@ impl Altitude {
 }
 
 /// SPI Condition
-#[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
 #[deku(type = "u8", bits = "2")]
 pub enum SurveillanceStatus {
     NoCondition    = 0,
@@ -539,7 +539,7 @@ impl Default for SurveillanceStatus {
 }
 
 /// Even / Odd
-#[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
 #[deku(type = "u8", bits = "1")]
 pub enum CPRFormat {
     Even = 0,
@@ -566,7 +566,7 @@ impl fmt::Display for CPRFormat {
 }
 
 /// Positive / Negative
-#[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
 #[deku(type = "u8", bits = "1")]
 pub enum Sign {
     Positive = 0,
@@ -597,7 +597,7 @@ impl fmt::Display for Sign {
 }
 
 /// 13 bit identity code
-#[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
 pub struct IdentityCode(#[deku(reader = "Self::read(deku::rest)")] pub u16);
 
 impl IdentityCode {
@@ -628,7 +628,7 @@ impl IdentityCode {
 }
 
 /// ICAO Address; Mode S transponder code
-#[derive(Debug, PartialEq, PartialOrd, DekuRead, Hash, Eq, Copy, Clone, Ord)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, DekuRead, Hash, Copy, Clone, Ord)]
 pub struct ICAO(pub [u8; 3]);
 
 impl fmt::Display for ICAO {
@@ -641,7 +641,7 @@ impl fmt::Display for ICAO {
 }
 
 /// Type of `DownlinkRequest`
-#[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
 #[deku(type = "u8", bits = "5")]
 pub enum DownlinkRequest {
     None               = 0b00000,
@@ -653,14 +653,14 @@ pub enum DownlinkRequest {
 }
 
 /// Uplink / Downlink
-#[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
 #[deku(type = "u8", bits = "1")]
 pub enum KE {
     DownlinkELMTx = 0,
     UplinkELMAck  = 1,
 }
 
-#[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
 pub struct UtilityMessage {
     #[deku(bits = "4")]
     pub iis: u8,
@@ -668,7 +668,7 @@ pub struct UtilityMessage {
 }
 
 /// Message Type
-#[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
 #[deku(type = "u8", bits = "2")]
 pub enum UtilityMessageType {
     NoInformation = 0b00,
@@ -678,7 +678,7 @@ pub enum UtilityMessageType {
 }
 
 /// Airborne / Ground and SPI
-#[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
 #[deku(type = "u8", bits = "3")]
 pub enum FlightStatus {
     NoAlertNoSPIAirborne     = 0b000,
@@ -710,7 +710,7 @@ impl fmt::Display for FlightStatus {
 }
 
 /// 13 bit encoded altitude
-#[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
 pub struct AC13Field(#[deku(reader = "Self::read(deku::rest)")] pub u16);
 
 impl AC13Field {
@@ -745,7 +745,7 @@ impl AC13Field {
 }
 
 /// Transponder level and additional information (3.1.2.5.2.2.1)
-#[derive(Debug, PartialEq, DekuRead, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
 #[deku(type = "u8", bits = "3")]
 #[allow(non_camel_case_types)]
 pub enum Capability {
