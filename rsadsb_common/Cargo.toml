@@ -1,6 +1,6 @@
 [package]
 name = "rsadsb_common"
-version = "0.5.1"
+version = "0.6.0"
 license = "MIT"
 edition = "2021"
 rust-version = "1.59.0"
@@ -11,6 +11,6 @@ std = ["adsb_deku/std", "tracing/std", "alloc"]
 alloc = ["adsb_deku/alloc", "tracing"]
 
 [dependencies]
-adsb_deku = { path = "../libadsb_deku", version = "0.5", default-features = false }
+adsb_deku = { path = "../libadsb_deku", version = "0.6.0", default-features = false }
 tracing = { version = "0.1.0", default-features = false, optional = true}
 libm = "0.2.2"
