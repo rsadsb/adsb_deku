@@ -1,11 +1,9 @@
-use std::fs::File;
-use std::io::prelude::*;
-use std::io::BufReader;
-
 use adsb_deku::cpr::get_position;
 use adsb_deku::deku::prelude::*;
 use adsb_deku::{Altitude, CPRFormat, Frame};
 use criterion::{criterion_group, criterion_main, Criterion};
+
+const TEST_STR: &str = include_str!("../tests/lax-messages.txt");
 
 fn b_get_position() {
     let odd = Altitude {
@@ -43,12 +41,8 @@ fn b_get_position() {
 }
 
 fn lax_message() {
-    // Read from test file and assert display implemented and non panic decode
-    let file = File::open("tests/lax-messages.txt").unwrap();
-    let reader = BufReader::new(file);
-
-    for line in reader.lines() {
-        let line = line.unwrap();
+    // Read from test file and non panic decode
+    for line in TEST_STR.lines() {
         let len = line.chars().count();
         let hex = &mut line.to_string()[1..len - 1].to_string();
         let bytes = hex::decode(&hex).unwrap();
