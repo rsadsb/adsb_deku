@@ -71,7 +71,7 @@ const TUI_START_MARGIN: u16 = 1;
 const TUI_BAR_WIDTH: u16 = 3;
 
 /// default precision of latitude, longitude, and distance
-const DEFAULT_PRECISION: usize = 3;
+pub const DEFAULT_PRECISION: usize = 3;
 
 /// Available top row Tabs
 #[derive(Copy, Clone)]
