@@ -5,7 +5,7 @@ use tui::text::Span;
 use tui::widgets::canvas::{Canvas, Line, Points};
 use tui::widgets::{Block, Borders};
 
-use crate::{draw_lines, draw_locations, Settings, MAX_PLOT_HIGH, MAX_PLOT_LOW};
+use crate::{draw_lines, draw_locations, Settings, DEFAULT_PRECISION, MAX_PLOT_HIGH, MAX_PLOT_LOW};
 
 /// Render Map tab for tui display
 pub fn build_tab_map<A: tui::backend::Backend>(
@@ -110,8 +110,11 @@ pub fn build_tab_map<A: tui::backend::Backend>(
                     let name = if settings.opts.disable_lat_long {
                         format!("{key}").into_boxed_str()
                     } else {
-                        format!("{key} ({}, {})", position.latitude, position.longitude)
-                            .into_boxed_str()
+                        format!(
+                            "{key} ({:.DEFAULT_PRECISION$}, {:.DEFAULT_PRECISION$})",
+                            position.latitude, position.longitude
+                        )
+                        .into_boxed_str()
                     };
 
                     if !settings.opts.disable_icao {
