@@ -25,6 +25,23 @@ const MAX_RECEIVER_DISTANCE: f64 = 500.0;
 // Max absurd distance an aircraft travelled between messages
 const MAX_AIRCRAFT_DISTANCE: f64 = 100.0;
 
+#[derive(Debug, PartialEq, Eq)]
+pub enum Added {
+    /// Airplane was not added
+    No,
+    /// Airplane was added
+    Yes,
+}
+
+impl From<bool> for Added {
+    fn from(other: bool) -> Self {
+        match other {
+            true => Self::Yes,
+            false => Self::No,
+        }
+    }
+}
+
 /// `BTreeMap` of of all currently tracked `ICAO` and `AirplaneState`.
 ///
 /// Currently tracked means that within calling [`Self::action`], an aircraft is added to this data
@@ -87,16 +104,6 @@ impl Airplanes {
         self.0.is_empty()
     }
 
-    /// Increment message count of `ICAO`. If feature: `std`, set `last_time` to current time.
-    pub fn incr_messages(&mut self, icao: ICAO) {
-        let mut state = self.0.entry(icao).or_insert_with(AirplaneState::default);
-        state.num_messages += 1;
-        #[cfg(feature = "std")]
-        {
-            state.last_time = std::time::SystemTime::now();
-        }
-    }
-
     /// Update `Airplanes` with new `Frame`
     ///
     /// Take parsed `Frame` and read the `DF::ADSB` type and act upon the parsed message. This
@@ -104,23 +111,31 @@ impl Airplanes {
     /// airplanes (`ICAO` and `AirplaneState`) when a new aircraft is detected.
     ///
     /// `lat_long`: (latitude, longitude) of current receiver location
-    pub fn action(&mut self, frame: Frame, lat_long: (f64, f64)) {
+    ///
+    /// Return true if entry was added into `Airplanes`
+    pub fn action(&mut self, frame: Frame, lat_long: (f64, f64)) -> Added {
+        let mut airplane_added = Added::No;
         if let DF::ADSB(ref adsb) = frame.df {
-            match &adsb.me {
+            airplane_added = match &adsb.me {
                 ME::AircraftIdentification(identification) => {
-                    self.add_identification(adsb.icao, identification);
+                    self.add_identification(adsb.icao, identification)
                 },
-                ME::AirborneVelocity(vel) => {
-                    self.add_airborne_velocity(adsb.icao, vel);
-                },
+                ME::AirborneVelocity(vel) => self.add_airborne_velocity(adsb.icao, vel),
                 ME::AirbornePositionGNSSAltitude(altitude)
                 | ME::AirbornePositionBaroAltitude(altitude) => {
-                    self.add_altitude(adsb.icao, altitude, lat_long);
+                    self.add_altitude(adsb.icao, altitude, lat_long)
                 },
-                _ => {},
+                _ => Added::No,
             };
-            self.incr_messages(adsb.icao);
+            let incr_airplane_added = self.incr_messages(adsb.icao);
+            airplane_added = if incr_airplane_added == Added::Yes || airplane_added == Added::Yes {
+                Added::Yes
+            } else {
+                Added::No
+            };
         }
+
+        airplane_added
     }
 
     /// from `ICAO` return details on that airplane
@@ -187,30 +202,64 @@ impl Airplanes {
 
 // private
 impl Airplanes {
+    // Return (matching state from icao, true if airplane added)
+    fn entry_or_insert(&mut self, icao: ICAO) -> (&mut AirplaneState, Added) {
+        let entry = self.0.entry(icao);
+        let airplane_added = Added::from(matches!(
+            entry,
+            alloc::collections::btree_map::Entry::Vacant(_)
+        ));
+        if Added::Yes == airplane_added {
+            info!("[{icao}] now tracking");
+        }
+        (entry.or_insert_with(AirplaneState::default), airplane_added)
+    }
+
+    /// Increment message count of `ICAO`. If feature: `std`, set `last_time` to current time.
+    ///
+    /// Return true if entry was added into `Airplanes`
+    pub fn incr_messages(&mut self, icao: ICAO) -> Added {
+        let (state, airplane_added) = self.entry_or_insert(icao);
+        state.num_messages += 1;
+        #[cfg(feature = "std")]
+        {
+            state.last_time = std::time::SystemTime::now();
+        }
+
+        airplane_added
+    }
+
     /// update from `ME::AircraftIdentification`
-    fn add_identification(&mut self, icao: ICAO, identification: &Identification) {
-        let mut state = self.0.entry(icao).or_insert_with(AirplaneState::default);
+    ///
+    /// Return true if entry was added into `Airplanes`
+    fn add_identification(&mut self, icao: ICAO, identification: &Identification) -> Added {
+        let (state, airplane_added) = self.entry_or_insert(icao);
         state.callsign = Some(identification.cn.clone());
         info!("[{icao}] with identification: {}", identification.cn);
+
+        airplane_added
     }
 
     /// update from `ME::AirborneVelocity`
-    fn add_airborne_velocity(&mut self, icao: ICAO, vel: &AirborneVelocity) {
-        let mut state = self.0.entry(icao).or_insert_with(AirplaneState::default);
+    ///
+    /// Return true if entry was added into `Airplanes`
+    fn add_airborne_velocity(&mut self, icao: ICAO, vel: &AirborneVelocity) -> Added {
+        let (state, airplane_added) = self.entry_or_insert(icao);
         if let Some((heading, ground_speed, vert_speed)) = vel.calculate() {
-            info!(
-                "[{icao}] with airborne velocity: heading: {}, speed: {}, vertical speed: {}",
-                heading, ground_speed, vert_speed
-            );
+            info!("[{icao}] with airborne velocity: heading: {heading}, speed: {ground_speed}, vertical speed: {vert_speed}");
             state.heading = Some(heading);
             state.speed = Some(ground_speed as f32);
             state.vert_speed = Some(vert_speed);
         }
+
+        airplane_added
     }
 
     /// update from `ME::AirbornePosition{GNSSAltitude, BaroAltitude}`
-    fn add_altitude(&mut self, icao: ICAO, altitude: &Altitude, lat_long: (f64, f64)) {
-        let state = self.0.entry(icao).or_insert_with(AirplaneState::default);
+    ///
+    /// Return true if entry was added into `Airplanes`
+    fn add_altitude(&mut self, icao: ICAO, altitude: &Altitude, lat_long: (f64, f64)) -> Added {
+        let (state, airplane_added) = self.entry_or_insert(icao);
         info!(
             "[{icao}] with altitude: {:?}, cpr lat: {}, cpr long: {}",
             altitude.alt, altitude.lat_cpr, altitude.lon_cpr
@@ -242,6 +291,8 @@ impl Airplanes {
             // clear record
             state.coords = AirplaneCoor::default();
         }
+
+        airplane_added
     }
 }
 
