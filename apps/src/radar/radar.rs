@@ -15,7 +15,7 @@ mod map;
 use crate::map::build_tab_map;
 
 mod stats;
-use crate::stats::build_tab_stats;
+use crate::stats::{build_tab_stats, Stats};
 
 mod help;
 use crate::help::build_tab_help;
@@ -24,7 +24,7 @@ mod airplanes;
 use std::io::{self, BufRead, BufReader, BufWriter};
 use std::net::{SocketAddr, TcpStream};
 use std::sync::{Arc, Mutex};
-use std::time::{Duration, SystemTime};
+use std::time::Duration;
 
 use adsb_deku::deku::DekuContainerRead;
 use adsb_deku::{Frame, ICAO};
@@ -37,7 +37,7 @@ use crossterm::event::{
 use crossterm::terminal::enable_raw_mode;
 use crossterm::ExecutableCommand;
 use gpsd_proto::{get_data, handshake, ResponseData};
-use rsadsb_common::{AirplaneCoor, AirplaneDetails, Airplanes};
+use rsadsb_common::{AirplaneDetails, Airplanes};
 use time::UtcOffset;
 use tracing::{debug, error, info, trace};
 use tracing_subscriber::EnvFilter;
@@ -91,43 +91,6 @@ impl Tab {
             Self::Airplanes => Self::Stats,
             Self::Stats => Self::Help,
             Self::Help => Self::Map,
-        }
-    }
-}
-
-#[derive(Debug, Default)]
-pub struct Stats {
-    most_distance: Option<(SystemTime, ICAO, AirplaneCoor)>,
-    most_airplanes: Option<(SystemTime, u32)>,
-}
-
-impl Stats {
-    fn update(&mut self, airplanes: &Airplanes) {
-        // Update most_distance
-        let current_distance = self.most_distance.map_or(0.0, |most_distance| {
-            most_distance
-                .2
-                .kilo_distance
-                .map_or(0.0, |kilo_distance| kilo_distance)
-        });
-        for (key, state) in airplanes.iter() {
-            if let Some(distance) = state.coords.kilo_distance {
-                if distance > current_distance {
-                    info!("new max distance: [{}]{:?}", key, state.coords);
-                    self.most_distance = Some((SystemTime::now(), *key, state.coords));
-                }
-            }
-        }
-
-        // Update most airplanes
-        let current_len = airplanes.len();
-        let most_airplanes = self
-            .most_airplanes
-            .map_or(0, |most_airplanes| most_airplanes.1);
-
-        if most_airplanes < current_len as u32 {
-            info!("new most airplanes: {}", current_len);
-            self.most_airplanes = Some((SystemTime::now(), current_len as u32));
         }
     }
 }
@@ -430,12 +393,13 @@ fn main() -> Result<()> {
                 match frame {
                     Ok((left_over, frame)) => {
                         debug!("ADS-B Frame: {frame}");
-                        adsb_airplanes.action(frame, (settings.lat, settings.long));
+                        let airplane_added =
+                            adsb_airplanes.action(frame, (settings.lat, settings.long));
                         if left_over.1 != 0 {
                             error!("{left_over:x?}");
                         }
                         // update stats
-                        stats.update(&adsb_airplanes);
+                        stats.update(&adsb_airplanes, airplane_added);
                     },
                     Err(e) => error!("{e:?}"),
                 }

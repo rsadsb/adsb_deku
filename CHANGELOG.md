@@ -30,7 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
    - `Heading`: Display an arrow to show the direction of the tracked aircraft. Use key: `h` to turn off, or 
      `--disable-heading` cli option.
 - Add key: `i` to trigger disable of ICAO names above aircraft positions.
-- Add Stats Tab, with `Max Distance` and `Most Airplanes`.
+- Add Stats Tab, with `Max Distance`, `Most Airplanes`, and `Total Airplanes Tracked`.
 - Fix terminal escape codes for mouse control. Thanks ([@paunstefan](https://github.com/paunstefan)) ([!124](https://github.com/rsadsb/adsb_deku/pull/124)).
 - Reduce precision of all `f32`s to 3. (for longitude, latitude, heading displays).
 - Add `--retry-tcp` for trying to connect to a dump1090 instance if it crashes. Add tui screen to alert user instead of crashing.
