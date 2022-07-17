@@ -22,12 +22,10 @@ jobs:
             ~/.cargo/git/db/
             target/
           key: cargo-${{ hashFiles('**/Cargo.lock') }}
-      - uses: actions-rs/toolchain@v1
+      - uses: dtolnay/rust-toolchain@master
         with:
-          profile: minimal
           toolchain: nightly
           target: thumbv7em-none-eabihf
-          override: true
       - uses: actions-rs/cargo@v1
         with:
           command: build

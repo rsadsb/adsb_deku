@@ -33,16 +33,12 @@ jobs:
             ~/.cargo/git/db/
             target/
           key: stable-${{ matrix.targets }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - uses: actions-rs/toolchain@v1
+
+      - uses: dtolnay/rust-toolchain@stable
         with:
-          profile: minimal
-          toolchain: stable
-          override: true
-      - uses: actions-rs/cargo@v1
-        with:
-          use-cross: true
-          command: build
-          args: --bin ${{ matrix.bins }} --locked --release --target ${{ matrix.targets }}
+          target: ${{ matrix.targets }}
+      - run: cargo install cross || true
+      - run: cross build --bin ${{ matrix.bins }} --locked --release --target ${{ matrix.targets }}
 
       - name: archive
         run: |
