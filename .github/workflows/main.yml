@@ -18,6 +18,7 @@ jobs:
           - x86_64-unknown-linux-gnu
           - armv7-unknown-linux-gnueabihf
           - aarch64-linux-android
+          - aarch64-unknown-linux-gnu
         toolchain:
           - stable
             # msrv
