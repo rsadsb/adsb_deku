@@ -23,15 +23,10 @@ jobs:
             ~/.cargo/git/db/
             target/
           key: doc-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          default: true
-          profile: minimal
+
+      - uses: dtolnay/rust-toolchain@stable
+
       - name: Check documentation
         env:
           RUSTDOCFLAGS: -D warnings
-        uses: actions-rs/cargo@v1
-        with:
-          command: doc
-          args: --locked --no-deps --document-private-items --all-features
+        run: cargo doc --locked --no-deps --document-private-items --all-features

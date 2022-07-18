@@ -35,23 +35,14 @@ jobs:
             ~/.cargo/git/db/
             target/
           key: ${{ matrix.toolchain }}-${{ matrix.targets }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - uses: actions-rs/toolchain@v1
+
+      - uses: dtolnay/rust-toolchain@master
         with:
-          profile: minimal
           toolchain: ${{ matrix.toolchain }}
           target: ${{ matrix.targets }}
-          override: true
-      - uses: actions-rs/cargo@v1
-        with:
-          use-cross: true
-          command: build
-          args: --locked --workspace --target ${{ matrix.targets }}
-
-      - uses: actions-rs/cargo@v1
-        with:
-          use-cross: true
-          command: test
-          args: --locked --workspace --target ${{ matrix.targets }}
+      - run: cargo install cross || true
+      - run: cross build --locked --workspace --target ${{ matrix.targets }}
+      - run: cross test --locked --workspace --target ${{ matrix.targets }}
 
   # fmt and clippy on nightly builds
   fmt-clippy-nightly:
@@ -67,21 +58,12 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ matrix.toolchain }}-${{ matrix.targets }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ matrix.toolchain }}-x86_64-unknown-linux-gnu-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-      - uses: actions-rs/toolchain@v1
+      - uses: dtolnay/rust-toolchain@master
         with:
-          profile: minimal
           toolchain: nightly
-          override: true
+          target: x86_64-unknown-linux-gnu
           components: rustfmt, clippy
-
-      - uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --all -- --check
-
-      - uses: actions-rs/cargo@v1
-        with:
-          command: clippy
-          args: --workspace -- -D warnings
+      - run: cargo fmt --all --check
+      - run: cargo clippy --workspace -- -D warnings
