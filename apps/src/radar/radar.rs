@@ -563,6 +563,7 @@ fn handle_keyevent(
         (KeyCode::Char('i'), _) => settings.opts.disable_icao ^= true,
         (KeyCode::Char('h'), _) => settings.opts.disable_heading ^= true,
         (KeyCode::Char('t'), _) => settings.opts.disable_track ^= true,
+        (KeyCode::Char('n'), _) => settings.opts.display_callsign ^= true,
         // Map and Coverage
         (KeyCode::Char('-'), Tab::Map | Tab::Coverage) => settings.scale_increase(),
         (KeyCode::Char('+'), Tab::Map | Tab::Coverage) => settings.scale_decrease(),
