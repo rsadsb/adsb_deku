@@ -25,7 +25,7 @@ pub fn build_tab_map<A: tui::backend::Backend>(
             draw_locations(ctx, settings);
 
             // draw ADSB tab airplanes
-            for key in adsb_airplanes.keys() {
+            for (key, value) in adsb_airplanes.iter() {
                 let aircraft_details = adsb_airplanes.aircraft_details(*key);
                 if let Some(AirplaneDetails {
                     position,
@@ -107,11 +107,21 @@ pub fn build_tab_map<A: tui::backend::Backend>(
                         }
                     }
 
-                    let name = if settings.opts.disable_lat_long {
+                    let call_sign = if settings.opts.display_callsign {
+                        if let Some(callsign) = &value.callsign {
+                            callsign.to_string().into_boxed_str()
+                        } else {
+                            format!("{key}").into_boxed_str()
+                        }
+                    } else {
                         format!("{key}").into_boxed_str()
+                    };
+
+                    let name = if settings.opts.disable_lat_long {
+                        format!("{call_sign}").into_boxed_str()
                     } else {
                         format!(
-                            "{key} ({:.DEFAULT_PRECISION$}, {:.DEFAULT_PRECISION$})",
+                            "{call_sign} ({:.DEFAULT_PRECISION$}, {:.DEFAULT_PRECISION$})",
                             position.latitude, position.longitude
                         )
                         .into_boxed_str()

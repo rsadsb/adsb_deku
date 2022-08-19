@@ -73,6 +73,10 @@ pub struct Opts {
     #[clap(long)]
     pub disable_lat_long: bool,
 
+    /// Display Callsign / Tail Number instead of ICAO number
+    #[clap(long)]
+    pub display_callsign: bool,
+
     /// Disable output of icao address of airplane on Map
     #[clap(long)]
     pub disable_icao: bool,
@@ -144,6 +148,7 @@ mod tests {
             long: -80.0,
             locations: vec![],
             disable_lat_long: false,
+            display_callsign: false,
             scale: 0.12,
             gpsd: false,
             gpsd_ip: "localhost".to_string(),
@@ -187,6 +192,7 @@ mod tests {
                 },
             ],
             disable_lat_long: false,
+            display_callsign: false,
             scale: 0.12,
             gpsd: false,
             gpsd_ip: "localhost".to_string(),

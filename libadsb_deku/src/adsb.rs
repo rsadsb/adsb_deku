@@ -816,8 +816,11 @@ pub struct OperationCodeSurface {
 #[derive(Debug, PartialEq, Eq, DekuRead, Clone)]
 pub struct Identification {
     pub tc: TypeCoding,
+
     #[deku(bits = "3")]
     pub ca: u8,
+
+    /// N-Number / Tail Number
     #[deku(reader = "aircraft_identification_read(deku::rest)")]
     pub cn: String,
 }

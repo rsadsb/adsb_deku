@@ -39,6 +39,7 @@ OPTIONS:
         --disable-icao                               Disable output of icao address of airplane on Map
         --disable-lat-long                           Disable output of latitude and longitude on Map
         --disable-track                              Disable display of previous positions of aircraft on Map
+        --display-callsign                           Display Callsign / Tail Number instead of ICAO number
         --filter-time <FILTER_TIME>                  Seconds since last message from airplane, triggers removal of airplane after time is up [default: 120]
         --gpsd                                       Enable automatic updating of lat/lon from gpsd(https://gpsd.io/) server
         --gpsd-ip <GPSD_IP>                          Ip address of gpsd [default: localhost]
@@ -87,6 +88,7 @@ This enables those features for platforms without keyboard and mouse usage.
 | i        | control --disable-icao     |
 | h        | control --disable-heading  |
 | t        | control --disable-track    |
+| n        | toggle --diplay-callsign   |
 | TAB      | Move to next tab           |
 | q        | Quit the app               |
 | ctrl + C | Quit the app               |
