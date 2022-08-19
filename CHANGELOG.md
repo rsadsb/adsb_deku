@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * `apps` follow semvar of `adsb_deku` 
 
 ## [Unreleased]
+
+## [v0.6.0] 2022-08-19
+
 ### rsadsb_common
 - Added this library to have a library for the common data structures required for keeping aircraft
   details in memory for embedded and non-embedded environments.
@@ -22,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add `no_std` support through `--default-features = false` and `features = alloc`. See [rsadsb-embedded](https://github.com/rsadsb/rsadsb-embedded) for example usage.
 
 ### radar
+- Added optionally showing tail numbers (Callsign) instead of ICAO hex callsign by using `--display-callsign` or `n` while in the Map screen.
 - Release binary is now stripped. ~2.26MB -> ~1.24MB. MSRV is bumped to `1.59`.
 - Remove unsecure `chrono` crate with secure `time` crate usage.
 - Add `track`, `heading` to Map tab.
