@@ -131,6 +131,10 @@ pub struct Opts {
     /// retry TCP connection to dump1090 instance if connecton is lost/disconnected
     #[clap(long)]
     pub retry_tcp: bool,
+
+    /// Control the max range of the receiver in km
+    #[clap(long, default_value = "500")]
+    pub max_range: f64,
 }
 
 #[cfg(test)]
