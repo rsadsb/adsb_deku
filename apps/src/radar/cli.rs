@@ -166,6 +166,7 @@ mod tests {
             disable_heading: false,
             disable_track: false,
             retry_tcp: false,
+            max_range: 500.0
         };
         assert_eq!(exp_opt, opt);
 
@@ -210,6 +211,7 @@ mod tests {
             disable_heading: false,
             disable_track: false,
             retry_tcp: false,
+            max_range: 500.0,
         };
         assert_eq!(exp_opt, opt);
     }

@@ -111,9 +111,11 @@ impl Airplanes {
     /// airplanes (`ICAO` and `AirplaneState`) when a new aircraft is detected.
     ///
     /// `lat_long`: (latitude, longitude) of current receiver location
+    /// 
+    /// `max_range`: max range of the receiver
     ///
     /// Return true if entry was added into `Airplanes`
-    pub fn action(&mut self, frame: Frame, lat_long: (f64, f64)) -> Added {
+    pub fn action(&mut self, frame: Frame, lat_long: (f64, f64), max_rang: f64) -> Added {
         let mut airplane_added = Added::No;
         if let DF::ADSB(ref adsb) = frame.df {
             airplane_added = match &adsb.me {
