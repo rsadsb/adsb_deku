@@ -107,7 +107,7 @@ impl Airplanes {
     /// airplanes (`ICAO` and `AirplaneState`) when a new aircraft is detected.
     ///
     /// `lat_long`: (latitude, longitude) of current receiver location
-    /// 
+    ///
     /// `max_range`: max range of the receiver
     ///
     /// Return true if entry was added into `Airplanes`
@@ -256,7 +256,13 @@ impl Airplanes {
     /// update from `ME::AirbornePosition{GNSSAltitude, BaroAltitude}`
     ///
     /// Return true if entry was added into `Airplanes`
-    fn add_altitude(&mut self, icao: ICAO, altitude: &Altitude, lat_long: (f64, f64), max_range: f64) -> Added {
+    fn add_altitude(
+        &mut self,
+        icao: ICAO,
+        altitude: &Altitude,
+        lat_long: (f64, f64),
+        max_range: f64,
+    ) -> Added {
         let (state, airplane_added) = self.entry_or_insert(icao);
         info!(
             "[{icao}] with altitude: {:?}, cpr lat: {}, cpr long: {}",

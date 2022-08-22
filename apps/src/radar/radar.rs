@@ -393,8 +393,11 @@ fn main() -> Result<()> {
                 match frame {
                     Ok((left_over, frame)) => {
                         debug!("ADS-B Frame: {frame}");
-                        let airplane_added =
-                            adsb_airplanes.action(frame, (settings.lat, settings.long), settings.opts.max_range);
+                        let airplane_added = adsb_airplanes.action(
+                            frame,
+                            (settings.lat, settings.long),
+                            settings.opts.max_range,
+                        );
                         if left_over.1 != 0 {
                             error!("{left_over:x?}");
                         }

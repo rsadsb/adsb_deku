@@ -166,7 +166,7 @@ mod tests {
             disable_heading: false,
             disable_track: false,
             retry_tcp: false,
-            max_range: 500.0
+            max_range: 500.0,
         };
         assert_eq!(exp_opt, opt);
 
