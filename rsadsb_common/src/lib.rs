@@ -18,10 +18,6 @@ use adsb_deku::adsb::{AirborneVelocity, Identification, ME};
 use adsb_deku::{cpr, Altitude, CPRFormat, Frame, DF, ICAO};
 use tracing::{debug, info, warn};
 
-// Max kilometer distance from the receiver to the aircraft. Any distance greater then this is
-// considered a "bad" new position and is not tracked.
-const MAX_RECEIVER_DISTANCE: f64 = 500.0;
-
 // Max absurd distance an aircraft travelled between messages
 const MAX_AIRCRAFT_DISTANCE: f64 = 100.0;
 
@@ -112,8 +108,10 @@ impl Airplanes {
     ///
     /// `lat_long`: (latitude, longitude) of current receiver location
     ///
+    /// `max_range`: max range of the receiver
+    ///
     /// Return true if entry was added into `Airplanes`
-    pub fn action(&mut self, frame: Frame, lat_long: (f64, f64)) -> Added {
+    pub fn action(&mut self, frame: Frame, lat_long: (f64, f64), max_rang: f64) -> Added {
         let mut airplane_added = Added::No;
         if let DF::ADSB(ref adsb) = frame.df {
             airplane_added = match &adsb.me {
@@ -123,7 +121,7 @@ impl Airplanes {
                 ME::AirborneVelocity(vel) => self.add_airborne_velocity(adsb.icao, vel),
                 ME::AirbornePositionGNSSAltitude(altitude)
                 | ME::AirbornePositionBaroAltitude(altitude) => {
-                    self.add_altitude(adsb.icao, altitude, lat_long)
+                    self.add_altitude(adsb.icao, altitude, lat_long, max_rang)
                 },
                 _ => Added::No,
             };
@@ -258,7 +256,13 @@ impl Airplanes {
     /// update from `ME::AirbornePosition{GNSSAltitude, BaroAltitude}`
     ///
     /// Return true if entry was added into `Airplanes`
-    fn add_altitude(&mut self, icao: ICAO, altitude: &Altitude, lat_long: (f64, f64)) -> Added {
+    fn add_altitude(
+        &mut self,
+        icao: ICAO,
+        altitude: &Altitude,
+        lat_long: (f64, f64),
+        max_range: f64,
+    ) -> Added {
         let (state, airplane_added) = self.entry_or_insert(icao);
         info!(
             "[{icao}] with altitude: {:?}, cpr lat: {}, cpr long: {}",
@@ -275,7 +279,7 @@ impl Airplanes {
             },
         };
         // update the position from the new even/odd message if it's a good new position
-        if temp_coords.update_position(lat_long) {
+        if temp_coords.update_position(lat_long, max_range) {
             // don't bother updating if it's the same coords
             if state.coords != temp_coords {
                 // update track
@@ -365,7 +369,7 @@ pub struct AirplaneCoor {
 impl AirplaneCoor {
     /// After checking the range of the new lat / long, new position from last position, update the
     /// position of an aircraft
-    fn update_position(&mut self, lat_long: (f64, f64)) -> bool {
+    fn update_position(&mut self, lat_long: (f64, f64), max_range: f64) -> bool {
         if let [Some(odd), Some(even)] = self.altitudes {
             let test_position = cpr::get_position((&odd, &even));
 
@@ -375,7 +379,7 @@ impl AirplaneCoor {
                     lat_long,
                     (test_position.latitude, test_position.longitude),
                 );
-                if kilo_distance > MAX_RECEIVER_DISTANCE {
+                if kilo_distance > max_range {
                     warn!("range: {kilo_distance} -  old: {lat_long:?} new: {test_position:?}");
                     return false;
                 }
