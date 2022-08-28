@@ -17,9 +17,9 @@ pub fn build_tab_help<A: tui::backend::Backend>(f: &mut tui::Frame<A>, chunks: &
         .direction(Direction::Vertical)
         .constraints([
             Constraint::Percentage(2),
-            Constraint::Percentage(30),
-            Constraint::Percentage(30),
-            Constraint::Percentage(30),
+            Constraint::Percentage(40),
+            Constraint::Percentage(40),
+            Constraint::Percentage(10),
             Constraint::Percentage(2),
         ])
         .split(horizontal_chunks[1]);
@@ -35,7 +35,7 @@ pub fn build_tab_help<A: tui::backend::Backend>(f: &mut tui::Frame<A>, chunks: &
         Row::new(vec!["i", "control --disable-icao"]),
         Row::new(vec!["h", "control --disable-heading"]),
         Row::new(vec!["t", "control --disable-track"]),
-        Row::new(vec!["n", "toggle --display-callsign"]),
+        Row::new(vec!["n", "toggle --disable-callsign"]),
         Row::new(vec!["TAB", "Move to Next screen"]),
         Row::new(vec!["q", "Quit this app"]),
         Row::new(vec!["ctrl+c", "Quit this app"]),
