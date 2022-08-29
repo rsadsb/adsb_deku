@@ -74,7 +74,7 @@ pub struct Opts {
     #[clap(long)]
     pub disable_lat_long: bool,
 
-    /// Display Callsign / Tail Number instead of ICAO number
+    /// Display only ICAO number instead of Callsign / Tail Number
     #[clap(long)]
     pub disable_callsign: bool,
 

@@ -5,7 +5,7 @@ See main README.md for app sample images.
 ## radar
 See `--help` for more information.
 ```
-adar 0.6.1
+radar 0.6.1
 wcampbell0x2a
 TUI Display of ADS-B protocol info from demodulator
 
@@ -19,7 +19,7 @@ OPTIONS:
         --long <LONG>                                Antenna location longitude
         --locations <LOCATIONS>...                   Vector of location [(name, lat, long),..] to display on Map
         --disable-lat-long                           Disable output of latitude and longitude on Map
-        --display-callsign                           Display Callsign / Tail Number instead of ICAO number
+        --disable-callsign                           Display only ICAO number instead of Callsign / Tail Number
         --disable-icao                               Disable output of icao address of airplane on Map
         --disable-heading                            Disable display of angles on aircraft within Map display showing the direction of the aircraft
         --disable-track                              Disable display of previous positions of aircraft on Map
