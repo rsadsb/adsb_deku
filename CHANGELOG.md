@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v0.6.1] 2022-09-10
+
+### radar
+- Remove `--display-callsign`, Add `--disable-callsign. Display only ICAO number instead of Callsign / Tail Number
+- Help tab will now show more help
+
 ## [v0.6.0] 2022-08-19
 
 ### rsadsb_common
