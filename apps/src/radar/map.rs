@@ -107,12 +107,10 @@ pub fn build_tab_map<A: tui::backend::Backend>(
                         }
                     }
 
-                    let call_sign = if settings.opts.display_callsign {
-                        if let Some(callsign) = &value.callsign {
-                            callsign.to_string().into_boxed_str()
-                        } else {
-                            format!("{key}").into_boxed_str()
-                        }
+                    let call_sign = if settings.opts.disable_callsign {
+                        format!("{key}").into_boxed_str()
+                    } else if let Some(callsign) = &value.callsign {
+                        callsign.to_string().into_boxed_str()
                     } else {
                         format!("{key}").into_boxed_str()
                     };

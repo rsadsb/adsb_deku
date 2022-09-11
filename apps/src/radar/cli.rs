@@ -43,6 +43,7 @@ const AFTER_TEST: &str = r#"Environment Variables:
     author = "wcampbell0x2a",
     about = "TUI Display of ADS-B protocol info from demodulator",
     after_help = AFTER_TEST,
+    settings = &[clap::AppSettings::DeriveDisplayOrder],
 )]
 pub struct Opts {
     /// ip address / hostname of ADS-B server / demodulator
@@ -73,9 +74,9 @@ pub struct Opts {
     #[clap(long)]
     pub disable_lat_long: bool,
 
-    /// Display Callsign / Tail Number instead of ICAO number
+    /// Display only ICAO number instead of Callsign / Tail Number
     #[clap(long)]
-    pub display_callsign: bool,
+    pub disable_callsign: bool,
 
     /// Disable output of icao address of airplane on Map
     #[clap(long)]
@@ -152,7 +153,7 @@ mod tests {
             long: -80.0,
             locations: vec![],
             disable_lat_long: false,
-            display_callsign: false,
+            disable_callsign: false,
             scale: 0.12,
             gpsd: false,
             gpsd_ip: "localhost".to_string(),
@@ -197,7 +198,7 @@ mod tests {
                 },
             ],
             disable_lat_long: false,
-            display_callsign: false,
+            disable_callsign: false,
             scale: 0.12,
             gpsd: false,
             gpsd_ip: "localhost".to_string(),
