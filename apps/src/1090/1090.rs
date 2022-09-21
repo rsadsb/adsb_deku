@@ -6,27 +6,27 @@ use adsb_deku::Frame;
 use clap::Parser;
 
 #[derive(Debug, Parser)]
-#[clap(
-    version,
+#[command(
     name = "1090",
+    version,
     author = "wcampbell0x2a",
     about = "Dump ADS-B protocol info from demodulator"
 )]
 struct Options {
     /// ip address of ADS-B demodulated bytes server
-    #[clap(long, default_value = "localhost")]
+    #[arg(long, default_value = "localhost")]
     host: String,
     /// port of ADS-B demodulated bytes server
-    #[clap(long, default_value = "30002")]
+    #[arg(long, default_value = "30002")]
     port: u16,
     /// Panic on adsb_deku::Frame::fmt::Display not implemented
-    #[clap(long)]
+    #[arg(long)]
     panic_display: bool,
     /// Panic on adsb_deku::Frame::from_bytes() error
-    #[clap(long)]
+    #[arg(long)]
     panic_decode: bool,
     /// Display debug of adsb::Frame
-    #[clap(long)]
+    #[arg(long)]
     debug: bool,
 }
 

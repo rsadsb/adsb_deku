@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 - MSRV for all libs/bins is bumped to 1.64 for using new workspace package feature.
+### radar
+- Update to clap v4
+### 1090
+- Update to clap v4
 
 ## [v0.6.1] 2022-09-10
 
