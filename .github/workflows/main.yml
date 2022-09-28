@@ -23,7 +23,7 @@ jobs:
         toolchain:
           - stable
             # msrv
-          - 1.59.0
+          - 1.64.0
 
     steps:
       - uses: actions/checkout@v3

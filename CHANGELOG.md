@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * `apps` follow semvar of `adsb_deku` 
 
 ## [Unreleased]
+- MSRV for all libs/bins is bumped to 1.64 for using new workspace package feature.
 
 ## [v0.6.1] 2022-09-10
 
