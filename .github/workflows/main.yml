@@ -26,20 +26,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: ${{ matrix.toolchain }}-${{ matrix.targets }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ matrix.toolchain }}
           target: ${{ matrix.targets }}
+      - uses: Swatinem/rust-cache@v2
       - run: cargo install cross || true
       - run: cross build --locked --workspace --target ${{ matrix.targets }}
       - run: cross test --locked --workspace --target ${{ matrix.targets }}
@@ -50,20 +41,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: ${{ matrix.toolchain }}-x86_64-unknown-linux-gnu-cargo-${{ hashFiles('**/Cargo.lock') }}
-
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: nightly
           target: x86_64-unknown-linux-gnu
           components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
       - run: cargo fmt --all --check
       - run: cargo clippy --workspace -- -D warnings

@@ -13,20 +13,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: cargo-${{ hashFiles('**/Cargo.lock') }}
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: nightly
           target: thumbv7em-none-eabihf
-      - uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --manifest-path ensure_no_std/Cargo.toml
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo build --manifest-path ensure_no_std/Cargo.toml
