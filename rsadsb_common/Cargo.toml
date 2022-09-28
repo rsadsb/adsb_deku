@@ -1,9 +1,9 @@
 [package]
 name = "rsadsb_common"
-version = "0.6.1"
-license = "MIT"
-edition = "2021"
-rust-version = "1.59.0"
+version.workspace = true
+rust-version.workspace = true
+license.workspace = true
+edition.workspace = true
 
 [features]
 default = ["std"]

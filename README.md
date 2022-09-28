@@ -17,7 +17,7 @@ This library uses [deku](https://github.com/sharksforarms/deku) for deserializat
 
 ## Applications
 
-Minimum required rust version: `1.59.0`.
+Minimum required rust version: `1.64.0`.
 
 ### Client Applications
 
