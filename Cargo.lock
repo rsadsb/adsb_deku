@@ -360,8 +360,7 @@ dependencies = [
 [[package]]
 name = "deku"
 version = "0.13.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "868ccf23869582b2d79279e402db457fe341da24a0c5a8927c6154a5b4733dc3"
+source = "git+https://github.com/wcampbell0x2a/deku?branch=specialize-bytes#efe68f5e84ae4cc40f7c893511a36b35f58fe7b1"
 dependencies = [
  "bitvec",
  "deku_derive",
@@ -370,8 +369,7 @@ dependencies = [
 [[package]]
 name = "deku_derive"
 version = "0.13.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4dfb4274ccd1c87a598e98b398b4b630aecb2e8a32fd7c88ffa190fb73870f72"
+source = "git+https://github.com/wcampbell0x2a/deku?branch=specialize-bytes#efe68f5e84ae4cc40f7c893511a36b35f58fe7b1"
 dependencies = [
  "darling",
  "proc-macro-crate",

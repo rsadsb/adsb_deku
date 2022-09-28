@@ -992,11 +992,11 @@ impl AirborneVelocitySubFields {
     ) -> result::Result<(&BitSlice<Msb0, u8>, u16), DekuError> {
         match t {
             AirborneVelocityType::Subsonic => {
-                u16::read(rest, (deku::ctx::Endian::Big, deku::ctx::Size::Bits(10)))
+                u16::read(rest, (deku::ctx::Endian::Big, deku::ctx::BitSize(10)))
                     .map(|(rest, value)| (rest, value - 1))
             },
             AirborneVelocityType::Supersonic => {
-                u16::read(rest, (deku::ctx::Endian::Big, deku::ctx::Size::Bits(10)))
+                u16::read(rest, (deku::ctx::Endian::Big, deku::ctx::BitSize(10)))
                     .map(|(rest, value)| (rest, 4 * (value - 1)))
             },
         }

@@ -497,7 +497,7 @@ impl Altitude {
     fn read(
         rest: &BitSlice<Msb0, u8>,
     ) -> result::Result<(&BitSlice<Msb0, u8>, Option<u16>), DekuError> {
-        let (rest, num) = u32::read(rest, (deku::ctx::Endian::Big, deku::ctx::Size::Bits(12)))?;
+        let (rest, num) = u32::read(rest, (deku::ctx::Endian::Big, deku::ctx::BitSize(12)))?;
 
         let q = num & 0x10;
 
@@ -602,7 +602,7 @@ pub struct IdentityCode(#[deku(reader = "Self::read(deku::rest)")] pub u16);
 
 impl IdentityCode {
     fn read(rest: &BitSlice<Msb0, u8>) -> result::Result<(&BitSlice<Msb0, u8>, u16), DekuError> {
-        let (rest, num) = u32::read(rest, (deku::ctx::Endian::Big, deku::ctx::Size::Bits(13)))?;
+        let (rest, num) = u32::read(rest, (deku::ctx::Endian::Big, deku::ctx::BitSize(13)))?;
 
         let c1 = (num & 0b1_0000_0000_0000) >> 12;
         let a1 = (num & 0b0_1000_0000_0000) >> 11;
@@ -716,7 +716,7 @@ pub struct AC13Field(#[deku(reader = "Self::read(deku::rest)")] pub u16);
 impl AC13Field {
     // TODO Add unit
     fn read(rest: &BitSlice<Msb0, u8>) -> result::Result<(&BitSlice<Msb0, u8>, u16), DekuError> {
-        let (rest, num) = u32::read(rest, (deku::ctx::Endian::Big, deku::ctx::Size::Bits(13)))?;
+        let (rest, num) = u32::read(rest, (deku::ctx::Endian::Big, deku::ctx::BitSize(13)))?;
 
         let m_bit = num & 0x0040;
         let q_bit = num & 0x0010;
@@ -790,7 +790,7 @@ pub(crate) fn aircraft_identification_read(
 
     let mut chars = vec![];
     for _ in 0..=6 {
-        let (for_rest, c) = <u8>::read(inside_rest, deku::ctx::Size::Bits(6))?;
+        let (for_rest, c) = <u8>::read(inside_rest, deku::ctx::BitSize(6))?;
         if c != 32 {
             chars.push(c);
         }

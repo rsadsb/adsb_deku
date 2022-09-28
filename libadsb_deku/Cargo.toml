@@ -17,7 +17,8 @@ std = ["deku/std", "alloc"]
 alloc = ["deku/alloc"]
 
 [dependencies]
-deku = { version = "0.13", default-features = false }
+#deku = { version = "0.13", default-features = false }
+deku = { git = "https://github.com/wcampbell0x2a/deku", branch = "specialize-bytes" }
 libm = "0.2.2"
 
 [dev-dependencies]
