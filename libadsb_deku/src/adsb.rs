@@ -62,6 +62,12 @@ impl ADSB {
 #[derive(Debug, PartialEq, DekuRead, Clone)]
 #[deku(type = "u8", bits = "5")]
 pub enum ME {
+    #[deku(id_pat = "9..=18")]
+    AirbornePositionBaroAltitude(Altitude),
+
+    #[deku(id = "19")]
+    AirborneVelocity(AirborneVelocity),
+
     #[deku(id = "0")]
     NoPosition([u8; 6]),
 
@@ -70,12 +76,6 @@ pub enum ME {
 
     #[deku(id_pat = "5..=8")]
     SurfacePosition(SurfacePosition),
-
-    #[deku(id_pat = "9..=18")]
-    AirbornePositionBaroAltitude(Altitude),
-
-    #[deku(id = "19")]
-    AirborneVelocity(AirborneVelocity),
 
     #[deku(id_pat = "20..=22")]
     AirbornePositionGNSSAltitude(Altitude),
