@@ -31,6 +31,7 @@ use crate::{aircraft_identification_read, Altitude, CPRFormat, Capability, Sign,
 
 /// [`crate::DF::ADSB`] || [`crate::DF::TisB`]
 #[derive(Debug, PartialEq, DekuRead, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ADSB {
     /// Transponder Capability
     pub capability: Capability,
@@ -60,6 +61,7 @@ impl ADSB {
 ///
 /// reference: ICAO 9871 (A.2.3.1)
 #[derive(Debug, PartialEq, DekuRead, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[deku(type = "u8", bits = "5")]
 pub enum ME {
     #[deku(id_pat = "9..=18")]
@@ -312,6 +314,7 @@ impl ME {
 
 /// [`ME::AirborneVelocity`] && [`AirborneVelocitySubType::GroundSpeedDecoding`]
 #[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct GroundSpeedDecoding {
     pub ew_sign: Sign,
     #[deku(endian = "big", bits = "10")]
@@ -323,6 +326,7 @@ pub struct GroundSpeedDecoding {
 
 /// [`ME::AirborneVelocity`] && [`AirborneVelocitySubType::AirspeedDecoding`]
 #[derive(Debug, PartialEq, Eq, DekuRead, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct AirspeedDecoding {
     #[deku(bits = "1")]
     pub status_heading: u8,
@@ -340,6 +344,7 @@ pub struct AirspeedDecoding {
 
 /// Aircraft Operational Status Subtype
 #[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[deku(type = "u8", bits = "3")]
 pub enum OperationStatus {
     #[deku(id = "0")]
@@ -356,6 +361,7 @@ pub enum OperationStatus {
 ///
 /// Version 2 support only
 #[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct OperationStatusAirborne {
     /// CC (16 bits)
     pub capability_class: CapabilityClassAirborne,
@@ -426,6 +432,7 @@ impl fmt::Display for OperationStatusAirborne {
 
 /// [`ME::AircraftOperationStatus`]
 #[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct CapabilityClassAirborne {
     #[deku(bits = "2", assert_eq = "0")]
     pub reserved0: u8,
@@ -477,6 +484,7 @@ impl fmt::Display for CapabilityClassAirborne {
 ///
 /// Version 2 support only
 #[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct OperationStatusSurface {
     /// CC (14 bits)
     pub capability_class: CapabilityClassSurface,
@@ -556,6 +564,7 @@ impl fmt::Display for OperationStatusSurface {
 
 /// [`ME::AircraftOperationStatus`]
 #[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct CapabilityClassSurface {
     /// 0, 0 in current version, reserved as id for later versions
     #[deku(bits = "2", assert_eq = "0")]
@@ -597,6 +606,7 @@ impl fmt::Display for CapabilityClassSurface {
 
 /// `OperationMode` field not including the last 8 bits that are different for Surface/Airborne
 #[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct OperationalMode {
     /// (0, 0) in Version 2, reserved for other values
     #[deku(bits = "2", assert_eq = "0")]
@@ -643,6 +653,7 @@ impl fmt::Display for OperationalMode {
 ///
 /// reference: ICAO 9871 (5.3.2.3)
 #[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[deku(type = "u8", bits = "3")]
 pub enum ADSBVersion {
     #[deku(id = "0")]
@@ -663,6 +674,7 @@ impl fmt::Display for ADSBVersion {
 ///
 /// reference: ICAO 9871
 #[derive(Debug, PartialEq, DekuRead, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ControlField {
     t: ControlFieldType,
     /// AA: Address, Announced
@@ -687,6 +699,7 @@ impl fmt::Display for ControlField {
 }
 
 #[derive(Debug, PartialEq, Eq, DekuRead, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[deku(type = "u8", bits = "3")]
 #[allow(non_camel_case_types)]
 pub enum ControlFieldType {
@@ -739,6 +752,7 @@ impl fmt::Display for ControlFieldType {
 
 /// Table: A-2-97
 #[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct AircraftStatus {
     pub sub_type: AircraftStatusType,
     pub emergency_state: EmergencyState,
@@ -751,6 +765,7 @@ pub struct AircraftStatus {
 }
 
 #[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[deku(type = "u8", bits = "3")]
 pub enum AircraftStatusType {
     #[deku(id = "0")]
@@ -764,6 +779,7 @@ pub enum AircraftStatusType {
 }
 
 #[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[deku(type = "u8", bits = "3")]
 pub enum EmergencyState {
     None                 = 0,
@@ -794,6 +810,7 @@ impl fmt::Display for EmergencyState {
 }
 
 #[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct OperationCodeSurface {
     #[deku(bits = "1")]
     pub poe: u8,
@@ -807,6 +824,7 @@ pub struct OperationCodeSurface {
 }
 
 #[derive(Debug, PartialEq, Eq, DekuRead, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Identification {
     pub tc: TypeCoding,
 
@@ -819,6 +837,7 @@ pub struct Identification {
 }
 
 #[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[deku(type = "u8", bits = "5")]
 pub enum TypeCoding {
     D = 1,
@@ -844,6 +863,7 @@ impl fmt::Display for TypeCoding {
 
 /// Target State and Status (§2.2.3.2.7.1)
 #[derive(Copy, Clone, Debug, PartialEq, DekuRead)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct TargetStateAndStatusInformation {
     // TODO Support Target State and Status defined in DO-260A, ADS-B Version=1
     // TODO Support reserved 2..=3
@@ -898,6 +918,7 @@ pub struct TargetStateAndStatusInformation {
 
 /// [`ME::AirborneVelocity`]
 #[derive(Debug, PartialEq, Eq, DekuRead, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct AirborneVelocity {
     #[deku(bits = "3")]
     pub st: u8,
@@ -945,6 +966,7 @@ impl AirborneVelocity {
 
 /// Airborne Velocity Message “Subtype” Code Field Encoding
 #[derive(Debug, PartialEq, Eq, DekuRead, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[deku(ctx = "st: u8", id = "st")]
 pub enum AirborneVelocitySubType {
     #[deku(id = "0")]
@@ -961,6 +983,7 @@ pub enum AirborneVelocitySubType {
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, DekuRead)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[deku(type = "u8", bits = "3")]
 pub enum AirborneVelocityType {
     Subsonic   = 1,
@@ -969,6 +992,7 @@ pub enum AirborneVelocityType {
 
 #[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
 #[deku(ctx = "t: AirborneVelocityType")]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct AirborneVelocitySubFields {
     pub dew: DirectionEW,
     #[deku(reader = "Self::read_v(deku::rest, t)")]
@@ -997,6 +1021,7 @@ impl AirborneVelocitySubFields {
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, DekuRead)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[deku(type = "u8", bits = "1")]
 pub enum DirectionEW {
     WestToEast = 0,
@@ -1004,6 +1029,7 @@ pub enum DirectionEW {
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, DekuRead)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[deku(type = "u8", bits = "1")]
 pub enum DirectionNS {
     SouthToNorth = 0,
@@ -1011,6 +1037,7 @@ pub enum DirectionNS {
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, DekuRead)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[deku(type = "u8", bits = "1")]
 pub enum SourceBitVerticalRate {
     GNSS      = 0,
@@ -1018,6 +1045,7 @@ pub enum SourceBitVerticalRate {
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, DekuRead)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[deku(type = "u8", bits = "1")]
 pub enum SignBitVerticalRate {
     Up   = 0,
@@ -1025,6 +1053,7 @@ pub enum SignBitVerticalRate {
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, DekuRead)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[deku(type = "u8", bits = "1")]
 pub enum SignBitGNSSBaroAltitudesDiff {
     Above = 0,
@@ -1032,6 +1061,7 @@ pub enum SignBitGNSSBaroAltitudesDiff {
 }
 
 #[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[deku(type = "u8", bits = "1")]
 pub enum VerticalRateSource {
     BarometricPressureAltitude = 0,
@@ -1052,6 +1082,7 @@ impl fmt::Display for VerticalRateSource {
 }
 
 #[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct SurfacePosition {
     #[deku(bits = "7")]
     pub mov: u8,
@@ -1068,6 +1099,7 @@ pub struct SurfacePosition {
 }
 
 #[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[deku(type = "u8", bits = "1")]
 pub enum StatusForGroundTrack {
     Invalid = 0,

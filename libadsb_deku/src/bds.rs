@@ -14,6 +14,7 @@ use crate::aircraft_identification_read;
 
 #[derive(Debug, PartialEq, Eq, DekuRead, Clone)]
 #[deku(type = "u8", bits = "8")]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum BDS {
     /// (1, 0) Table A-2-16
     #[deku(id = "0x00")]
@@ -54,6 +55,7 @@ impl fmt::Display for BDS {
 
 /// To report the data link capability of the Mode S transponder/data link installation
 #[derive(Debug, PartialEq, Eq, DekuRead, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct DataLinkCapability {
     #[deku(bits = "1")]
     #[deku(pad_bits_after = "5")] // reserved

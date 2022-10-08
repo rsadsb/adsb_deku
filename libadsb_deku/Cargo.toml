@@ -18,6 +18,7 @@ alloc = ["deku/alloc"]
 
 [dependencies]
 deku = { version = "0.15", default-features = false }
+serde = { version = "1.0", features = ["derive"], optional = true }
 libm = "0.2.2"
 
 [dev-dependencies]

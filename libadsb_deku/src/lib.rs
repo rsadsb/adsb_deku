@@ -158,6 +158,7 @@ use deku::prelude::*;
 
 /// Downlink ADS-B Packet
 #[derive(Debug, PartialEq, DekuRead, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Frame {
     /// Starting with 5 bit identifier, decode packet
     pub df: DF,
@@ -276,6 +277,7 @@ impl fmt::Display for Frame {
 ///
 /// Starting with 5 bits, decode the rest of the message as the correct data packets
 #[derive(Debug, PartialEq, DekuRead, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[deku(type = "u8", bits = "5")]
 pub enum DF {
     /// 17: Extended Squitter, Downlink Format 17 (3.1.2.8.6)
@@ -459,6 +461,7 @@ pub enum DF {
 
 /// Latitude, Longitude and Altitude information
 #[derive(Debug, PartialEq, Eq, DekuRead, Default, Copy, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Altitude {
     #[deku(bits = "5")]
     pub tc: u8,
@@ -523,6 +526,7 @@ impl Altitude {
 
 /// SPI Condition
 #[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[deku(type = "u8", bits = "2")]
 pub enum SurveillanceStatus {
     NoCondition    = 0,
@@ -539,6 +543,7 @@ impl Default for SurveillanceStatus {
 
 /// Even / Odd
 #[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[deku(type = "u8", bits = "1")]
 pub enum CPRFormat {
     Even = 0,
@@ -566,6 +571,7 @@ impl fmt::Display for CPRFormat {
 
 /// Positive / Negative
 #[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[deku(type = "u8", bits = "1")]
 pub enum Sign {
     Positive = 0,
@@ -597,6 +603,7 @@ impl fmt::Display for Sign {
 
 /// 13 bit identity code
 #[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct IdentityCode(#[deku(reader = "Self::read(deku::rest)")] pub u16);
 
 impl IdentityCode {
@@ -628,6 +635,7 @@ impl IdentityCode {
 
 /// ICAO Address; Mode S transponder code
 #[derive(Debug, PartialEq, Eq, PartialOrd, DekuRead, Hash, Copy, Clone, Ord)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ICAO(pub [u8; 3]);
 
 impl fmt::Display for ICAO {
@@ -639,8 +647,20 @@ impl fmt::Display for ICAO {
     }
 }
 
+impl core::str::FromStr for ICAO {
+    type Err = core::num::ParseIntError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let num = u32::from_str_radix(s, 16)?;
+        let bytes = num.to_be_bytes();
+        let num = [bytes[1], bytes[2], bytes[3]];
+        Ok(Self(num))
+    }
+}
+
 /// Type of `DownlinkRequest`
 #[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[deku(type = "u8", bits = "5")]
 pub enum DownlinkRequest {
     None               = 0b00000,
@@ -653,6 +673,7 @@ pub enum DownlinkRequest {
 
 /// Uplink / Downlink
 #[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[deku(type = "u8", bits = "1")]
 pub enum KE {
     DownlinkELMTx = 0,
@@ -660,6 +681,7 @@ pub enum KE {
 }
 
 #[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct UtilityMessage {
     #[deku(bits = "4")]
     pub iis: u8,
@@ -668,6 +690,7 @@ pub struct UtilityMessage {
 
 /// Message Type
 #[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[deku(type = "u8", bits = "2")]
 pub enum UtilityMessageType {
     NoInformation = 0b00,
@@ -678,6 +701,7 @@ pub enum UtilityMessageType {
 
 /// Airborne / Ground and SPI
 #[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[deku(type = "u8", bits = "3")]
 pub enum FlightStatus {
     NoAlertNoSPIAirborne     = 0b000,
@@ -710,6 +734,7 @@ impl fmt::Display for FlightStatus {
 
 /// 13 bit encoded altitude
 #[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct AC13Field(#[deku(reader = "Self::read(deku::rest)")] pub u16);
 
 impl AC13Field {
@@ -745,6 +770,7 @@ impl AC13Field {
 
 /// Transponder level and additional information (3.1.2.5.2.2.1)
 #[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[deku(type = "u8", bits = "3")]
 #[allow(non_camel_case_types)]
 pub enum Capability {

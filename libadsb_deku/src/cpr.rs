@@ -29,6 +29,7 @@ const CPR_MAX: f64 = 131_072.0;
 
 /// Post-processing of CPR into Latitude/Longitude
 #[derive(Debug, PartialEq, Clone, Copy)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Position {
     pub latitude: f64,
     pub longitude: f64,
