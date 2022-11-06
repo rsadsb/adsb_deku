@@ -726,7 +726,7 @@ impl AC13Field {
             Ok((rest, 0))
         } else if q_bit != 0 {
             let n = ((num & 0x1f80) >> 2) | ((num & 0x0020) >> 1) | (num & 0x000f);
-            let n = n as u32 * 25;
+            let n = n * 25;
             if n > 1000 {
                 Ok((rest, (n - 1000) as u16))
             } else {
