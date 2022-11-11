@@ -37,104 +37,103 @@ const AFTER_TEST: &str = r#"Environment Variables:
 "#;
 
 #[derive(Debug, Clone, Parser, PartialEq)]
-#[clap(
+#[command(
     version,
     name = "radar",
     author = "wcampbell0x2a",
     about = "TUI Display of ADS-B protocol info from demodulator",
     after_help = AFTER_TEST,
-    settings = &[clap::AppSettings::DeriveDisplayOrder],
 )]
 pub struct Opts {
     /// ip address / hostname of ADS-B server / demodulator
-    #[clap(long, default_value = "127.0.0.1")]
+    #[arg(long, default_value = "127.0.0.1")]
     pub host: Ipv4Addr,
 
     /// port of ADS-B server / demodulator
-    #[clap(long, default_value = "30002")]
+    #[arg(long, default_value = "30002")]
     pub port: u16,
 
     /// Antenna location latitude, this use for aircraft position algorithms.
     ///
     /// This is overwritten when using the `--gpsd` option.
-    #[clap(long)]
+    #[arg(long)]
     pub lat: f64,
 
     /// Antenna location longitude
     ///
     /// This is overwritten when using the `--gpsd` option.
-    #[clap(long)]
+    #[arg(long)]
     pub long: f64,
 
     /// Vector of location [(name, lat, long),..] to display on Map
-    #[clap(long, multiple_values(true))]
+    #[arg(long, num_args = 1..)]
     pub locations: Vec<Location>,
 
     /// Disable output of latitude and longitude on Map
-    #[clap(long)]
+    #[arg(long)]
     pub disable_lat_long: bool,
 
     /// Display only ICAO number instead of Callsign / Tail Number
-    #[clap(long)]
+    #[arg(long)]
     pub disable_callsign: bool,
 
     /// Disable output of icao address of airplane on Map
-    #[clap(long)]
+    #[arg(long)]
     pub disable_icao: bool,
 
     /// Disable display of angles on aircraft within Map display showing the direction of the aircraft.
-    #[clap(long)]
+    #[arg(long)]
     pub disable_heading: bool,
 
     /// Disable display of previous positions of aircraft on Map
-    #[clap(long)]
+    #[arg(long)]
     pub disable_track: bool,
 
     /// Zoom level of Map and Coverage (-=zoom out/+=zoom in)
-    #[clap(long, default_value = ".12")]
+    #[arg(long, default_value = ".12")]
     pub scale: f64,
 
     /// Enable automatic updating of lat/lon from gpsd(<https://gpsd.io/>) server.
     ///
     /// This overwrites the `--lat` and `--long`
-    #[clap(long)]
+    #[arg(long)]
     pub gpsd: bool,
 
     /// Ip address of gpsd
-    #[clap(long, default_value = "localhost")]
+    #[arg(long, default_value = "localhost")]
     pub gpsd_ip: String,
 
     /// Seconds since last message from airplane, triggers removal of airplane after time is up
-    #[clap(long, default_value = "120")]
+    #[arg(long, default_value = "120")]
     pub filter_time: u64,
 
-    #[clap(long, default_value = "logs")]
+    #[arg(long, default_value = "logs")]
     pub log_folder: String,
 
     /// Enable three tabs on left side of screen for zoom out/zoom in/and reset
-    #[clap(long)]
+    #[arg(long)]
     pub touchscreen: bool,
 
     /// Limit parsing of ADS-B messages to `DF::ADSB(17)` num_messages
     ///
     /// This can improve performance of just needing to read radar related messages
-    #[clap(long)]
+    #[arg(long)]
     pub limit_parsing: bool,
 
     /// Import downloaded csv file for FAA Airport from <https://github.com/mborsetti/airportsdata>
-    #[clap(long)]
+    #[arg(long)]
     pub airports: Option<String>,
 
     /// comma seperated filter for --airports timezone data, such as: "America/Chicago,America/New_York"
-    #[clap(long)]
+    #[arg(long)]
     pub airports_tz_filter: Option<String>,
 
     /// retry TCP connection to dump1090 instance if connecton is lost/disconnected
-    #[clap(long)]
+    #[arg(long)]
     pub retry_tcp: bool,
 
     /// Control the max range of the receiver in km
-    #[clap(long, default_value = "500")]
+    #[arg(long, default_value = "500")]
     pub max_range: f64,
 }
 
