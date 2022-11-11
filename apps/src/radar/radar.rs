@@ -353,8 +353,8 @@ fn main() -> Result<()> {
         // check the Mutex from the gpsd thread, update lat/long
         if let Ok(lat_long) = gps_lat_long.lock() {
             if let Some((lat, long)) = *lat_long {
-                settings.lat = lat as f64;
-                settings.long = long as f64;
+                settings.lat = lat;
+                settings.long = long;
             }
         }
 
