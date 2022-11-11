@@ -277,6 +277,23 @@ impl fmt::Display for Frame {
 #[derive(Debug, PartialEq, DekuRead, Clone)]
 #[deku(type = "u8", bits = "5")]
 pub enum DF {
+    /// 17: Extended Squitter, Downlink Format 17 (3.1.2.8.6)
+    ///
+    /// Civil aircraft ADS-B message
+    #[deku(id = "17")]
+    ADSB(ADSB),
+
+    /// 11: (Mode S) All-call reply, Downlink format 11 (2.1.2.5.2.2)
+    #[deku(id = "11")]
+    AllCallReply {
+        /// CA: Capability
+        capability: Capability,
+        /// AA: Address Announced
+        icao: ICAO,
+        /// PI: Parity/Interrogator identifier
+        p_icao: ICAO,
+    },
+
     /// 0: (Mode S) Short Air-Air Surveillance, Downlink Format 0 (3.1.2.8.2)
     #[deku(id = "0")]
     ShortAirAirSurveillance {
@@ -337,17 +354,6 @@ pub enum DF {
         ap: ICAO,
     },
 
-    /// 11: (Mode S) All-call reply, Downlink format 11 (2.1.2.5.2.2)
-    #[deku(id = "11")]
-    AllCallReply {
-        /// CA: Capability
-        capability: Capability,
-        /// AA: Address Announced
-        icao: ICAO,
-        /// PI: Parity/Interrogator identifier
-        p_icao: ICAO,
-    },
-
     /// 16: (Mode S) Long Air-Air Surveillance Downlink Format 16 (3.1.2.8.3)
     #[deku(id = "16")]
     LongAirAir {
@@ -371,12 +377,6 @@ pub enum DF {
         /// AP: address, parity
         parity: ICAO,
     },
-
-    /// 17: Extended Squitter, Downlink Format 17 (3.1.2.8.6)
-    ///
-    /// Civil aircraft ADS-B message
-    #[deku(id = "17")]
-    ADSB(ADSB),
 
     /// 18: Extended Squitter/Supplementary, Downlink Format 18 (3.1.2.8.7)
     ///
