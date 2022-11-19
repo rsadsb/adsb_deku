@@ -17,7 +17,7 @@ std = ["deku/std", "alloc"]
 alloc = ["deku/alloc"]
 
 [dependencies]
-deku = { version = "0.13", default-features = false }
+deku = { version = "0.15", default-features = false }
 libm = "0.2.2"
 
 [dev-dependencies]
