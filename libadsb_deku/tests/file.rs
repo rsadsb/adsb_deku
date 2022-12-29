@@ -13,6 +13,6 @@ fn lax_messages() {
         // test non panic decode
         let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
         // test fmt::Display implemented
-        assert_ne!("{}", format!("{}", frame));
+        assert_ne!("{}", format!("{frame}"));
     }
 }

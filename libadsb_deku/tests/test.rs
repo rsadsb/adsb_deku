@@ -211,7 +211,7 @@ fn testing08() {
 fn testing_df_shortairairsurveillance() {
     let bytes = hex!("02e19cb02512c3");
     let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-    let resulting_string = format!("{}", frame);
+    let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Short Air-Air Surveillance
   ICAO Address:  0d097e (Mode S / ADS-B)
@@ -277,7 +277,7 @@ fn testing_df_shortairairsurveillance() {
 fn testing_df_extendedsquitteraircraftopstatus() {
     let bytes = hex!("8d0d097ef8230007005ab8547268");
     let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-    let resulting_string = format!("{}", frame);
+    let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Extended Squitter Aircraft operational status (airborne)
   Address:       0d097e (Mode S / ADS-B)
@@ -298,7 +298,7 @@ fn testing_df_extendedsquitteraircraftopstatus() {
 
     let bytes = hex!("8da1a8daf82300060049b870c88b");
     let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-    let resulting_string = format!("{}", frame);
+    let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Extended Squitter Aircraft operational status (airborne)
   Address:       a1a8da (Mode S / ADS-B)
@@ -322,7 +322,7 @@ fn testing_df_extendedsquitteraircraftopstatus() {
 fn testing_allcall_reply() {
     let bytes = hex!("5da58fd4561b39");
     let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-    let resulting_string = format!("{}", frame);
+    let resulting_string = format!("{frame}");
     assert_eq!(
         r#" All Call Reply
   ICAO Address:  a58fd4 (Mode S / ADS-B)
@@ -336,7 +336,7 @@ fn testing_allcall_reply() {
 fn testing_airbornepositionbaroaltitude() {
     let bytes = hex!("8da2c1bd587ba2adb31799cb802b");
     let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-    let resulting_string = format!("{}", frame);
+    let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Extended Squitter Airborne position (barometric altitude)
   Address:       a2c1bd (Mode S / ADS-B)
@@ -355,7 +355,7 @@ fn testing_airbornepositionbaroaltitude() {
 fn testing_surveillancealtitudereply() {
     let bytes = hex!("200012b0d96e39");
     let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-    let resulting_string = format!("{}", frame);
+    let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Surveillance, Altitude Reply
   ICAO Address:  a3ecce (Mode S / ADS-B)
@@ -370,7 +370,7 @@ fn testing_surveillancealtitudereply() {
 fn testing_surveillanceidentityreply_err() {
     let bytes = hex!("245093892a1bfd");
     let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-    let resulting_string = format!("{}", frame);
+    let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Surveillance, Altitude Reply
   ICAO Address:  a168ad (Mode S / ADS-B)
@@ -387,7 +387,7 @@ fn testing_surveillanceidentityreply_err() {
 fn testing_surveillanceidentityreply() {
     let bytes = hex!("2A00516D492B80");
     let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-    let resulting_string = format!("{}", frame);
+    let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Surveillance, Identity Reply
   ICAO Address:  510af9 (Mode S / ADS-B)
@@ -402,7 +402,7 @@ fn testing_surveillanceidentityreply() {
 fn testing_airbornevelocity() {
     let bytes = hex!("8dac8e1a9924263950043944cf32");
     let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-    let resulting_string = format!("{}", frame);
+    let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Extended Squitter Airborne velocity over ground, subsonic
   Address:       ac8e1a (Mode S / ADS-B)
@@ -417,7 +417,7 @@ fn testing_airbornevelocity() {
 
     let bytes = hex!("8da3f9cb9910100da8148571db11");
     let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-    let resulting_string = format!("{}", frame);
+    let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Extended Squitter Airborne velocity over ground, subsonic
   Address:       a3f9cb (Mode S / ADS-B)
@@ -435,7 +435,7 @@ fn testing_airbornevelocity() {
 fn testing_targetstateandstatusinformation() {
     let bytes = hex!("8da97753ea2d0858015c003ee5de");
     let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-    let resulting_string = format!("{}", frame);
+    let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Extended Squitter Target state and status (V2)
   Address:       a97753 (Mode S / ADS-B)
@@ -457,7 +457,7 @@ fn testing_targetstateandstatusinformation() {
 fn testing_aircraftidentificationandcategory() {
     let bytes = hex!("8da3f9cb213b3d75c1582080f4d9");
     let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-    let resulting_string = format!("{}", frame);
+    let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Extended Squitter Aircraft identification and category
   Address:       a3f9cb (Mode S / ADS-B)
@@ -473,7 +473,7 @@ fn testing_aircraftidentificationandcategory() {
 fn testing_issue_01() {
     let bytes = hex!("8dad50a9ea466867811c08abbaa2");
     let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-    let resulting_string = format!("{}", frame);
+    let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Extended Squitter Target state and status (V2)
   Address:       ad50a9 (Mode S / ADS-B)
@@ -496,7 +496,7 @@ fn testing_issue_01() {
 fn testing_issue_03() {
     let bytes = hex!("80e1969058b5025b9850641d2974");
     let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-    let resulting_string = format!("{}", frame);
+    let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Long Air-Air ACAS
   ICAO Address:  ac049e (Mode S / ADS-B)
@@ -511,7 +511,7 @@ fn testing_issue_03() {
 fn testing_issue_04() {
     let bytes = hex!("0621776e99b6ad");
     let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-    let resulting_string = format!("{}", frame);
+    let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Short Air-Air Surveillance
   ICAO Address:  a33325 (Mode S / ADS-B)
@@ -525,7 +525,7 @@ fn testing_issue_04() {
 fn testing_df_21() {
     let bytes = hex!("AE24238D15EE315463718B1AF755");
     let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-    let resulting_string = format!("{}", frame);
+    let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Comm-B, Identity Reply
     ICAO Address:  a95fdc (Mode S / ADS-B)
@@ -540,7 +540,7 @@ fn testing_df_21() {
 fn testing_df_24() {
     let bytes = hex!("daca7f82613c2db14a49c535a3a2");
     let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-    let resulting_string = format!("{}", frame);
+    let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Comm-D Extended Length Message
     ICAO Address:     a01f73 (Mode S / ADS-B)
@@ -554,7 +554,7 @@ fn testing_df_18() {
     // test github issue #2 (with sample output from dump1090_fa as control)
     let bytes = hex!("95298FCA680946499671468C7ACA");
     let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-    let resulting_string = format!("{}", frame);
+    let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Extended Squitter (Non-Transponder) Airborne position (barometric altitude)
   Address:       298fca (TIS-B)
@@ -571,7 +571,7 @@ fn testing_df_18() {
     // test github issue #3 (with sample output from dump1090_fa as control)
     let bytes = hex!("96A082FB213B1CF2113820D6EDDF");
     let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-    let resulting_string = format!("{}", frame);
+    let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Extended Squitter (Non-Transponder) Aircraft identification and category
   Address:       a082fb (ADS-R)
@@ -585,7 +585,7 @@ fn testing_df_18() {
     // test github issue #4 (with sample output from dump1090_fa as control)
     let bytes = hex!("96A6C24699141E0E8018074AA959");
     let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-    let resulting_string = format!("{}", frame);
+    let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Extended Squitter (Non-Transponder) Airborne velocity over ground, subsonic
   Address:       a6c246 (ADS-R)
@@ -601,7 +601,7 @@ fn testing_df_18() {
     // test github issue #5 (with sample output from dump1090_fa as control)
     let bytes = hex!("92A24528993C238900062053CDEF");
     let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-    let resulting_string = format!("{}", frame);
+    let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Extended Squitter (Non-Transponder) Airborne velocity over ground, subsonic
   Address:       a24528 (TIS-B)
@@ -617,7 +617,7 @@ fn testing_df_18() {
     // test github issue #6 (with sample output from dump1090_fa as control)
     let bytes = hex!("96130D9D910F86188A7A71EF6DCB");
     let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-    let resulting_string = format!("{}", frame);
+    let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Extended Squitter (Non-Transponder) Airborne position (barometric altitude)
   Address:       130d9d (ADS-R)
@@ -634,7 +634,7 @@ fn testing_df_18() {
     // test github issue #7 (with sample output from dump1090_fa as control)
     let bytes = hex!("91ADF9CEC11C0524407F11538EE5");
     let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-    let resulting_string = format!("{}", frame);
+    let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Extended Squitter (Non-Transponder) Reserved for surface system status
   Address:       adf9ce (ADS-B)
@@ -645,7 +645,7 @@ fn testing_df_18() {
 
     let bytes = hex!("97CAEEF737FB1341BF58DF19118A");
     let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-    let resulting_string = format!("{}", frame);
+    let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Extended Squitter (Non-Transponder) Surface position
   Address:       caeef7 (unknown addressing scheme)
@@ -656,7 +656,7 @@ fn testing_df_18() {
     // test github issue #8 (with sample output from dump1090_fa as control)
     let bytes = hex!("96A4D01FF900210600493075E234");
     let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-    let resulting_string = format!("{}", frame);
+    let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Extended Squitter (Non-Transponder) Aircraft operational status (surface)
   Address:       a4d01f (ADS-R)
@@ -680,7 +680,7 @@ fn testing_df_18() {
 fn test_emergency() {
     let bytes = hex!("8dc06800e1108500000000baa81f");
     let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-    let resulting_string = format!("{}", frame);
+    let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Extended Squitter Emergency/priority status
   Address:       c06800 (Mode S / ADS-B)
@@ -696,7 +696,7 @@ fn test_emergency() {
 fn issue_10() {
     let bytes = hex!("8DA35EBC9B000024B00C0004E897");
     let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-    let resulting_string = format!("{}", frame);
+    let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Extended Squitter Airspeed and heading, subsonic
   Address:       a35ebc (Mode S / ADS-B)
@@ -713,7 +713,7 @@ fn issue_10() {
 fn issue_11_12() {
     let bytes = hex!("8da90a6e000000000000005cab8b");
     let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-    let resulting_string = format!("{}", frame);
+    let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Extended Squitter No position information
   Address:       a90a6e (Mode S / ADS-B)
@@ -724,7 +724,7 @@ fn issue_11_12() {
 
     let bytes = hex!("92ef92b301154cb9ab09466702c6");
     let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-    let resulting_string = format!("{}", frame);
+    let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Extended Squitter (Non-Transponder) No position information
   Address:       ef92b3 (TIS-B)
@@ -738,7 +738,7 @@ fn issue_11_12() {
 fn fix_issue_unknown() {
     let bytes = hex!("8d85d792beaf5654b710d87357ee");
     let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-    let resulting_string = format!("{}", frame);
+    let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Extended Squitter Unknown
   Address:       85d792 (Mode S / ADS-B)
@@ -749,7 +749,7 @@ fn fix_issue_unknown() {
 
     let bytes = hex!("972ae8d6d73e298fcaa6bec4c338");
     let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-    let resulting_string = format!("{}", frame);
+    let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Extended Squitter (Non-Transponder) Unknown
   Address:       2ae8d6 (unknown addressing scheme)
@@ -764,7 +764,7 @@ fn fix_issue_13() {
     // 1
     let bytes = hex!("8dab92a2593e0664204c69d8fe84");
     let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-    let resulting_string = format!("{}", frame);
+    let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Extended Squitter Airborne position (barometric altitude)
   Address:       ab92a2 (Mode S / ADS-B)
@@ -781,7 +781,7 @@ fn fix_issue_13() {
     // 2
     let bytes = hex!("8dab92a299105e93001486608c6d");
     let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-    let resulting_string = format!("{}", frame);
+    let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Extended Squitter Airborne velocity over ground, subsonic
   Address:       ab92a2 (Mode S / ADS-B)
@@ -797,7 +797,7 @@ fn fix_issue_13() {
     // 3
     let bytes = hex!("020007a0d08ff4");
     let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-    let resulting_string = format!("{}", frame);
+    let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Short Air-Air Surveillance
   ICAO Address:  ab92a2 (Mode S / ADS-B)
@@ -810,7 +810,7 @@ fn fix_issue_13() {
     // 4
     let bytes = hex!("5dab92a2b04912");
     let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-    let resulting_string = format!("{}", frame);
+    let resulting_string = format!("{frame}");
     assert_eq!(
         r#" All Call Reply
   ICAO Address:  ab92a2 (Mode S / ADS-B)
@@ -822,7 +822,7 @@ fn fix_issue_13() {
     // 4
     let bytes = hex!("8dab92a2593e0664204c69d8fe84");
     let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-    let resulting_string = format!("{}", frame);
+    let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Extended Squitter Airborne position (barometric altitude)
   Address:       ab92a2 (Mode S / ADS-B)
@@ -841,7 +841,7 @@ fn fix_issue_13() {
 fn test_issue_14() {
     let bytes = hex!("a0001910204d7075d35820c25c0c");
     let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-    let resulting_string = format!("{}", frame);
+    let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Comm-B, Altitude Reply
   ICAO Address:  aa6f80 (Mode S / ADS-B)
@@ -854,7 +854,7 @@ fn test_issue_14() {
 
     let bytes = hex!("a000171810030a80f6000012bd7b");
     let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-    let resulting_string = format!("{}", frame);
+    let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Comm-B, Altitude Reply
   ICAO Address:  aacb19 (Mode S / ADS-B)
@@ -869,7 +869,7 @@ fn test_issue_14() {
 fn test_issue_09() {
     let bytes = hex!("a00017b010030a80f60000a0fc1e");
     let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-    let resulting_string = format!("{}", frame);
+    let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Comm-B, Altitude Reply
   ICAO Address:  a6c756 (Mode S / ADS-B)
@@ -881,7 +881,7 @@ fn test_issue_09() {
 
     let bytes = hex!("a000179f0000000000000019a524");
     let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-    let resulting_string = format!("{}", frame);
+    let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Comm-B, Altitude Reply
   ICAO Address:  a6c756 (Mode S / ADS-B)
@@ -896,7 +896,7 @@ fn test_issue_09() {
 fn test_issue_16() {
     let bytes = hex!("a227ed3417826515bebd01707629");
     let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-    let resulting_string = format!("{}", frame);
+    let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Comm-B, Altitude Reply
   ICAO Address:  abef98 (Mode S / ADS-B)
@@ -911,7 +911,7 @@ fn test_issue_16() {
 fn test_operational_coordination() {
     let bytes = hex!("9143e8eef79baeeacca522b044bf");
     let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-    let resulting_string = format!("{}", frame);
+    let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Extended Squitter (Non-Transponder) Aircraft Operational Coordination
   Address:       43e8ee (ADS-B)
@@ -924,7 +924,7 @@ fn test_operational_coordination() {
 fn test_issue_25() {
     let bytes = hex!("92479249fcb22e16fbdc3bac5b56");
     let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-    let resulting_string = format!("{}", frame);
+    let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Extended Squitter (Non-Transponder) Aircraft operational status (reserved)
   Address:       479249 (TIS-B)
@@ -937,7 +937,7 @@ fn test_issue_25() {
 fn test_issue_22() {
     let bytes = hex!("911c059d9805a452cf109f64924f");
     let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-    let resulting_string = format!("{}", frame);
+    let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Extended Squitter (Non-Transponder) Airborne Velocity status (reserved)
   Address:       1c059d (ADS-B)
@@ -950,7 +950,7 @@ fn test_issue_22() {
 fn test_df17_error() {
     let bytes = hex!("8da04e60ea3ab860015f889746a9");
     let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-    let resulting_string = format!("{}", frame);
+    let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Extended Squitter Target state and status (V2)
   Address:       a04e60 (Mode S / ADS-B)

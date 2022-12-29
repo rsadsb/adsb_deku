@@ -470,7 +470,7 @@ fn main() -> Result<()> {
     )?;
     crossterm::terminal::disable_raw_mode()?;
     terminal.show_cursor()?;
-    println!("radar quitting: {}", reason);
+    println!("radar quitting: {reason}");
     info!("quitting: {}", reason);
     Ok(())
 }
@@ -747,8 +747,7 @@ fn draw(
                 .block(
                     Block::default()
                         .title(format!(
-                            "rsadsb/radar(v{}) - ({:.DEFAULT_PRECISION$},{:.DEFAULT_PRECISION$}) {view_type}",
-                            version, lat, long
+                            "rsadsb/radar(v{version}) - ({lat:.DEFAULT_PRECISION$},{long:.DEFAULT_PRECISION$}) {view_type}"
                         ))
                         .borders(Borders::ALL),
                 )

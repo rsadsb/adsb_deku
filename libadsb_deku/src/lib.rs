@@ -168,8 +168,8 @@ pub struct Frame {
 
 impl Frame {
     /// Read rest as CRC bits
-    fn read_crc<'a, 'b>(
-        df: &'a DF,
+    fn read_crc<'b>(
+        df: &DF,
         rest: &'b BitSlice<u8, Msb0>,
     ) -> result::Result<(&'b BitSlice<u8, Msb0>, u32), DekuError> {
         const MODES_LONG_MSG_BYTES: usize = 14;
@@ -246,7 +246,7 @@ impl fmt::Display for Frame {
                 write!(f, "{}", adsb.to_string("(Mode S / ADS-B)")?)?;
             },
             DF::TisB { cf, .. } => {
-                write!(f, "{}", cf)?;
+                write!(f, "{cf}")?;
             },
             // TODO
             DF::ExtendedQuitterMilitaryApplication { .. } => {},
@@ -255,13 +255,13 @@ impl fmt::Display for Frame {
                 writeln!(f, "  ICAO Address:  {crc:x?} (Mode S / ADS-B)")?;
                 let altitude = alt.0;
                 writeln!(f, "  Altitude:      {altitude} ft")?;
-                write!(f, "  {}", bds)?;
+                write!(f, "  {bds}")?;
             },
             DF::CommBIdentityReply { id, bds, .. } => {
                 writeln!(f, " Comm-B, Identity Reply")?;
                 writeln!(f, "    ICAO Address:  {crc:x?} (Mode S / ADS-B)")?;
                 writeln!(f, "    Squawk:        {id:x?}")?;
-                write!(f, "    {}", bds)?;
+                write!(f, "    {bds}")?;
             },
             DF::CommDExtendedLengthMessage { .. } => {
                 writeln!(f, " Comm-D Extended Length Message")?;
@@ -482,9 +482,9 @@ impl fmt::Display for Altitude {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let altitude = self.alt.map_or_else(
             || "None".to_string(),
-            |altitude| format!("{} ft barometric", altitude),
+            |altitude| format!("{altitude} ft barometric"),
         );
-        writeln!(f, "  Altitude:      {}", altitude)?;
+        writeln!(f, "  Altitude:      {altitude}")?;
         writeln!(f, "  CPR type:      Airborne")?;
         writeln!(f, "  CPR odd flag:  {}", self.odd_flag)?;
         writeln!(f, "  CPR latitude:  ({})", self.lat_cpr)?;
