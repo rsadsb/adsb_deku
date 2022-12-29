@@ -39,7 +39,7 @@ impl fmt::Display for BDS {
             },
             Self::AircraftIdentification(s) => {
                 writeln!(f, "Comm-B format: BDS2,0 Aircraft identification")?;
-                writeln!(f, "  Ident:         {}", s)?;
+                writeln!(f, "  Ident:         {s}")?;
             },
             Self::DataLinkCapability(_) => {
                 writeln!(f, "Comm-B format: BDS1,0 Datalink capabilities")?;

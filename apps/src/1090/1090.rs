@@ -63,16 +63,16 @@ fn main() {
             match Frame::from_bytes((&bytes, 0)) {
                 Ok((_, frame)) => {
                     if options.debug {
-                        println!("{:#?}", frame);
+                        println!("{frame:#?}");
                     }
-                    println!("{}", frame);
+                    println!("{frame}");
                     assert!(
                         !((frame.to_string() == "") && options.panic_display),
                         "[E] fmt::Display not implemented"
                     );
                 },
                 Err(e) => {
-                    assert!(!options.panic_decode, "[E] {}", e);
+                    assert!(!options.panic_decode, "[E] {e}");
                 },
             }
             input.clear();

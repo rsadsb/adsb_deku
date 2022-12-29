@@ -118,19 +118,14 @@ impl ME {
         let mut f = String::new();
         match self {
             ME::NoPosition(_) => {
-                writeln!(
-                    f,
-                    " Extended Squitter{}No position information",
-                    transponder
-                )?;
+                writeln!(f, " Extended Squitter{transponder}No position information")?;
                 writeln!(f, "  Address:       {icao} {address_type}")?;
                 writeln!(f, "  Air/Ground:    {capability}")?;
             },
             ME::AircraftIdentification(Identification { tc, ca, cn }) => {
                 writeln!(
                     f,
-                    " Extended Squitter{}Aircraft identification and category",
-                    transponder
+                    " Extended Squitter{transponder}Aircraft identification and category"
                 )?;
                 writeln!(f, "  Address:       {icao} {address_type}")?;
                 writeln!(f, "  Air/Ground:    {capability}")?;
@@ -144,19 +139,17 @@ impl ME {
             ME::AirbornePositionBaroAltitude(altitude) => {
                 writeln!(
                     f,
-                    " Extended Squitter{}Airborne position (barometric altitude)",
-                    transponder
+                    " Extended Squitter{transponder}Airborne position (barometric altitude)"
                 )?;
                 writeln!(f, "  Address:       {icao} {address_type}")?;
                 writeln!(f, "  Air/Ground:    {capability}")?;
-                write!(f, "{}", altitude)?;
+                write!(f, "{altitude}")?;
             },
             ME::AirborneVelocity(airborne_velocity) => match &airborne_velocity.sub_type {
                 AirborneVelocitySubType::GroundSpeedDecoding(_) => {
                     writeln!(
                         f,
-                        " Extended Squitter{}Airborne velocity over ground, subsonic",
-                        transponder
+                        " Extended Squitter{transponder}Airborne velocity over ground, subsonic"
                     )?;
                     writeln!(f, "  Address:       {icao} {address_type}")?;
                     writeln!(f, "  Air/Ground:    {capability}")?;
@@ -215,7 +208,7 @@ impl ME {
                     " Extended Squitter{transponder}Airborne position (GNSS altitude)",
                 )?;
                 writeln!(f, "  Address:      {icao} {address_type}")?;
-                write!(f, "{}", altitude)?;
+                write!(f, "{altitude}")?;
             },
             ME::Reserved0(_) | ME::Reserved1(_) => {
                 writeln!(f, " Extended Squitter{transponder}Unknown")?;
@@ -285,7 +278,7 @@ impl ME {
                     f,
                     " Extended Squitter{transponder}Aircraft Operational Coordination",
                 )?;
-                writeln!(f, "  Address:       {} {}", icao, address_type)?;
+                writeln!(f, "  Address:       {icao} {address_type}")?;
             },
             ME::AircraftOperationStatus(OperationStatus::Airborne(opstatus_airborne)) => {
                 writeln!(
@@ -795,7 +788,7 @@ impl fmt::Display for EmergencyState {
             Self::DownedAircraft => "downed aircraft",
             Self::Reserved2 => "reserved2",
         };
-        write!(f, "{}", s)?;
+        write!(f, "{s}")?;
         Ok(())
     }
 }

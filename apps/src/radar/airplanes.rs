@@ -32,7 +32,7 @@ pub fn build_tab_airplanes<A: tui::backend::Backend>(
         {
             lat = format!("{:.DEFAULT_PRECISION$}", position.latitude);
             lon = format!("{:.DEFAULT_PRECISION$}", position.longitude);
-            s_kilo_distance = format!("{:.DEFAULT_PRECISION$}", kilo_distance);
+            s_kilo_distance = format!("{kilo_distance:.DEFAULT_PRECISION$}");
             alt = altitude.to_string();
         }
 
@@ -53,7 +53,7 @@ pub fn build_tab_airplanes<A: tui::backend::Backend>(
             state
                 .speed
                 .map_or_else(|| "".into(), |v| format!("{v:>5.0}")),
-            format!("{:>8}", s_kilo_distance),
+            format!("{s_kilo_distance:>8}"),
             format!("{:>4}", state.num_messages),
         ]));
     }
