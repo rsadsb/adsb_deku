@@ -85,7 +85,7 @@ Test data was generated using a rtl-sdr with `dump1090-fa`.
 For testing this library, you can run our app `1090` with the following options for exiting program 
 on missing `fmt::Display` or bytes protocol decode.
 ```text
-> cd apps
+> cd ../apps
 > cargo r --release --bin 1090 -- --debug --disable-airplanes --panic-decode --panic-display
 ```
 
