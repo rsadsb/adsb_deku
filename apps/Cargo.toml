@@ -1,6 +1,6 @@
 [package]
 name = "rsadsb_apps"
-version.workspace = true
+version = "0.6.2"
 rust-version.workspace = true
 license.workspace = true
 edition.workspace = true
@@ -14,7 +14,7 @@ name = "1090"
 path = "src/1090/1090.rs"
 
 [dependencies]
-adsb_deku = { path = "../libadsb_deku", version = "0.6.1" }
+adsb_deku = { path = "../libadsb_deku", version = "0.6.2" }
 rsadsb_common = { path = "../rsadsb_common", version = "0.6.1" }
 hex = "0.4.0"
 crossterm = "0.25.0"
