@@ -3,7 +3,7 @@ Minimum required rust version: `1.64`.
 
 Add the following lines to your Cargo.toml file:
 ```text
-adsb_deku = "*"
+adsb_deku = "0.6.2"
 ```
 
 ## Support
