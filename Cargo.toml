@@ -3,7 +3,6 @@ members = ["apps", "libadsb_deku", "rsadsb_common"]
 exclude = ["ensure_no_std"]
 
 [workspace.package]
-version = "0.6.1"
 rust-version = "1.64.0"
 license = "MIT"
 edition = "2021"
