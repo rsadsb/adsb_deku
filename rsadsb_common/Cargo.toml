@@ -1,5 +1,9 @@
 [package]
 name = "rsadsb_common"
+description = "common library for adsb_deku"
+repository = "https://github.com/wcampbel0x2a/adsb_deku"
+keywords = ["deku", "adsb", "aerorust", "airplane", "radar"]
+categories = ["aerospace::protocols", "parsing"]
 version = "0.6.1"
 rust-version.workspace = true
 license.workspace = true
