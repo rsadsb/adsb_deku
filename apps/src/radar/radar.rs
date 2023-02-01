@@ -501,7 +501,7 @@ fn init_tcp_reader(
             "radar: Waiting for connection to {ip}:{port}"
         ))];
 
-        let paragraph = Paragraph::new(text.clone()).alignment(Alignment::Left);
+        let paragraph = Paragraph::new(text).alignment(Alignment::Left);
         f.render_widget(paragraph, chunks[0]);
     })?;
 
@@ -756,7 +756,7 @@ fn draw(
                 .select(settings.tab_selection as usize)
                 .divider(DOT);
 
-            f.render_widget(tab.clone(), chunks[0]);
+            f.render_widget(tab, chunks[0]);
 
             // render everything under tab
             tui_info = draw_bottom_chunks(
