@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2023-01-31]
+### rsadsb_common
+- Published to [crates.io](https://crates.io/crates/rsadsb_common)
+
 ## [2022-12-29]
 - MSRV for all libs/bins is bumped to 1.64 for using new workspace package feature.
 ### adsb_deku
