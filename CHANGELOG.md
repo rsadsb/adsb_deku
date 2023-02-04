@@ -1,13 +1,11 @@
 # Changelog
-All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+Binary releases are given a date and a release within this file.
+All libraries are pushed to crates.io with semver in mind. 
+Libraries are released without a new release date within this changelog,
+since this pertains to binary (package) releases.
 
-* `adsb_deku`(published library) follows semvar when versioning
-* `apps` follow semvar of `adsb_deku` 
-
-## [Unreleased]
+## [Package Unreleased]
 ### rsadsb_common
 - Added optional `serde` feature for the serialization into formats such as `json` or `toml`. 
 - Published `v0.7.0` to [crates.io](https://crates.io/crates/rsadsb_common)
