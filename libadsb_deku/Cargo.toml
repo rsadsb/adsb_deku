@@ -30,3 +30,7 @@ criterion = "0.3"
 [[bench]]
 name = "decoding"
 harness = false
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]

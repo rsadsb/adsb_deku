@@ -21,3 +21,7 @@ libm = "0.2.2"
 tracing = { version = "0.1.0", default-features = false, optional = true}
 serde = { version = "1.0", features = ["derive"], optional = true }
 serde_with = { version = "2.0.1",optional = true }
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
