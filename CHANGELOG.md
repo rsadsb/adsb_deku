@@ -10,12 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### rsadsb_common
 - Added optional `serde` feature for the serialization into formats such as `json` or `toml`. 
+- Published `v0.7.0` to [crates.io](https://crates.io/crates/rsadsb_common)
 ### adsb_deku
 - Added optional `serde` feature for the serialization into formats such as `json` or `toml`. 
-
-## [2023-01-31]
-### rsadsb_common
-- Published to [crates.io](https://crates.io/crates/rsadsb_common)
+- Published `v0.7.0` to [crates.io](https://crates.io/crates/adsb_deku)
 
 ## [2022-12-29]
 - MSRV for all libs/bins is bumped to 1.64 for using new workspace package feature.
