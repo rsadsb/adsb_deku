@@ -16,7 +16,7 @@ alloc = ["adsb_deku/alloc", "tracing"]
 serde = ["dep:serde", "dep:serde_with", "adsb_deku/serde"]
 
 [dependencies]
-adsb_deku = { path = "../libadsb_deku", default-features = false }
+adsb_deku = { path = "../libadsb_deku", default-features = false, version = "0.6.3" }
 libm = "0.2.2"
 tracing = { version = "0.1.0", default-features = false, optional = true}
 serde = { version = "1.0", features = ["derive"], optional = true }
