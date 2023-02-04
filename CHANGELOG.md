@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * `apps` follow semvar of `adsb_deku` 
 
 ## [Unreleased]
+### rsadsb_common
+- Added optional `serde` feature for the serialization into formats such as `json` or `toml`. 
+### adsb_deku
+- Added optional `serde` feature for the serialization into formats such as `json` or `toml`. 
 
 ## [2023-01-31]
 ### rsadsb_common
