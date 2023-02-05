@@ -28,7 +28,7 @@ jobs:
         with:
           target: ${{ matrix.targets }}
       - uses: Swatinem/rust-cache@v2
-      - run: cargo install cross --git https://github.com/cross-rs/cross || true
+      - run: cargo install cross --git https://github.com/cross-rs/cross --tag v0.2.5 || true
       - run: cross build --bin ${{ matrix.bins }} --locked --release --target ${{ matrix.targets }}
 
       - name: archive
