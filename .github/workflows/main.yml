@@ -32,7 +32,8 @@ jobs:
           toolchain: ${{ matrix.toolchain }}
           target: ${{ matrix.targets }}
       - uses: Swatinem/rust-cache@v2
-      - run: cargo install cross --git https://github.com/cross-rs/cross || true
+      - run: cargo install cargo-quickinstall
+      - run: cargo quickinstall cross@0.2.5
       - run: cross build --locked --workspace --target ${{ matrix.targets }}
       - run: cross test --locked --workspace --target ${{ matrix.targets }}
 
