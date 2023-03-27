@@ -1,14 +1,14 @@
+use ratatui::layout::{Constraint, Rect};
+use ratatui::style::{Color, Modifier, Style};
+use ratatui::widgets::{Block, Borders, Row, Table, TableState};
 use rsadsb_common::{AirplaneDetails, Airplanes};
-use tui::layout::{Constraint, Rect};
-use tui::style::{Color, Modifier, Style};
-use tui::widgets::{Block, Borders, Row, Table, TableState};
 
 use crate::DEFAULT_PRECISION;
 
 /// Render Airplanes tab for tui display
-pub fn build_tab_airplanes<A: tui::backend::Backend>(
-    f: &mut tui::Frame<A>,
-    chunks: Vec<Rect>,
+pub fn build_tab_airplanes<A: ratatui::backend::Backend>(
+    f: &mut ratatui::Frame<A>,
+    chunks: &[Rect],
     adsb_airplanes: &Airplanes,
     airplanes_state: &mut TableState,
 ) {

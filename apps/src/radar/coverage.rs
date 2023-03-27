@@ -1,10 +1,10 @@
 use adsb_deku::cpr::Position;
 use adsb_deku::ICAO;
+use ratatui::layout::Rect;
+use ratatui::style::Color;
+use ratatui::widgets::canvas::{Canvas, Points};
+use ratatui::widgets::{Block, Borders};
 use rsadsb_common::Airplanes;
-use tui::layout::Rect;
-use tui::style::Color;
-use tui::widgets::canvas::{Canvas, Points};
-use tui::widgets::{Block, Borders};
 
 use crate::{draw_locations, Settings, MAX_PLOT_HIGH, MAX_PLOT_LOW};
 
@@ -70,9 +70,9 @@ pub fn populate_coverage(
 }
 
 /// Render Coverage tab for tui display
-pub fn build_tab_coverage<A: tui::backend::Backend>(
-    f: &mut tui::Frame<A>,
-    chunks: Vec<Rect>,
+pub fn build_tab_coverage<A: ratatui::backend::Backend>(
+    f: &mut ratatui::Frame<A>,
+    chunks: &[Rect],
     settings: &Settings,
     coverage_airplanes: &[(f64, f64, u32, ICAO)],
 ) {

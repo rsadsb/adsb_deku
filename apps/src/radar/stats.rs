@@ -1,11 +1,11 @@
 use std::time::SystemTime;
 
 use adsb_deku::ICAO;
+use ratatui::layout::{Constraint, Rect};
+use ratatui::style::{Color, Style};
+use ratatui::widgets::{Block, Borders, Row, Table};
 use rsadsb_common::{Added, AirplaneCoor, Airplanes};
 use tracing::info;
-use tui::layout::{Constraint, Rect};
-use tui::style::{Color, Style};
-use tui::widgets::{Block, Borders, Row, Table};
 
 use crate::{Settings, DEFAULT_PRECISION};
 
@@ -53,9 +53,9 @@ impl Stats {
 }
 
 /// Render Help tab for tui display
-pub fn build_tab_stats<A: tui::backend::Backend>(
-    f: &mut tui::Frame<A>,
-    chunks: Vec<Rect>,
+pub fn build_tab_stats<A: ratatui::backend::Backend>(
+    f: &mut ratatui::Frame<A>,
+    chunks: &[Rect],
     stats: &Stats,
     settings: &Settings,
 ) {
