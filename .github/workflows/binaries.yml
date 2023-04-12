@@ -16,7 +16,7 @@ jobs:
         targets:
           - x86_64-unknown-linux-gnu
           - armv7-unknown-linux-gnueabihf
-          - aarch64-linux-android
+            #- aarch64-linux-android
           - aarch64-unknown-linux-gnu
         bins:
           - radar
@@ -29,7 +29,7 @@ jobs:
           target: ${{ matrix.targets }}
       - uses: Swatinem/rust-cache@v2
       - run: cargo install cargo-quickinstall
-      - run: cargo quickinstall cross@0.2.5
+      - run: cargo quickinstall cross@0.2.5 --force
       - run: cross build --bin ${{ matrix.bins }} --locked --release --target ${{ matrix.targets }}
 
       - name: archive
