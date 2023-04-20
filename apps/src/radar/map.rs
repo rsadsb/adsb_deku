@@ -1,16 +1,16 @@
+use ratatui::layout::Rect;
+use ratatui::style::{Color, Style};
+use ratatui::text::Span;
+use ratatui::widgets::canvas::{Canvas, Line, Points};
+use ratatui::widgets::{Block, Borders};
 use rsadsb_common::{AirplaneDetails, Airplanes};
-use tui::layout::Rect;
-use tui::style::{Color, Style};
-use tui::text::Span;
-use tui::widgets::canvas::{Canvas, Line, Points};
-use tui::widgets::{Block, Borders};
 
 use crate::{draw_lines, draw_locations, Settings, DEFAULT_PRECISION, MAX_PLOT_HIGH, MAX_PLOT_LOW};
 
 /// Render Map tab for tui display
-pub fn build_tab_map<A: tui::backend::Backend>(
-    f: &mut tui::Frame<A>,
-    chunks: Vec<Rect>,
+pub fn build_tab_map<A: ratatui::backend::Backend>(
+    f: &mut ratatui::Frame<A>,
+    chunks: &[Rect],
     settings: &Settings,
     adsb_airplanes: &Airplanes,
 ) {

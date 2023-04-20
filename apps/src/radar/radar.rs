@@ -37,18 +37,18 @@ use crossterm::event::{
 use crossterm::terminal::enable_raw_mode;
 use crossterm::ExecutableCommand;
 use gpsd_proto::{get_data, handshake, ResponseData};
+use ratatui::backend::{Backend, CrosstermBackend};
+use ratatui::layout::{Alignment, Constraint, Direction, Layout, Rect};
+use ratatui::style::{Color, Style};
+use ratatui::symbols::DOT;
+use ratatui::text::{Span, Spans};
+use ratatui::widgets::canvas::{Line, Points};
+use ratatui::widgets::{Block, Borders, Paragraph, TableState, Tabs};
+use ratatui::Terminal;
 use rsadsb_common::{AirplaneDetails, Airplanes};
 use time::UtcOffset;
 use tracing::{debug, error, info, trace};
 use tracing_subscriber::EnvFilter;
-use tui::backend::{Backend, CrosstermBackend};
-use tui::layout::{Alignment, Constraint, Direction, Layout, Rect};
-use tui::style::{Color, Style};
-use tui::symbols::DOT;
-use tui::text::{Span, Spans};
-use tui::widgets::canvas::{Line, Points};
-use tui::widgets::{Block, Borders, Paragraph, TableState, Tabs};
-use tui::Terminal;
 
 use crate::airplanes::build_tab_airplanes;
 
@@ -761,7 +761,7 @@ fn draw(
             // render everything under tab
             tui_info = draw_bottom_chunks(
                 f,
-                chunks,
+                &chunks,
                 settings,
                 adsb_airplanes,
                 coverage_airplanes,
@@ -774,9 +774,9 @@ fn draw(
     tui_info
 }
 
-fn draw_bottom_chunks<A: tui::backend::Backend>(
-    f: &mut tui::Frame<A>,
-    chunks: Vec<Rect>,
+fn draw_bottom_chunks<A: ratatui::backend::Backend>(
+    f: &mut ratatui::Frame<A>,
+    chunks: &[Rect],
     settings: &Settings,
     adsb_airplanes: &Airplanes,
     coverage_airplanes: &[(f64, f64, u32, ICAO)],
@@ -797,7 +797,7 @@ fn draw_bottom_chunks<A: tui::backend::Backend>(
         .constraints([Constraint::Min(left_size), Constraint::Percentage(100)].as_ref())
         .split(chunks[1]);
 
-    tui_info.bottom_chunks = Some(bottom_chunks.clone());
+    tui_info.bottom_chunks = Some(bottom_chunks.to_vec());
 
     // Optionally create the tui widgets for the touchscreen
     tui_info.touchscreen_buttons = if touchscreen_enable {
@@ -819,17 +819,17 @@ fn draw_bottom_chunks<A: tui::backend::Backend>(
         let block03 = Block::default().title("Reset").borders(Borders::ALL);
         f.render_widget(block03, touchscreen_chunks[2]);
 
-        Some(touchscreen_chunks)
+        Some(touchscreen_chunks.to_vec())
     } else {
         None
     };
 
     // render the bottom cavas depending on the chosen tab
     match settings.tab_selection {
-        Tab::Map => build_tab_map(f, bottom_chunks, settings, adsb_airplanes),
-        Tab::Coverage => build_tab_coverage(f, bottom_chunks, settings, coverage_airplanes),
-        Tab::Airplanes => build_tab_airplanes(f, bottom_chunks, adsb_airplanes, airplanes_state),
-        Tab::Stats => build_tab_stats(f, bottom_chunks, stats, settings),
+        Tab::Map => build_tab_map(f, &bottom_chunks, settings, adsb_airplanes),
+        Tab::Coverage => build_tab_coverage(f, &bottom_chunks, settings, coverage_airplanes),
+        Tab::Airplanes => build_tab_airplanes(f, &bottom_chunks, adsb_airplanes, airplanes_state),
+        Tab::Stats => build_tab_stats(f, &bottom_chunks, stats, settings),
         Tab::Help => build_tab_help(f, &bottom_chunks),
     }
 
@@ -837,7 +837,7 @@ fn draw_bottom_chunks<A: tui::backend::Backend>(
 }
 
 /// Draw vertical and horizontal lines
-fn draw_lines(ctx: &mut tui::widgets::canvas::Context<'_>) {
+fn draw_lines(ctx: &mut ratatui::widgets::canvas::Context<'_>) {
     ctx.draw(&Line {
         x1: MAX_PLOT_HIGH,
         y1: 0.0,
@@ -855,7 +855,7 @@ fn draw_lines(ctx: &mut tui::widgets::canvas::Context<'_>) {
 }
 
 /// Draw locations on the map
-pub fn draw_locations(ctx: &mut tui::widgets::canvas::Context<'_>, settings: &Settings) {
+pub fn draw_locations(ctx: &mut ratatui::widgets::canvas::Context<'_>, settings: &Settings) {
     for location in &settings.opts.locations {
         let (x, y) = settings.to_xy(location.lat, location.long);
 

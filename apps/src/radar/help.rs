@@ -1,9 +1,9 @@
-use tui::layout::{Constraint, Direction, Layout, Rect};
-use tui::style::{Color, Style};
-use tui::widgets::{Block, Borders, Row, Table};
+use ratatui::layout::{Constraint, Direction, Layout, Rect};
+use ratatui::style::{Color, Style};
+use ratatui::widgets::{Block, Borders, Row, Table};
 
 /// Render Help tab for tui display
-pub fn build_tab_help<A: tui::backend::Backend>(f: &mut tui::Frame<A>, chunks: &[Rect]) {
+pub fn build_tab_help<A: ratatui::backend::Backend>(f: &mut ratatui::Frame<A>, chunks: &[Rect]) {
     let horizontal_chunks = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([
