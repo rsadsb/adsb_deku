@@ -48,6 +48,6 @@ jobs:
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: ${{ matrix.bins }}-${{ matrix.targets }}.tar.gz
-          asset_name: ${{ matrix.bins }}-${{ matrix.targets }}.tar.gz
+          asset_name: ${{ matrix.bins }}-${{ github.ref_name }}-${{ matrix.targets }}.tar.gz
           tag: ${{ github.ref }}
           overwrite: true
