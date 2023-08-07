@@ -34,7 +34,7 @@ and stores this info, allowing an operator to control the display of the data.
 
 See [apps/README.md](apps) for map control keybindings.
 
-This application uses [tui-rs](https://github.com/fdehau/tui-rs) for generating the display to the terminal.
+This application uses [ratatui](https://github.com/ratatui-org/ratatui) for generating the display to the terminal.
 
 ```text
 # Startup "radar" display in tui relative to your antenna position
