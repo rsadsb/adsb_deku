@@ -530,10 +530,10 @@ impl Altitude {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[deku(type = "u8", bits = "2")]
 pub enum SurveillanceStatus {
-    NoCondition    = 0,
+    NoCondition = 0,
     PermanentAlert = 1,
     TemporaryAlert = 2,
-    SPICondition   = 3,
+    SPICondition = 3,
 }
 
 impl Default for SurveillanceStatus {
@@ -548,7 +548,7 @@ impl Default for SurveillanceStatus {
 #[deku(type = "u8", bits = "1")]
 pub enum CPRFormat {
     Even = 0,
-    Odd  = 1,
+    Odd = 1,
 }
 
 impl Default for CPRFormat {
@@ -664,8 +664,8 @@ impl core::str::FromStr for ICAO {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[deku(type = "u8", bits = "5")]
 pub enum DownlinkRequest {
-    None               = 0b00000,
-    RequestSendCommB   = 0b00001,
+    None = 0b00000,
+    RequestSendCommB = 0b00001,
     CommBBroadcastMsg1 = 0b00100,
     CommBBroadcastMsg2 = 0b00101,
     #[deku(id_pat = "_")]
@@ -678,7 +678,7 @@ pub enum DownlinkRequest {
 #[deku(type = "u8", bits = "1")]
 pub enum KE {
     DownlinkELMTx = 0,
-    UplinkELMAck  = 1,
+    UplinkELMAck = 1,
 }
 
 #[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
@@ -695,9 +695,9 @@ pub struct UtilityMessage {
 #[deku(type = "u8", bits = "2")]
 pub enum UtilityMessageType {
     NoInformation = 0b00,
-    CommB         = 0b01,
-    CommC         = 0b10,
-    CommD         = 0b11,
+    CommB = 0b01,
+    CommC = 0b10,
+    CommD = 0b11,
 }
 
 /// Airborne / Ground and SPI
@@ -705,14 +705,14 @@ pub enum UtilityMessageType {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[deku(type = "u8", bits = "3")]
 pub enum FlightStatus {
-    NoAlertNoSPIAirborne     = 0b000,
-    NoAlertNoSPIOnGround     = 0b001,
-    AlertNoSPIAirborne       = 0b010,
-    AlertNoSPIOnGround       = 0b011,
-    AlertSPIAirborneGround   = 0b100,
+    NoAlertNoSPIAirborne = 0b000,
+    NoAlertNoSPIOnGround = 0b001,
+    AlertNoSPIAirborne = 0b010,
+    AlertNoSPIOnGround = 0b011,
+    AlertSPIAirborneGround = 0b100,
     NoAlertSPIAirborneGround = 0b101,
-    Reserved                 = 0b110,
-    NotAssigned              = 0b111,
+    Reserved = 0b110,
+    NotAssigned = 0b111,
 }
 
 impl fmt::Display for FlightStatus {
@@ -776,13 +776,13 @@ impl AC13Field {
 #[allow(non_camel_case_types)]
 pub enum Capability {
     /// Level 1 transponder (surveillance only), and either airborne or on the ground
-    AG_UNCERTAIN  = 0x00,
+    AG_UNCERTAIN = 0x00,
     #[deku(id_pat = "0x01..=0x03")]
     Reserved,
     /// Level 2 or above transponder, on ground
-    AG_GROUND     = 0x04,
+    AG_GROUND = 0x04,
     /// Level 2 or above transponder, airborne
-    AG_AIRBORNE   = 0x05,
+    AG_AIRBORNE = 0x05,
     /// Level 2 or above transponder, either airborne or on ground
     AG_UNCERTAIN2 = 0x06,
     /// DR field is not equal to 0, or fs field equal 2, 3, 4, or 5, and either airborne or on
