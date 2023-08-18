@@ -124,14 +124,17 @@ impl Airplanes {
         let mut airplane_added = Added::No;
         if let DF::ADSB(ref adsb) = frame.df {
             airplane_added = match &adsb.me {
-                ME::AircraftIdentification(identification) => {
-                    self.add_identification(adsb.icao, identification)
-                }
+                ME::AircraftIdentification {
+                    value: identification,
+                    ..
+                } => self.add_identification(adsb.icao, identification),
                 ME::AirborneVelocity(vel) => self.add_airborne_velocity(adsb.icao, vel),
-                ME::AirbornePositionGNSSAltitude(altitude)
-                | ME::AirbornePositionBaroAltitude(altitude) => {
-                    self.add_altitude(adsb.icao, altitude, lat_long, max_rang)
+                ME::AirbornePositionGNSSAltitude {
+                    value: altitude, ..
                 }
+                | ME::AirbornePositionBaroAltitude {
+                    value: altitude, ..
+                } => self.add_altitude(adsb.icao, altitude, lat_long, max_rang),
                 _ => Added::No,
             };
             let incr_airplane_added = self.incr_messages(adsb.icao);

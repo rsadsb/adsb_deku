@@ -4,7 +4,7 @@
 //! [`DF::TisB`]: crate::DF::TisB
 
 #[cfg(feature = "alloc")]
-use alloc::{fmt, format, string::String};
+use alloc::{fmt, format, string::String, vec};
 #[cfg(feature = "alloc")]
 use core::{
     clone::Clone,
@@ -20,10 +20,10 @@ use core::{
     result::Result::Ok,
     stringify, write, writeln,
 };
+use deku::acid_io::Read;
 #[cfg(not(feature = "alloc"))]
 use std::{fmt, i64};
 
-use deku::bitvec::{BitSlice, Msb0};
 use deku::prelude::*;
 
 use crate::mode_ac::decode_id13_field;
@@ -60,7 +60,7 @@ impl ADSB {
 #[deku(type = "u8", bits = "5")]
 pub enum ME {
     #[deku(id_pat = "9..=18")]
-    AirbornePositionBaroAltitude(Altitude),
+    AirbornePositionBaroAltitude { id: u8, value: Altitude },
 
     #[deku(id = "19")]
     AirborneVelocity(AirborneVelocity),
@@ -69,22 +69,26 @@ pub enum ME {
     NoPosition([u8; 6]),
 
     #[deku(id_pat = "1..=4")]
-    AircraftIdentification(Identification),
+    AircraftIdentification {
+        #[deku(map = "|field: u8| -> Result<_, DekuError> { TypeCoding::try_from(field) }")]
+        tc: TypeCoding,
+        value: Identification,
+    },
 
     #[deku(id_pat = "5..=8")]
-    SurfacePosition(SurfacePosition),
+    SurfacePosition { id: u8, value: SurfacePosition },
 
     #[deku(id_pat = "20..=22")]
-    AirbornePositionGNSSAltitude(Altitude),
+    AirbornePositionGNSSAltitude { id: u8, value: Altitude },
 
     #[deku(id = "23")]
     Reserved0([u8; 6]),
 
-    #[deku(id_pat = "24")]
+    #[deku(id = "24")]
     SurfaceSystemStatus([u8; 6]),
 
     #[deku(id_pat = "25..=27")]
-    Reserved1([u8; 6]),
+    Reserved1 { id: u8, value: [u8; 6] },
 
     #[deku(id = "28")]
     AircraftStatus(AircraftStatus),
@@ -269,8 +273,8 @@ impl ME {
                 writeln!(f, "  Address:       {icao} {address_type}")?;
                 writeln!(f, "  Air/Ground:    {capability}")?;
                 write!(f, "  Aircraft Operational Status:\n {opstatus_surface}")?;
-            }
-            ME::AircraftOperationStatus(OperationStatus::Reserved(..)) => {
+            },
+            ME::AircraftOperationStatus(OperationStatus::Reserved { .. }) => {
                 writeln!(
                     f,
                     " Extended Squitter{transponder}Aircraft operational status (reserved)",
@@ -324,7 +328,12 @@ pub enum OperationStatus {
     Surface(OperationStatusSurface),
 
     #[deku(id_pat = "2..=7")]
-    Reserved(#[deku(bits = "5")] u8, [u8; 5]),
+    Reserved {
+        id: u8,
+        #[deku(bits = "5")]
+        more: u8,
+        value: [u8; 5],
+    },
 }
 
 /// [`ME::AircraftOperationStatus`] && [`OperationStatus`] == 0
@@ -763,24 +772,37 @@ pub struct OperationCodeSurface {
 #[derive(Debug, PartialEq, Eq, DekuRead, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Identification {
-    pub tc: TypeCoding,
-
     #[deku(bits = "3")]
     pub ca: u8,
 
     /// N-Number / Tail Number
-    #[deku(reader = "aircraft_identification_read(deku::rest)")]
+    #[deku(reader = "aircraft_identification_read(deku::reader)")]
     pub cn: String,
 }
 
-#[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[deku(type = "u8", bits = "5")]
 pub enum TypeCoding {
     D = 1,
     C = 2,
     B = 3,
     A = 4,
+}
+
+impl TryFrom<u8> for TypeCoding {
+    type Error = DekuError;
+
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
+        let a = match value {
+            1 => TypeCoding::D,
+            2 => TypeCoding::C,
+            3 => TypeCoding::B,
+            4 => TypeCoding::A,
+            _ => return Err(DekuError::Unexpected("not a type coding value".to_string())),
+        };
+
+        Ok(a)
+    }
 }
 
 impl fmt::Display for TypeCoding {
@@ -932,27 +954,27 @@ pub enum AirborneVelocityType {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct AirborneVelocitySubFields {
     pub dew: DirectionEW,
-    #[deku(reader = "Self::read_v(deku::rest, t)")]
+    #[deku(reader = "Self::read_v(deku::reader, t)")]
     pub vew: u16,
     pub dns: DirectionNS,
-    #[deku(reader = "Self::read_v(deku::rest, t)")]
+    #[deku(reader = "Self::read_v(deku::reader, t)")]
     pub vns: u16,
 }
 
 impl AirborneVelocitySubFields {
-    fn read_v(
-        rest: &BitSlice<u8, Msb0>,
+    fn read_v<R: Read>(
+        reader: &mut Reader<R>,
         t: AirborneVelocityType,
-    ) -> result::Result<(&BitSlice<u8, Msb0>, u16), DekuError> {
+    ) -> result::Result<u16, DekuError> {
         match t {
             AirborneVelocityType::Subsonic => {
-                u16::read(rest, (deku::ctx::Endian::Big, deku::ctx::BitSize(10)))
-                    .map(|(rest, value)| (rest, value - 1))
-            }
+                u16::from_reader_with_ctx(reader, (deku::ctx::Endian::Big, deku::ctx::BitSize(10)))
+                    .map(|value| value - 1)
+            },
             AirborneVelocityType::Supersonic => {
-                u16::read(rest, (deku::ctx::Endian::Big, deku::ctx::BitSize(10)))
-                    .map(|(rest, value)| (rest, 4 * (value - 1)))
-            }
+                u16::from_reader_with_ctx(reader, (deku::ctx::Endian::Big, deku::ctx::BitSize(10)))
+                    .map(|value| 4 * (value - 1))
+            },
         }
     }
 }

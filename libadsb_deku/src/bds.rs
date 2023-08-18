@@ -3,17 +3,21 @@
 use alloc::format;
 use alloc::string::String;
 #[cfg(feature = "alloc")]
+use alloc::vec;
+#[cfg(feature = "alloc")]
 use core::{
-    clone::Clone, cmp::PartialEq, fmt, fmt::Debug, prelude::rust_2021::derive, result::Result,
-    result::Result::Ok, writeln,
+    clone::Clone, cmp::PartialEq, fmt, fmt::Debug, prelude::rust_2021::derive, result::Result::Ok,
+    writeln,
 };
+#[cfg(feature = "alloc")]
+use alloc::vec;
 
 use deku::prelude::*;
 
 use crate::aircraft_identification_read;
 
 #[derive(Debug, PartialEq, Eq, DekuRead, Clone)]
-#[deku(type = "u8", bits = "8")]
+#[deku(type = "u8")]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum BDS {
     /// (1, 0) Table A-2-16
@@ -26,10 +30,10 @@ pub enum BDS {
 
     /// (2, 0) Table A-2-32
     #[deku(id = "0x20")]
-    AircraftIdentification(#[deku(reader = "aircraft_identification_read(deku::rest)")] String),
+    AircraftIdentification(#[deku(reader = "aircraft_identification_read(deku::reader)")] String),
 
     #[deku(id_pat = "_")]
-    Unknown([u8; 6]),
+    Unknown { id: u8, value: [u8; 5] },
 }
 
 impl fmt::Display for BDS {
@@ -44,8 +48,8 @@ impl fmt::Display for BDS {
             }
             Self::DataLinkCapability(_) => {
                 writeln!(f, "Comm-B format: BDS1,0 Datalink capabilities")?;
-            }
-            Self::Unknown(_) => {
+            },
+            Self::Unknown { id: _, value: _ } => {
                 writeln!(f, "Comm-B format: unknown format")?;
             }
         }
