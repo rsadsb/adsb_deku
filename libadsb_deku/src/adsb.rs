@@ -4,7 +4,7 @@
 //! [`DF::TisB`]: crate::DF::TisB
 
 #[cfg(feature = "alloc")]
-use alloc::{fmt, format, string::String, vec};
+use alloc::{fmt, format, string::String, vec, string::ToString};
 #[cfg(feature = "alloc")]
 use core::{
     clone::Clone,
