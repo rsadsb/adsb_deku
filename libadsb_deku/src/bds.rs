@@ -9,8 +9,6 @@ use core::{
     clone::Clone, cmp::PartialEq, fmt, fmt::Debug, prelude::rust_2021::derive, result::Result::Ok,
     writeln,
 };
-#[cfg(feature = "alloc")]
-use alloc::vec;
 
 use deku::prelude::*;
 
