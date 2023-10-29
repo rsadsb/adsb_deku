@@ -23,11 +23,11 @@ jobs:
           - 1090
 
     steps:
-      - uses: actions/checkout@v3
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.6.0
+      - uses: dtolnay/rust-toolchain@d76c2a93c593483c9892fd8d2538734f73ed8588 # stable
         with:
           target: ${{ matrix.targets }}
-      - uses: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@a95ba195448af2da9b00fb742d14ffaaf3c21f43 # v2.7.0
       - run: cargo install cargo-quickinstall
       - run: cargo quickinstall cross@0.2.5 --force
       - run: cross build --bin ${{ matrix.bins }} --locked --release --target ${{ matrix.targets }}
@@ -37,14 +37,14 @@ jobs:
           tar -czvf ${{ matrix.bins }}-${{ matrix.targets }}.tar.gz \
               -C target/${{ matrix.targets }}/release/ ${{ matrix.bins }}
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@82c141cc518b40d92cc801eee768e7aafc9c2fa2 # v2.3.1
         with:
           name: ${{ matrix.bins }}-${{ matrix.targets }}.tar.gz
           path: ${{ matrix.bins }}-${{ matrix.targets }}.tar.gz
 
       - name: Upload binary to release
         if: ${{ startsWith(github.ref, 'refs/tags/v') }}
-        uses: svenstaro/upload-release-action@v2
+        uses: svenstaro/upload-release-action@1beeb572c19a9242f4361f4cee78f8e0d9aec5df # v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: ${{ matrix.bins }}-${{ matrix.targets }}.tar.gz
