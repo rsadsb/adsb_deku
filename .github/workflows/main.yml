@@ -31,7 +31,7 @@ jobs:
         with:
           toolchain: ${{ matrix.toolchain }}
           target: ${{ matrix.targets }}
-      - uses: Swatinem/rust-cache@a95ba195448af2da9b00fb742d14ffaaf3c21f43 # v2.7.0
+      - uses: Swatinem/rust-cache@3cf7f8cc28d1b4e7d01e3783be10a97d55d483c8 # v2.7.1
       - run: cargo install cargo-quickinstall
       - run: cargo quickinstall cross@0.2.5 --force
       - run: cross build --locked --workspace --target ${{ matrix.targets }}
@@ -48,6 +48,6 @@ jobs:
           toolchain: stable
           target: x86_64-unknown-linux-gnu
           components: rustfmt, clippy
-      - uses: Swatinem/rust-cache@a95ba195448af2da9b00fb742d14ffaaf3c21f43 # v2.7.0
+      - uses: Swatinem/rust-cache@3cf7f8cc28d1b4e7d01e3783be10a97d55d483c8 # v2.7.1
       - run: cargo fmt --all --check
       - run: cargo clippy --workspace -- -D warnings
