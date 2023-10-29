@@ -782,14 +782,14 @@ pub enum AircraftStatusType {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[deku(type = "u8", bits = "3")]
 pub enum EmergencyState {
-    None                 = 0,
-    General              = 1,
-    Lifeguard            = 2,
-    MinimumFuel          = 3,
-    NoCommunication      = 4,
+    None = 0,
+    General = 1,
+    Lifeguard = 2,
+    MinimumFuel = 3,
+    NoCommunication = 4,
     UnlawfulInterference = 5,
-    DownedAircraft       = 6,
-    Reserved2            = 7,
+    DownedAircraft = 6,
+    Reserved2 = 7,
 }
 
 impl fmt::Display for EmergencyState {
@@ -986,7 +986,7 @@ pub enum AirborneVelocitySubType {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[deku(type = "u8", bits = "3")]
 pub enum AirborneVelocityType {
-    Subsonic   = 1,
+    Subsonic = 1,
     Supersonic = 3,
 }
 
@@ -1040,7 +1040,7 @@ pub enum DirectionNS {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[deku(type = "u8", bits = "1")]
 pub enum SourceBitVerticalRate {
-    GNSS      = 0,
+    GNSS = 0,
     Barometer = 1,
 }
 
@@ -1048,7 +1048,7 @@ pub enum SourceBitVerticalRate {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[deku(type = "u8", bits = "1")]
 pub enum SignBitVerticalRate {
-    Up   = 0,
+    Up = 0,
     Down = 1,
 }
 
@@ -1065,7 +1065,7 @@ pub enum SignBitGNSSBaroAltitudesDiff {
 #[deku(type = "u8", bits = "1")]
 pub enum VerticalRateSource {
     BarometricPressureAltitude = 0,
-    GeometricAltitude          = 1,
+    GeometricAltitude = 1,
 }
 
 impl fmt::Display for VerticalRateSource {
@@ -1103,5 +1103,5 @@ pub struct SurfacePosition {
 #[deku(type = "u8", bits = "1")]
 pub enum StatusForGroundTrack {
     Invalid = 0,
-    Valid   = 1,
+    Valid = 1,
 }
