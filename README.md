@@ -1,9 +1,9 @@
 # adsb_deku
 
-[![Latest Version](https://img.shields.io/crates/v/adsb_deku.svg)](https://crates.io/crates/adsb_deku)
-[![Rust Documentation](https://docs.rs/adsb_deku/badge.svg)](https://docs.rs/adsb_deku)
-[![Actions Status](https://github.com/rsadsb/adsb_deku/workflows/CI/badge.svg)](https://github.com/rsadsb/adsb_deku/actions)
-[![dependency status](https://deps.rs/repo/github/rsadsb/adsb_deku/status.svg)](https://deps.rs/repo/github/rsadsb/adsb_deku)
+[<img alt="github" src="https://img.shields.io/badge/github-rsadsb/adsb_deku-8da0cb?style=for-the-badge&labelColor=555555&logo=github" height="20">](https://github.com/rsadsb/adsb_deku)
+[<img alt="crates.io" src="https://img.shields.io/crates/v/adsb_deku.svg?style=for-the-badge&color=fc8d62&logo=rust" height="20">](https://crates.io/crates/adsb_deku)
+[<img alt="docs.rs" src="https://img.shields.io/badge/docs.rs-adsb_deku-66c2a5?style=for-the-badge&labelColor=555555&logo=docs.rs" height="20">](https://docs.rs/adsb_deku)
+[<img alt="build status" src="https://img.shields.io/github/actions/workflow/status/rsadsb/adsb_deku/main.yml?branch=master&style=for-the-badge" height="20">](https://github.com/rsadsb/adsb_deku/actions?query=branch%3Amaster)
 
 Decoder for [ADS-B(Automatic Dependent Surveillance-Broadcast)](https://en.wikipedia.org/wiki/Automatic_Dependent_Surveillance%E2%80%93Broadcast) Downlink Format protocol packets from 1090mhz. See [dump1090_rs](https://github.com/rsadsb/dump1090_rs.git) for a Rust demodulator. View planes in the sky around you, with only a [rtl-sdr](https://www.rtl-sdr.com/)!
 
