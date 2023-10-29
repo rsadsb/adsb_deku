@@ -233,24 +233,12 @@ pub fn get_position(cpr_frames: (&Altitude, &Altitude)) -> Option<Position> {
     let latest_frame = cpr_frames.1;
     let (even_frame, odd_frame) = match cpr_frames {
         (
-            even @ Altitude {
-                odd_flag: CPRFormat::Even,
-                ..
-            },
-            odd @ Altitude {
-                odd_flag: CPRFormat::Odd,
-                ..
-            },
+            even @ Altitude { odd_flag: CPRFormat::Even, .. },
+            odd @ Altitude { odd_flag: CPRFormat::Odd, .. },
         )
         | (
-            odd @ Altitude {
-                odd_flag: CPRFormat::Odd,
-                ..
-            },
-            even @ Altitude {
-                odd_flag: CPRFormat::Even,
-                ..
-            },
+            odd @ Altitude { odd_flag: CPRFormat::Odd, .. },
+            even @ Altitude { odd_flag: CPRFormat::Even, .. },
         ) => (even, odd),
         _ => return None,
     };
@@ -273,18 +261,11 @@ pub fn get_position(cpr_frames: (&Altitude, &Altitude)) -> Option<Position> {
         lat_odd -= 360.0;
     }
 
-    let lat = if latest_frame == even_frame {
-        lat_even
-    } else {
-        lat_odd
-    };
+    let lat = if latest_frame == even_frame { lat_even } else { lat_odd };
 
     let (lat, lon) = get_lat_lon(lat, cpr_lon_even, cpr_lon_odd, &latest_frame.odd_flag);
 
-    Some(Position {
-        latitude: lat,
-        longitude: lon,
-    })
+    Some(Position { latitude: lat, longitude: lon })
 }
 
 fn get_lat_lon(
@@ -293,11 +274,7 @@ fn get_lat_lon(
     cpr_lon_odd: f64,
     cpr_format: &CPRFormat,
 ) -> (f64, f64) {
-    let (p, c) = if cpr_format == &CPRFormat::Even {
-        (0, cpr_lon_even)
-    } else {
-        (1, cpr_lon_odd)
-    };
+    let (p, c) = if cpr_format == &CPRFormat::Even { (0, cpr_lon_even) } else { (1, cpr_lon_odd) };
     let ni = cmp::max(cpr_nl(lat) - p, 1) as f64;
     let m = libm::floor(
         cpr_lon_even * (cpr_nl(lat) - 1) as f64 - cpr_lon_odd * cpr_nl(lat) as f64 + 0.5,

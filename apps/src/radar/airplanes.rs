@@ -23,22 +23,15 @@ pub fn build_tab_airplanes<A: ratatui::backend::Backend>(
         let mut lon = empty.clone();
         let mut alt = empty.clone();
         let mut s_kilo_distance = empty.clone();
-        if let Some(AirplaneDetails {
-            position,
-            altitude,
-            kilo_distance,
-            ..
-        }) = aircraft_details
-        {
+        if let Some(AirplaneDetails { position, altitude, kilo_distance, .. }) = aircraft_details {
             lat = format!("{:.DEFAULT_PRECISION$}", position.latitude);
             lon = format!("{:.DEFAULT_PRECISION$}", position.longitude);
             s_kilo_distance = format!("{kilo_distance:.DEFAULT_PRECISION$}");
             alt = altitude.to_string();
         }
 
-        let heading = state
-            .heading
-            .map_or_else(|| "".to_string(), |heading| format!("{heading:>7.1}"));
+        let heading =
+            state.heading.map_or_else(|| "".to_string(), |heading| format!("{heading:>7.1}"));
 
         rows.push(Row::new(vec![
             format!("{key}"),
@@ -47,12 +40,8 @@ pub fn build_tab_airplanes<A: ratatui::backend::Backend>(
             lon,
             heading,
             format!("{alt:>8}"),
-            state
-                .vert_speed
-                .map_or_else(|| "".into(), |v| format!("{v:>6}")),
-            state
-                .speed
-                .map_or_else(|| "".into(), |v| format!("{v:>5.0}")),
+            state.vert_speed.map_or_else(|| "".into(), |v| format!("{v:>6}")),
+            state.speed.map_or_else(|| "".into(), |v| format!("{v:>5.0}")),
             format!("{s_kilo_distance:>8}"),
             format!("{:>4}", state.num_messages),
         ]));
@@ -85,11 +74,7 @@ pub fn build_tab_airplanes<A: ratatui::backend::Backend>(
             ])
             .bottom_margin(1),
         )
-        .block(
-            Block::default()
-                .title(format!("Airplanes({rows_len})"))
-                .borders(Borders::ALL),
-        )
+        .block(Block::default().title(format!("Airplanes({rows_len})")).borders(Borders::ALL))
         .widths(&[
             Constraint::Length(6),
             Constraint::Length(9),

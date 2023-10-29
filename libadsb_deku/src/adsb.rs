@@ -47,12 +47,7 @@ impl ADSB {
     /// `to_string` with DF.id() input
     pub(crate) fn to_string(&self, address_type: &str) -> result::Result<String, Error> {
         let mut f = String::new();
-        write!(
-            f,
-            "{}",
-            self.me
-                .to_string(self.icao, address_type, self.capability, true)?
-        )?;
+        write!(f, "{}", self.me.to_string(self.icao, address_type, self.capability, true)?)?;
         Ok(f)
     }
 }
@@ -123,21 +118,18 @@ impl ME {
                 writeln!(f, " Extended Squitter{transponder}No position information")?;
                 writeln!(f, "  Address:       {icao} {address_type}")?;
                 writeln!(f, "  Air/Ground:    {capability}")?;
-            },
+            }
             ME::AircraftIdentification(Identification { tc, ca, cn }) => {
-                writeln!(
-                    f,
-                    " Extended Squitter{transponder}Aircraft identification and category"
-                )?;
+                writeln!(f, " Extended Squitter{transponder}Aircraft identification and category")?;
                 writeln!(f, "  Address:       {icao} {address_type}")?;
                 writeln!(f, "  Air/Ground:    {capability}")?;
                 writeln!(f, "  Ident:         {cn}")?;
                 writeln!(f, "  Category:      {tc}{ca}")?;
-            },
+            }
             ME::SurfacePosition(..) => {
                 writeln!(f, " Extended Squitter{transponder}Surface position")?;
                 writeln!(f, "  Address:       {icao} {address_type}")?;
-            },
+            }
             ME::AirbornePositionBaroAltitude(altitude) => {
                 writeln!(
                     f,
@@ -146,7 +138,7 @@ impl ME {
                 writeln!(f, "  Address:       {icao} {address_type}")?;
                 writeln!(f, "  Air/Ground:    {capability}")?;
                 write!(f, "{altitude}")?;
-            },
+            }
             ME::AirborneVelocity(airborne_velocity) => match &airborne_velocity.sub_type {
                 AirborneVelocitySubType::GroundSpeedDecoding(_) => {
                     writeln!(
@@ -177,12 +169,9 @@ impl ME {
                     } else {
                         writeln!(f, "  Invalid packet")?;
                     }
-                },
+                }
                 AirborneVelocitySubType::AirspeedDecoding(airspeed_decoding) => {
-                    writeln!(
-                        f,
-                        " Extended Squitter{transponder}Airspeed and heading, subsonic",
-                    )?;
+                    writeln!(f, " Extended Squitter{transponder}Airspeed and heading, subsonic",)?;
                     writeln!(f, "  Address:       {icao} {address_type}")?;
                     writeln!(f, "  Air/Ground:    {capability}")?;
                     writeln!(f, "  IAS:           {} kt", airspeed_decoding.airspeed)?;
@@ -195,55 +184,39 @@ impl ME {
                         )?;
                     }
                     writeln!(f, "  NACv:          {}", airborne_velocity.nac_v)?;
-                },
+                }
                 AirborneVelocitySubType::Reserved0(_) | AirborneVelocitySubType::Reserved1(_) => {
                     writeln!(
                         f,
                         " Extended Squitter{transponder}Airborne Velocity status (reserved)",
                     )?;
                     writeln!(f, "  Address:       {icao} {address_type}")?;
-                },
+                }
             },
             ME::AirbornePositionGNSSAltitude(altitude) => {
-                writeln!(
-                    f,
-                    " Extended Squitter{transponder}Airborne position (GNSS altitude)",
-                )?;
+                writeln!(f, " Extended Squitter{transponder}Airborne position (GNSS altitude)",)?;
                 writeln!(f, "  Address:      {icao} {address_type}")?;
                 write!(f, "{altitude}")?;
-            },
+            }
             ME::Reserved0(_) | ME::Reserved1(_) => {
                 writeln!(f, " Extended Squitter{transponder}Unknown")?;
                 writeln!(f, "  Address:       {icao} {address_type}")?;
                 writeln!(f, "  Air/Ground:    {capability}")?;
-            },
+            }
             ME::SurfaceSystemStatus(_) => {
-                writeln!(
-                    f,
-                    " Extended Squitter{transponder}Reserved for surface system status",
-                )?;
+                writeln!(f, " Extended Squitter{transponder}Reserved for surface system status",)?;
                 writeln!(f, "  Address:       {icao} {address_type}")?;
                 writeln!(f, "  Air/Ground:    {capability}")?;
-            },
-            ME::AircraftStatus(AircraftStatus {
-                emergency_state,
-                squawk,
-                ..
-            }) => {
-                writeln!(
-                    f,
-                    " Extended Squitter{transponder}Emergency/priority status",
-                )?;
+            }
+            ME::AircraftStatus(AircraftStatus { emergency_state, squawk, .. }) => {
+                writeln!(f, " Extended Squitter{transponder}Emergency/priority status",)?;
                 writeln!(f, "  Address:       {icao} {address_type}")?;
                 writeln!(f, "  Air/Ground:    {capability}")?;
                 writeln!(f, "  Squawk:        {squawk:x?}")?;
                 writeln!(f, "  Emergency/priority:    {emergency_state}")?;
-            },
+            }
             ME::TargetStateAndStatusInformation(target_info) => {
-                writeln!(
-                    f,
-                    " Extended Squitter{transponder}Target state and status (V2)",
-                )?;
+                writeln!(f, " Extended Squitter{transponder}Target state and status (V2)",)?;
                 writeln!(f, "  Address:       {icao} {address_type}")?;
                 writeln!(f, "  Air/Ground:    {capability}")?;
                 writeln!(f, "  Target State and Status:")?;
@@ -274,14 +247,11 @@ impl ME {
                 writeln!(f, "    NICbaro:           {}", target_info.nicbaro)?;
                 writeln!(f, "    SIL:               {} (per sample)", target_info.sil)?;
                 writeln!(f, "    QNH:               {} millibars", target_info.qnh)?;
-            },
+            }
             ME::AircraftOperationalCoordination(_) => {
-                writeln!(
-                    f,
-                    " Extended Squitter{transponder}Aircraft Operational Coordination",
-                )?;
+                writeln!(f, " Extended Squitter{transponder}Aircraft Operational Coordination",)?;
                 writeln!(f, "  Address:       {icao} {address_type}")?;
-            },
+            }
             ME::AircraftOperationStatus(OperationStatus::Airborne(opstatus_airborne)) => {
                 writeln!(
                     f,
@@ -290,7 +260,7 @@ impl ME {
                 writeln!(f, "  Address:       {icao} {address_type}")?;
                 writeln!(f, "  Air/Ground:    {capability}")?;
                 write!(f, "  Aircraft Operational Status:\n{opstatus_airborne}")?;
-            },
+            }
             ME::AircraftOperationStatus(OperationStatus::Surface(opstatus_surface)) => {
                 writeln!(
                     f,
@@ -299,14 +269,14 @@ impl ME {
                 writeln!(f, "  Address:       {icao} {address_type}")?;
                 writeln!(f, "  Air/Ground:    {capability}")?;
                 write!(f, "  Aircraft Operational Status:\n {opstatus_surface}")?;
-            },
+            }
             ME::AircraftOperationStatus(OperationStatus::Reserved(..)) => {
                 writeln!(
                     f,
                     " Extended Squitter{transponder}Aircraft operational status (reserved)",
                 )?;
                 writeln!(f, "  Address:       {icao} {address_type}")?;
-            },
+            }
         }
         Ok(f)
     }
@@ -401,26 +371,10 @@ impl fmt::Display for OperationStatusAirborne {
         writeln!(f, "   Capability classes:{}", self.capability_class)?;
         writeln!(f, "   Operational modes: {}", self.operational_mode)?;
         writeln!(f, "   NIC-A:              {}", self.nic_supplement_a)?;
-        writeln!(
-            f,
-            "   NACp:               {}",
-            self.navigational_accuracy_category
-        )?;
-        writeln!(
-            f,
-            "   GVA:                {}",
-            self.geometric_vertical_accuracy
-        )?;
-        writeln!(
-            f,
-            "   SIL:                {} (per hour)",
-            self.source_integrity_level
-        )?;
-        writeln!(
-            f,
-            "   NICbaro:            {}",
-            self.barometric_altitude_integrity
-        )?;
+        writeln!(f, "   NACp:               {}", self.navigational_accuracy_category)?;
+        writeln!(f, "   GVA:                {}", self.geometric_vertical_accuracy)?;
+        writeln!(f, "   SIL:                {} (per hour)", self.source_integrity_level)?;
+        writeln!(f, "   NICbaro:            {}", self.barometric_altitude_integrity)?;
         if self.horizontal_reference_direction == 1 {
             writeln!(f, "   Heading reference:  magnetic north")?;
         } else {
@@ -538,21 +492,9 @@ impl fmt::Display for OperationStatusSurface {
         }
         write!(f, "   Operational modes: {}", self.operational_mode)?;
         writeln!(f)?;
-        writeln!(
-            f,
-            "   NACp:               {}",
-            self.navigational_accuracy_category
-        )?;
-        writeln!(
-            f,
-            "   SIL:                {} (per hour)",
-            self.source_integrity_level
-        )?;
-        writeln!(
-            f,
-            "   NICbaro:            {}",
-            self.barometric_altitude_integrity
-        )?;
+        writeln!(f, "   NACp:               {}", self.navigational_accuracy_category)?;
+        writeln!(f, "   SIL:                {} (per hour)", self.source_integrity_level)?;
+        writeln!(f, "   NICbaro:            {}", self.barometric_altitude_integrity)?;
         if self.horizontal_reference_direction == 1 {
             writeln!(f, "   Heading reference:  magnetic north")?;
         } else {
@@ -688,12 +630,7 @@ impl fmt::Display for ControlField {
         write!(
             f,
             "{}",
-            self.me.to_string(
-                self.aa,
-                &format!("{}", self.t),
-                Capability::AG_UNCERTAIN3,
-                false,
-            )?
+            self.me.to_string(self.aa, &format!("{}", self.t), Capability::AG_UNCERTAIN3, false,)?
         )
     }
 }
@@ -1011,11 +948,11 @@ impl AirborneVelocitySubFields {
             AirborneVelocityType::Subsonic => {
                 u16::read(rest, (deku::ctx::Endian::Big, deku::ctx::BitSize(10)))
                     .map(|(rest, value)| (rest, value - 1))
-            },
+            }
             AirborneVelocityType::Supersonic => {
                 u16::read(rest, (deku::ctx::Endian::Big, deku::ctx::BitSize(10)))
                     .map(|(rest, value)| (rest, 4 * (value - 1)))
-            },
+            }
         }
     }
 }
