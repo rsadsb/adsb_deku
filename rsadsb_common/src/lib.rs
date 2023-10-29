@@ -217,7 +217,7 @@ impl Airplanes {
         if Added::Yes == airplane_added {
             info!("[{icao}] now tracking");
         }
-        (entry.or_insert_with(AirplaneState::default), airplane_added)
+        (entry.or_default(), airplane_added)
     }
 
     /// Increment message count of `ICAO`. If feature: `std`, set `last_time` to current time.
