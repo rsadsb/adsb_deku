@@ -108,10 +108,10 @@ impl std::fmt::Display for QuitReason {
         match self {
             Self::TcpDisconnect => {
                 writeln!(f, "TCP connection aborted, quitting radar tui")?;
-            },
+            }
             Self::UserRequested => {
                 writeln!(f, "user requested quit")?;
-            },
+            }
         }
 
         Ok(())
@@ -264,10 +264,7 @@ fn main() -> Result<()> {
 
     // print current version
     let version = env!("CARGO_PKG_VERSION");
-    info!(
-        "starting rsadsb/radar-v{} with options: {:?}",
-        version, opts
-    );
+    info!("starting rsadsb/radar-v{} with options: {:?}", version, opts);
 
     // empty containers
     let mut input = String::new();
@@ -336,7 +333,7 @@ fn main() -> Result<()> {
                         Some(tcp_reader) => {
                             settings.quit = None;
                             tcp_reader
-                        },
+                        }
                         // the settings.quit has been set within init_tcp_reader. This continues
                         // to the next loop, which checks for the settings.quit being set
                         None => break,
@@ -345,7 +342,7 @@ fn main() -> Result<()> {
                     // break out of event loop
                     break;
                 }
-            },
+            }
             Some(QuitReason::UserRequested) => break,
             None => (),
         }
@@ -403,7 +400,7 @@ fn main() -> Result<()> {
                         }
                         // update stats
                         stats.update(&adsb_airplanes, airplane_added);
-                    },
+                    }
                     Err(e) => error!("{e:?}"),
                 }
             }
@@ -442,12 +439,12 @@ fn main() -> Result<()> {
                             &adsb_airplanes,
                             &mut airplanes_state,
                         );
-                    },
+                    }
                     // handle mouse events
                     Event::Mouse(mouse_event) => {
                         trace!("{:?}", mouse_event);
                         handle_mouseevent(mouse_event, &mut settings, &tui_info);
-                    },
+                    }
                     _ => (),
                 }
             } else {
@@ -497,9 +494,7 @@ fn init_tcp_reader(
             .constraints([Constraint::Min(3), Constraint::Percentage(100)].as_ref())
             .split(f.size());
 
-        let text = vec![Spans::from(format!(
-            "radar: Waiting for connection to {ip}:{port}"
-        ))];
+        let text = vec![Spans::from(format!("radar: Waiting for connection to {ip}:{port}"))];
 
         let paragraph = Paragraph::new(text).alignment(Alignment::Left);
         f.render_widget(paragraph, chunks[0]);
@@ -515,13 +510,13 @@ fn init_tcp_reader(
                     KeyCode::Char('q') => {
                         settings.quit = Some(QuitReason::UserRequested);
                         return Ok(None);
-                    },
+                    }
                     KeyCode::Char('c') => {
                         if modifiers == crossterm::event::KeyModifiers::CONTROL {
                             settings.quit = Some(QuitReason::UserRequested);
                             return Ok(None);
                         }
-                    },
+                    }
                     // unknown key
                     _ => (),
                 }
@@ -530,9 +525,7 @@ fn init_tcp_reader(
 
         // try and connect to initial dump1090 instance
         if let Ok(stream) = TcpStream::connect_timeout(&socket, Duration::from_secs(10)) {
-            stream
-                .set_read_timeout(Some(std::time::Duration::from_millis(50)))
-                .unwrap();
+            stream.set_read_timeout(Some(std::time::Duration::from_millis(50))).unwrap();
             return Ok(Some(BufReader::new(stream)));
         }
     }
@@ -561,7 +554,7 @@ fn handle_keyevent(
             if modifiers == crossterm::event::KeyModifiers::CONTROL {
                 settings.quit = Some(QuitReason::UserRequested);
             }
-        },
+        }
         (KeyCode::Char('l'), _) => settings.opts.disable_lat_long ^= true,
         (KeyCode::Char('i'), _) => settings.opts.disable_icao ^= true,
         (KeyCode::Char('h'), _) => settings.opts.disable_heading ^= true,
@@ -582,13 +575,11 @@ fn handle_keyevent(
                 .and_then(|selected| selected.checked_sub(1))
                 .unwrap_or(0);
             airplanes_state.select(Some(index));
-        },
+        }
         (KeyCode::Down, Tab::Airplanes) => {
-            let index = airplanes_state
-                .selected()
-                .map_or(0, |selected| selected + 1);
+            let index = airplanes_state.selected().map_or(0, |selected| selected + 1);
             airplanes_state.select(Some(index));
-        },
+        }
         (KeyCode::Enter, Tab::Airplanes) => {
             if let Some(selected) = airplanes_state.selected() {
                 let key = adsb_airplanes.keys().nth(selected).unwrap();
@@ -599,7 +590,7 @@ fn handle_keyevent(
                     settings.tab_selection = Tab::Map;
                 }
             }
-        },
+        }
         _ => (),
     }
 }
@@ -613,16 +604,16 @@ fn handle_mouseevent(mouse_event: MouseEvent, settings: &mut Settings, tui_info:
                 (3..=6, TUI_START_MARGIN..=TUI_BAR_WIDTH) => settings.tab_selection = Tab::Map,
                 (8..=16, TUI_START_MARGIN..=TUI_BAR_WIDTH) => {
                     settings.tab_selection = Tab::Coverage;
-                },
+                }
                 (20..=34, TUI_START_MARGIN..=TUI_BAR_WIDTH) => {
                     settings.tab_selection = Tab::Airplanes;
-                },
+                }
                 (36..=42, TUI_START_MARGIN..=TUI_BAR_WIDTH) => {
                     settings.tab_selection = Tab::Stats;
-                },
+                }
                 (42..=48, TUI_START_MARGIN..=TUI_BAR_WIDTH) => {
                     settings.tab_selection = Tab::Help;
-                },
+                }
                 _ => (),
             }
             // left touchscreen (if enabled)
@@ -651,7 +642,7 @@ fn handle_mouseevent(mouse_event: MouseEvent, settings: &mut Settings, tui_info:
                     settings.reset();
                 }
             }
-        },
+        }
         MouseEventKind::Drag(MouseButton::Left) => {
             // check tab
             match settings.tab_selection {
@@ -692,10 +683,10 @@ fn handle_mouseevent(mouse_event: MouseEvent, settings: &mut Settings, tui_info:
                 }
             }
             settings.last_mouse_dragging = Some((mouse_event.column, mouse_event.row));
-        },
+        }
         MouseEventKind::Up(_) => {
             settings.last_mouse_dragging = None;
-        },
+        }
         MouseEventKind::ScrollDown => settings.scale_increase(),
         MouseEventKind::ScrollUp => settings.scale_decrease(),
         _ => (),
@@ -838,20 +829,8 @@ fn draw_bottom_chunks<A: ratatui::backend::Backend>(
 
 /// Draw vertical and horizontal lines
 fn draw_lines(ctx: &mut ratatui::widgets::canvas::Context<'_>) {
-    ctx.draw(&Line {
-        x1: MAX_PLOT_HIGH,
-        y1: 0.0,
-        x2: MAX_PLOT_LOW,
-        y2: 0.0,
-        color: Color::White,
-    });
-    ctx.draw(&Line {
-        x1: 0.0,
-        y1: MAX_PLOT_HIGH,
-        x2: 0.0,
-        y2: MAX_PLOT_LOW,
-        color: Color::White,
-    });
+    ctx.draw(&Line { x1: MAX_PLOT_HIGH, y1: 0.0, x2: MAX_PLOT_LOW, y2: 0.0, color: Color::White });
+    ctx.draw(&Line { x1: 0.0, y1: MAX_PLOT_HIGH, x2: 0.0, y2: MAX_PLOT_LOW, color: Color::White });
 }
 
 /// Draw locations on the map
@@ -860,34 +839,20 @@ pub fn draw_locations(ctx: &mut ratatui::widgets::canvas::Context<'_>, settings:
         let (x, y) = settings.to_xy(location.lat, location.long);
 
         // draw location coor
-        ctx.draw(&Points {
-            coords: &[(x, y)],
-            color: Color::Green,
-        });
+        ctx.draw(&Points { coords: &[(x, y)], color: Color::Green });
 
         // draw location name
-        ctx.print(
-            x,
-            y,
-            Span::styled(location.name.clone(), Style::default().fg(Color::Green)),
-        );
+        ctx.print(x, y, Span::styled(location.name.clone(), Style::default().fg(Color::Green)));
     }
     if let Some(ref airports) = settings.airports {
         for Airport { icao, lat, lon, .. } in airports {
             let (x, y) = settings.to_xy(*lat, *lon);
 
             // draw city coor
-            ctx.draw(&Points {
-                coords: &[(x, y)],
-                color: Color::Green,
-            });
+            ctx.draw(&Points { coords: &[(x, y)], color: Color::Green });
 
             // draw city name
-            ctx.print(
-                x,
-                y,
-                Span::styled(icao.to_string(), Style::default().fg(Color::Green)),
-            );
+            ctx.print(x, y, Span::styled(icao.to_string(), Style::default().fg(Color::Green)));
         }
     }
 }

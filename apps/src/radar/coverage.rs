@@ -24,15 +24,7 @@ pub fn populate_coverage(
     coverage_airplanes: &mut Vec<(f64, f64, u32, ICAO)>,
 ) {
     let all_position = adsb_airplanes.all_position();
-    for (
-        all_icao,
-        Position {
-            latitude,
-            longitude,
-            ..
-        },
-    ) in all_position
-    {
+    for (all_icao, Position { latitude, longitude, .. }) in all_position {
         let latitude = (latitude * COVERAGE_MASK).round() / COVERAGE_MASK;
         let longitude = (longitude * COVERAGE_MASK).round() / COVERAGE_MASK;
 
@@ -89,11 +81,8 @@ pub fn build_tab_coverage<A: ratatui::backend::Backend>(
                 let (x, y) = settings.to_xy(*lat, *long);
 
                 let number: u32 = 100 + *seen_number * 50;
-                let color_number: u8 = if number > u32::from(u8::MAX) {
-                    u8::MAX
-                } else {
-                    number as u8
-                };
+                let color_number: u8 =
+                    if number > u32::from(u8::MAX) { u8::MAX } else { number as u8 };
 
                 // draw dot on location
                 ctx.draw(&Points {

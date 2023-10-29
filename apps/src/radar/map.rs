@@ -27,13 +27,7 @@ pub fn build_tab_map<A: ratatui::backend::Backend>(
             // draw ADSB tab airplanes
             for (key, value) in adsb_airplanes.iter() {
                 let aircraft_details = adsb_airplanes.aircraft_details(*key);
-                if let Some(AirplaneDetails {
-                    position,
-                    heading,
-                    track,
-                    ..
-                }) = aircraft_details
-                {
+                if let Some(AirplaneDetails { position, heading, track, .. }) = aircraft_details {
                     let (x, y) = settings.to_xy(position.latitude, position.longitude);
 
                     // draw previous positions ("track")
@@ -45,10 +39,7 @@ pub fn build_tab_map<A: ratatui::backend::Backend>(
                                         settings.to_xy(position.latitude, position.longitude);
 
                                     // draw dot on location
-                                    ctx.draw(&Points {
-                                        coords: &[(x, y)],
-                                        color: Color::White,
-                                    });
+                                    ctx.draw(&Points { coords: &[(x, y)], color: Color::White });
                                 }
                             }
                         }
@@ -135,10 +126,7 @@ pub fn build_tab_map<A: ratatui::backend::Backend>(
                     }
 
                     // draw dot on actual lat/lon
-                    ctx.draw(&Points {
-                        coords: &[(x, y)],
-                        color: Color::Blue,
-                    });
+                    ctx.draw(&Points { coords: &[(x, y)], color: Color::Blue });
                 }
             }
         });

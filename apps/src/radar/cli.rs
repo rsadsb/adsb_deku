@@ -16,19 +16,12 @@ impl FromStr for Location {
     type Err = ParseFloatError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let coords: Vec<&str> = s
-            .trim_matches(|p| p == '(' || p == ')')
-            .split(',')
-            .collect();
+        let coords: Vec<&str> = s.trim_matches(|p| p == '(' || p == ')').split(',').collect();
 
         let lat_fromstr = coords[1].parse::<f64>()?;
         let long_fromstr = coords[2].parse::<f64>()?;
 
-        Ok(Self {
-            name: coords[0].to_string(),
-            lat: lat_fromstr,
-            long: long_fromstr,
-        })
+        Ok(Self { name: coords[0].to_string(), lat: lat_fromstr, long: long_fromstr })
     }
 }
 
@@ -185,16 +178,8 @@ mod tests {
             lat: 35.0,
             long: -80.0,
             locations: vec![
-                Location {
-                    name: "a".to_string(),
-                    lat: 56.5,
-                    long: 57.2,
-                },
-                Location {
-                    name: "b".to_string(),
-                    lat: 1.0,
-                    long: 2.0,
-                },
+                Location { name: "a".to_string(), lat: 56.5, long: 57.2 },
+                Location { name: "b".to_string(), lat: 1.0, long: 2.0 },
             ],
             disable_lat_long: false,
             disable_callsign: false,

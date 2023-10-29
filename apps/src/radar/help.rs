@@ -45,11 +45,7 @@ pub fn build_tab_help<A: ratatui::backend::Backend>(f: &mut ratatui::Frame<A>, c
         .header(Row::new(vec!["Key", "Action"]).bottom_margin(1))
         .widths(&[Constraint::Percentage(10), Constraint::Percentage(90)])
         .column_spacing(1)
-        .block(
-            Block::default()
-                .title("Key Bindings - Any Tab")
-                .borders(Borders::ALL),
-        );
+        .block(Block::default().title("Key Bindings - Any Tab").borders(Borders::ALL));
     f.render_widget(table, vertical_chunks[1]);
 
     // Second help section
@@ -67,11 +63,7 @@ pub fn build_tab_help<A: ratatui::backend::Backend>(f: &mut ratatui::Frame<A>, c
         .header(Row::new(vec!["Key", "Action"]).bottom_margin(1))
         .widths(&[Constraint::Percentage(10), Constraint::Percentage(90)])
         .column_spacing(1)
-        .block(
-            Block::default()
-                .title("Key Bindings - Map or Coverage")
-                .borders(Borders::ALL),
-        );
+        .block(Block::default().title("Key Bindings - Map or Coverage").borders(Borders::ALL));
     f.render_widget(table, vertical_chunks[2]);
 
     // Third help section
@@ -85,10 +77,6 @@ pub fn build_tab_help<A: ratatui::backend::Backend>(f: &mut ratatui::Frame<A>, c
         .header(Row::new(vec!["Key", "Action"]).bottom_margin(1))
         .widths(&[Constraint::Percentage(10), Constraint::Percentage(90)])
         .column_spacing(1)
-        .block(
-            Block::default()
-                .title("Key Bindings - Airplanes")
-                .borders(Borders::ALL),
-        );
+        .block(Block::default().title("Key Bindings - Airplanes").borders(Borders::ALL));
     f.render_widget(table, vertical_chunks[3]);
 }

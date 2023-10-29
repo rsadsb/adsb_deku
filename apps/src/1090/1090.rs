@@ -33,9 +33,7 @@ struct Options {
 fn main() {
     let options = Options::parse();
     let stream = TcpStream::connect((options.host, options.port)).unwrap();
-    stream
-        .set_read_timeout(Some(std::time::Duration::from_millis(50)))
-        .unwrap();
+    stream.set_read_timeout(Some(std::time::Duration::from_millis(50))).unwrap();
     let mut reader = BufReader::new(stream);
     let mut input = String::new();
 
@@ -70,10 +68,10 @@ fn main() {
                         !((frame.to_string() == "") && options.panic_display),
                         "[E] fmt::Display not implemented"
                     );
-                },
+                }
                 Err(e) => {
                     assert!(!options.panic_decode, "[E] {e}");
-                },
+                }
             }
             input.clear();
         }

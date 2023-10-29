@@ -126,12 +126,12 @@ impl Airplanes {
             airplane_added = match &adsb.me {
                 ME::AircraftIdentification(identification) => {
                     self.add_identification(adsb.icao, identification)
-                },
+                }
                 ME::AirborneVelocity(vel) => self.add_airborne_velocity(adsb.icao, vel),
                 ME::AirbornePositionGNSSAltitude(altitude)
                 | ME::AirbornePositionBaroAltitude(altitude) => {
                     self.add_altitude(adsb.icao, altitude, lat_long, max_rang)
-                },
+                }
                 _ => Added::No,
             };
             let incr_airplane_added = self.incr_messages(adsb.icao);
@@ -169,7 +169,7 @@ impl Airplanes {
                 } else {
                     None
                 }
-            },
+            }
             None => None,
         }
     }
@@ -212,10 +212,8 @@ impl Airplanes {
     // Return (matching state from icao, true if airplane added)
     fn entry_or_insert(&mut self, icao: ICAO) -> (&mut AirplaneState, Added) {
         let entry = self.0.entry(icao);
-        let airplane_added = Added::from(matches!(
-            entry,
-            alloc::collections::btree_map::Entry::Vacant(_)
-        ));
+        let airplane_added =
+            Added::from(matches!(entry, alloc::collections::btree_map::Entry::Vacant(_)));
         if Added::Yes == airplane_added {
             info!("[{icao}] now tracking");
         }

@@ -20,10 +20,7 @@ impl Stats {
     pub fn update(&mut self, airplanes: &Airplanes, airplane_added: Added) {
         // Update most_distance
         let current_distance = self.most_distance.map_or(0.0, |most_distance| {
-            most_distance
-                .2
-                .kilo_distance
-                .map_or(0.0, |kilo_distance| kilo_distance)
+            most_distance.2.kilo_distance.map_or(0.0, |kilo_distance| kilo_distance)
         });
         for (key, state) in airplanes.iter() {
             if let Some(distance) = state.coords.kilo_distance {
@@ -36,9 +33,7 @@ impl Stats {
 
         // Update most airplanes
         let current_len = airplanes.len();
-        let most_airplanes = self
-            .most_airplanes
-            .map_or(0, |most_airplanes| most_airplanes.1);
+        let most_airplanes = self.most_airplanes.map_or(0, |most_airplanes| most_airplanes.1);
 
         if most_airplanes < current_len as u32 {
             info!("new most airplanes: {}", current_len);
@@ -71,10 +66,7 @@ pub fn build_tab_stats<A: ratatui::backend::Backend>(
         // display time
         let datetime = time::OffsetDateTime::from(time);
         (
-            datetime
-                .to_offset(settings.utc_offset)
-                .format(&format)
-                .unwrap(),
+            datetime.to_offset(settings.utc_offset).format(&format).unwrap(),
             format!("[{key}]: {distance}km {lat},{lon}"),
         )
     } else {
@@ -87,10 +79,7 @@ pub fn build_tab_stats<A: ratatui::backend::Backend>(
         // display time
         let datetime = time::OffsetDateTime::from(time);
         (
-            datetime
-                .to_offset(settings.utc_offset)
-                .format(&format)
-                .unwrap(),
+            datetime.to_offset(settings.utc_offset).format(&format).unwrap(),
             most_airplanes.to_string(),
         )
     } else {
@@ -100,22 +89,14 @@ pub fn build_tab_stats<A: ratatui::backend::Backend>(
 
     // Total Airplanes Tracked
     let total_airplanes_s = stats.total_airplanes.to_string();
-    rows.push(Row::new(vec![
-        "Total Airplanes",
-        "All Time",
-        &total_airplanes_s,
-    ]));
+    rows.push(Row::new(vec!["Total Airplanes", "All Time", &total_airplanes_s]));
 
     // draw table
     let table = Table::new(rows)
         .style(Style::default().fg(Color::White))
         .header(Row::new(vec!["Type", "DateTime", "Value"]).bottom_margin(1))
         .block(Block::default().title("Stats").borders(Borders::ALL))
-        .widths(&[
-            Constraint::Length(16),
-            Constraint::Length(15),
-            Constraint::Length(200),
-        ])
+        .widths(&[Constraint::Length(16), Constraint::Length(15), Constraint::Length(200)])
         .column_spacing(1);
     f.render_widget(table, chunks[1]);
 }

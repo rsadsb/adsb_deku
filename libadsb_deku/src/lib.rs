@@ -208,7 +208,7 @@ impl fmt::Display for Frame {
                 } else {
                     writeln!(f, "  Air/Ground:    ground")?;
                 }
-            },
+            }
             DF::SurveillanceAltitudeReply { fs, ac, .. } => {
                 writeln!(f, " Surveillance, Altitude Reply")?;
                 writeln!(f, "  ICAO Address:  {crc:06x} (Mode S / ADS-B)")?;
@@ -217,21 +217,19 @@ impl fmt::Display for Frame {
                     let altitude = ac.0;
                     writeln!(f, "  Altitude:      {altitude} ft barometric")?;
                 }
-            },
+            }
             DF::SurveillanceIdentityReply { fs, id, .. } => {
                 let identity = id.0;
                 writeln!(f, " Surveillance, Identity Reply")?;
                 writeln!(f, "  ICAO Address:  {crc:06x} (Mode S / ADS-B)")?;
                 writeln!(f, "  Air/Ground:    {fs}")?;
                 writeln!(f, "  Identity:      {identity:04x}")?;
-            },
-            DF::AllCallReply {
-                capability, icao, ..
-            } => {
+            }
+            DF::AllCallReply { capability, icao, .. } => {
                 writeln!(f, " All Call Reply")?;
                 writeln!(f, "  ICAO Address:  {icao} (Mode S / ADS-B)")?;
                 writeln!(f, "  Air/Ground:    {capability}")?;
-            },
+            }
             DF::LongAirAir { altitude, .. } => {
                 writeln!(f, " Long Air-Air ACAS")?;
                 writeln!(f, "  ICAO Address:  {crc:06x} (Mode S / ADS-B)")?;
@@ -243,32 +241,32 @@ impl fmt::Display for Frame {
                 } else {
                     writeln!(f, "  Air/Ground:    ground")?;
                 }
-            },
+            }
             DF::ADSB(adsb) => {
                 write!(f, "{}", adsb.to_string("(Mode S / ADS-B)")?)?;
-            },
+            }
             DF::TisB { cf, .. } => {
                 write!(f, "{cf}")?;
-            },
+            }
             // TODO
-            DF::ExtendedQuitterMilitaryApplication { .. } => {},
+            DF::ExtendedQuitterMilitaryApplication { .. } => {}
             DF::CommBAltitudeReply { bds, alt, .. } => {
                 writeln!(f, " Comm-B, Altitude Reply")?;
                 writeln!(f, "  ICAO Address:  {crc:x?} (Mode S / ADS-B)")?;
                 let altitude = alt.0;
                 writeln!(f, "  Altitude:      {altitude} ft")?;
                 write!(f, "  {bds}")?;
-            },
+            }
             DF::CommBIdentityReply { id, bds, .. } => {
                 writeln!(f, " Comm-B, Identity Reply")?;
                 writeln!(f, "    ICAO Address:  {crc:x?} (Mode S / ADS-B)")?;
                 writeln!(f, "    Squawk:        {id:x?}")?;
                 write!(f, "    {bds}")?;
-            },
+            }
             DF::CommDExtendedLengthMessage { .. } => {
                 writeln!(f, " Comm-D Extended Length Message")?;
                 writeln!(f, "    ICAO Address:     {crc:x?} (Mode S / ADS-B)")?;
-            },
+            }
         }
         Ok(())
     }
@@ -484,10 +482,9 @@ pub struct Altitude {
 
 impl fmt::Display for Altitude {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let altitude = self.alt.map_or_else(
-            || "None".to_string(),
-            |altitude| format!("{altitude} ft barometric"),
-        );
+        let altitude = self
+            .alt
+            .map_or_else(|| "None".to_string(), |altitude| format!("{altitude} ft barometric"));
         writeln!(f, "  Altitude:      {altitude}")?;
         writeln!(f, "  CPR type:      Airborne")?;
         writeln!(f, "  CPR odd flag:  {}", self.odd_flag)?;
@@ -822,10 +819,7 @@ pub(crate) fn aircraft_identification_read(
         }
         inside_rest = for_rest;
     }
-    let encoded = chars
-        .into_iter()
-        .map(|b| CHAR_LOOKUP[b as usize] as char)
-        .collect::<String>();
+    let encoded = chars.into_iter().map(|b| CHAR_LOOKUP[b as usize] as char).collect::<String>();
 
     Ok((inside_rest, encoded))
 }
