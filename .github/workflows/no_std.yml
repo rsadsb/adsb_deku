@@ -5,6 +5,7 @@ on:
   pull_request:
     branches:
       - master
+  merge_group:
 
 name: ensure_no_std
 

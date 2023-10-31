@@ -5,6 +5,7 @@ on:
   pull_request:
     branches:
       - master
+  merge_group:
   schedule: [cron: "40 1 * * *"]
 
 name: ci
