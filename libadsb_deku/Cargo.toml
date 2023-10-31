@@ -24,7 +24,7 @@ libm = "0.2.8"
 [dev-dependencies]
 hex = "0.4"
 hexlit = "0.5"
-assert_hex = "0.2"
+assert_hex = "0.4"
 criterion = "0.5"
 
 [[bench]]
