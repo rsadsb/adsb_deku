@@ -25,6 +25,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - name: Populate cache
+        uses: ./.github/workflows/cache
+
       - uses: dtolnay/rust-toolchain@d76c2a93c593483c9892fd8d2538734f73ed8588 # stable
         with:
           target: ${{ matrix.targets }}

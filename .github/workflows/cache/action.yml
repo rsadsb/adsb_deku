@@ -1,0 +1,22 @@
+name: Cache Cargo Dependencies
+runs:
+  using: "composite"
+  steps:
+    # Cache the global cargo directory, but NOT the local `target` directory which
+    # we cannot reuse anyway when the nightly changes (and it grows quite large
+    # over time).
+    - name: Add cache for cargo
+      id: cache
+      uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84 # v3.3.2
+      with:
+        path: |
+          # Taken from <https://doc.rust-lang.org/nightly/cargo/guide/cargo-home.html#caching-the-cargo-home-in-ci>.
+          ~/.cargo/bin
+          ~/.cargo/registry/index
+          ~/.cargo/registry/cache
+          ~/.cargo/git/db
+          # contains package information of crates installed via `cargo install`.
+          ~/.cargo/.crates.toml
+          ~/.cargo/.crates2.json
+        key: ${{ runner.os }}-rsadsb-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: ${{ runner.os }}-rsadsb
