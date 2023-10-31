@@ -4,6 +4,7 @@ on:
     tags: [ 'v*' ]
   pull_request:
     branches: [ master ]
+  merge_group:
 
 name: binaries
 
