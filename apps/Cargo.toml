@@ -19,7 +19,7 @@ rsadsb_common = { path = "../rsadsb_common" }
 hex = "0.4.0"
 crossterm = "0.26.1"
 clap = { version = "4.0.0", features = ["color", "derive", "wrap_help"] }
-ratatui = "0.20.1"
+ratatui = "0.22.0"
 gpsd_proto = "0.7.0"
 tracing = "0.1.0"
 tracing-subscriber = { version = "0.3.0", features = ["env-filter"] }
