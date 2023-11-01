@@ -626,9 +626,9 @@ checksum = "ad0a93d233ebf96623465aad4046a8d3aa4da22d4f4beba5388838c8a434bbb4"
 
 [[package]]
 name = "gpsd_proto"
-version = "0.7.0"
+version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9d761ccb0b69f4d39c8a8deba71da23a91b0ed015d8f9dcb3f5f3ee67949d621"
+checksum = "247df1fffe6bc378377d6cf894dac08aef2194a6c1c9e2f173c3c10979fa5ca5"
 dependencies = [
  "log",
  "serde",
