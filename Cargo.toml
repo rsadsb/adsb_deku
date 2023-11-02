@@ -3,7 +3,7 @@ members = ["apps", "libadsb_deku", "rsadsb_common"]
 exclude = ["ensure_no_std"]
 
 [workspace.package]
-rust-version = "1.64.0"
+rust-version = "1.70.0"
 license = "MIT"
 edition = "2021"
 

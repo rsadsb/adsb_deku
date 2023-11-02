@@ -6,12 +6,13 @@ Libraries are released without a new release date within this changelog,
 since this pertains to binary (package) releases.
 
 ## [Package Unreleased]
-### rsadsb_common
+### All
+- Bumped MSRV to `1.70.0`
+
+### rsadsb_common v0.6.2
 - Added optional `serde` feature for the serialization into formats such as `json` or `toml`. 
-- Published `v0.6.2` to [crates.io](https://crates.io/crates/rsadsb_common)
-### adsb_deku
+### adsb_deku v0.6.3
 - Added optional `serde` feature for the serialization into formats such as `json` or `toml`. 
-- Published `v0.6.3` to [crates.io](https://crates.io/crates/adsb_deku)
 
 ## [2022-12-29]
 - MSRV for all libs/bins is bumped to 1.64 for using new workspace package feature.
