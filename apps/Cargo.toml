@@ -22,7 +22,7 @@ clap = { version = "4.4.7", features = ["color", "derive", "wrap_help"] }
 ratatui = "0.20.1"
 gpsd_proto = "1.0.0"
 tracing = "0.1.40"
-tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
+tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 tracing-appender = "0.2.0"
 anyhow = { version = "1.0", features = ["backtrace"] }
 csv = { version = "1.3" }
