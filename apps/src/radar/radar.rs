@@ -716,10 +716,7 @@ fn draw(
 
             // render tabs
             let airplane_len = format!("Airplanes({})", adsb_airplanes.len());
-            let titles = ["Map", "Coverage", &airplane_len, "Stats", "Help"]
-                .iter()
-                .copied()
-                .collect();
+            let titles = vec!["Map", "Coverage", &airplane_len, "Stats", "Help"];
 
             let mut view_type = "";
 

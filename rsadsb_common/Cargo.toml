@@ -4,7 +4,7 @@ description = "common library for adsb_deku"
 repository = "https://github.com/wcampbel0x2a/adsb_deku"
 keywords = ["deku", "adsb", "aerorust", "airplane", "radar"]
 categories = ["aerospace::protocols", "parsing"]
-version = "0.6.2"
+version = "0.6.3"
 rust-version.workspace = true
 license.workspace = true
 edition.workspace = true
@@ -16,7 +16,7 @@ alloc = ["adsb_deku/alloc", "tracing"]
 serde = ["dep:serde", "dep:serde_with", "adsb_deku/serde"]
 
 [dependencies]
-adsb_deku = { path = "../libadsb_deku", default-features = false, version = "0.6.3" }
+adsb_deku = { path = "../libadsb_deku", default-features = false, version = "0.7.0" }
 libm = "0.2.8"
 tracing = { version = "0.1.40", default-features = false, optional = true}
 serde = { version = "1.0", features = ["derive"], optional = true }
