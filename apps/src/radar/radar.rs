@@ -611,7 +611,7 @@ fn handle_mouseevent(mouse_event: MouseEvent, settings: &mut Settings, tui_info:
                 (36..=42, TUI_START_MARGIN..=TUI_BAR_WIDTH) => {
                     settings.tab_selection = Tab::Stats;
                 }
-                (42..=48, TUI_START_MARGIN..=TUI_BAR_WIDTH) => {
+                (43..=48, TUI_START_MARGIN..=TUI_BAR_WIDTH) => {
                     settings.tab_selection = Tab::Help;
                 }
                 _ => (),
