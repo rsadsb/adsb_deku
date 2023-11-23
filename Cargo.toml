@@ -1,6 +1,7 @@
 [workspace]
 members = ["apps", "libadsb_deku", "rsadsb_common"]
 exclude = ["ensure_no_std"]
+resolver = "2"
 
 [workspace.package]
 rust-version = "1.70.0"

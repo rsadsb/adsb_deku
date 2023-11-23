@@ -6,7 +6,24 @@ Libraries are released without a new release date within this changelog,
 since this pertains to binary (package) releases.
 
 ## [Package Unreleased]
-### All
+## [2023-11-22]
+### radar / 1090 v0.6.3
+- Bump dependancy `libm` to `0.2.8`
+- Bump dependancy `crossterm` to `0.27.0`
+- Bump dependancy `gpsd_proto` to `1.0.0`
+- Bump dependancy `tracing` to `0.1.40`
+- Bump dependancy `tracing-subscriber` to `0.3.17`
+- Bump dependancy `time` to `0.3.30`
+- Change dependancy from `tui` `0.19.0` to `ratatui` `0.24.0`
+- Bumped MSRV to `1.70.0`
+### rsadsb_common v0.6.2
+- Bump dependancy `libm` to `0.2.8`
+- Bump dependancy `tracing` to `0.1.40`
+- Bump dependancy `serde_with` to `3.4.0`
+- Bumped MSRV to `1.70.0`
+### adsb_deku v0.7.0
+- Bump dependancy `deku` to `0.16.0`
+- Bump dependancy `libm` to `0.2.8`
 - Bumped MSRV to `1.70.0`
 
 ### rsadsb_common v0.6.2
