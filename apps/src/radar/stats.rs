@@ -48,8 +48,8 @@ impl Stats {
 }
 
 /// Render Help tab for tui display
-pub fn build_tab_stats<A: ratatui::backend::Backend>(
-    f: &mut ratatui::Frame<A>,
+pub fn build_tab_stats(
+    f: &mut ratatui::Frame,
     chunks: &[Rect],
     stats: &Stats,
     settings: &Settings,

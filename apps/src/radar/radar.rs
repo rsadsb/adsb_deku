@@ -41,7 +41,7 @@ use ratatui::backend::{Backend, CrosstermBackend};
 use ratatui::layout::{Alignment, Constraint, Direction, Layout, Rect};
 use ratatui::style::{Color, Style};
 use ratatui::symbols::DOT;
-use ratatui::text::{Span, Spans};
+use ratatui::text::Span;
 use ratatui::widgets::canvas::{Line, Points};
 use ratatui::widgets::{Block, Borders, Paragraph, TableState, Tabs};
 use ratatui::Terminal;
@@ -494,9 +494,9 @@ fn init_tcp_reader(
             .constraints([Constraint::Min(3), Constraint::Percentage(100)].as_ref())
             .split(f.size());
 
-        let text = vec![Spans::from(format!("radar: Waiting for connection to {ip}:{port}"))];
+        let paragraph = Paragraph::new(format!("radar: Waiting for connection to {ip}:{port}"))
+            .alignment(Alignment::Left);
 
-        let paragraph = Paragraph::new(text).alignment(Alignment::Left);
         f.render_widget(paragraph, chunks[0]);
     })?;
 
@@ -719,7 +719,6 @@ fn draw(
             let titles = ["Map", "Coverage", &airplane_len, "Stats", "Help"]
                 .iter()
                 .copied()
-                .map(Spans::from)
                 .collect();
 
             let mut view_type = "";
@@ -765,8 +764,8 @@ fn draw(
     tui_info
 }
 
-fn draw_bottom_chunks<A: ratatui::backend::Backend>(
-    f: &mut ratatui::Frame<A>,
+fn draw_bottom_chunks(
+    f: &mut ratatui::Frame,
     chunks: &[Rect],
     settings: &Settings,
     adsb_airplanes: &Airplanes,

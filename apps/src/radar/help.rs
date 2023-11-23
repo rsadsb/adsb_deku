@@ -3,7 +3,7 @@ use ratatui::style::{Color, Style};
 use ratatui::widgets::{Block, Borders, Row, Table};
 
 /// Render Help tab for tui display
-pub fn build_tab_help<A: ratatui::backend::Backend>(f: &mut ratatui::Frame<A>, chunks: &[Rect]) {
+pub fn build_tab_help(f: &mut ratatui::Frame, chunks: &[Rect]) {
     let horizontal_chunks = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([

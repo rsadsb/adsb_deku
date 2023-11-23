@@ -6,8 +6,8 @@ use rsadsb_common::{AirplaneDetails, Airplanes};
 use crate::DEFAULT_PRECISION;
 
 /// Render Airplanes tab for tui display
-pub fn build_tab_airplanes<A: ratatui::backend::Backend>(
-    f: &mut ratatui::Frame<A>,
+pub fn build_tab_airplanes(
+    f: &mut ratatui::Frame,
     chunks: &[Rect],
     adsb_airplanes: &Airplanes,
     airplanes_state: &mut TableState,

@@ -62,8 +62,8 @@ pub fn populate_coverage(
 }
 
 /// Render Coverage tab for tui display
-pub fn build_tab_coverage<A: ratatui::backend::Backend>(
-    f: &mut ratatui::Frame<A>,
+pub fn build_tab_coverage(
+    f: &mut ratatui::Frame,
     chunks: &[Rect],
     settings: &Settings,
     coverage_airplanes: &[(f64, f64, u32, ICAO)],
