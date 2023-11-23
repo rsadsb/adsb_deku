@@ -8,8 +8,8 @@ use rsadsb_common::{AirplaneDetails, Airplanes};
 use crate::{draw_lines, draw_locations, Settings, DEFAULT_PRECISION, MAX_PLOT_HIGH, MAX_PLOT_LOW};
 
 /// Render Map tab for tui display
-pub fn build_tab_map<A: ratatui::backend::Backend>(
-    f: &mut ratatui::Frame<A>,
+pub fn build_tab_map(
+    f: &mut ratatui::Frame,
     chunks: &[Rect],
     settings: &Settings,
     adsb_airplanes: &Airplanes,
