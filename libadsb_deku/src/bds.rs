@@ -46,7 +46,7 @@ impl fmt::Display for BDS {
             }
             Self::DataLinkCapability(_) => {
                 writeln!(f, "Comm-B format: BDS1,0 Datalink capabilities")?;
-            },
+            }
             Self::Unknown { id: _, value: _ } => {
                 writeln!(f, "Comm-B format: unknown format")?;
             }

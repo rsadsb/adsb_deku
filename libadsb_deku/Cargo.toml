@@ -1,4 +1,4 @@
-mfackage]
+[package]
 name = "adsb_deku"
 description = "Decoder for ADS-B(Automatic Depedent Surveillance-Broadcast) - written with deku"
 repository = "https://github.com/wcampbel0x2a/adsb_deku"
@@ -17,7 +17,7 @@ std = ["deku/std", "alloc"]
 alloc = ["deku/alloc"]
 
 [dependencies]
-deku = { git = "https://github.com/sharksforarms/deku", branch = "impl-reader", default-features = false }
+deku = { git = "https://github.com/sharksforarms/deku", branch = "impl-writer", default-features = false }
 serde = { version = "1.0", features = ["derive"], optional = true }
 libm = "0.2.8"
 env_logger = "*"

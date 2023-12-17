@@ -20,7 +20,7 @@ use core::{
     result::Result::Ok,
     stringify, write, writeln,
 };
-use deku::acid_io::Read;
+use deku::no_std_io::Read;
 #[cfg(not(feature = "alloc"))]
 use std::{fmt, i64};
 
@@ -123,18 +123,18 @@ impl ME {
                 writeln!(f, "  Address:       {icao} {address_type}")?;
                 writeln!(f, "  Air/Ground:    {capability}")?;
             }
-            ME::AircraftIdentification(Identification { tc, ca, cn }) => {
+            ME::AircraftIdentification { tc, value: Identification { ca, cn, .. } } => {
                 writeln!(f, " Extended Squitter{transponder}Aircraft identification and category")?;
                 writeln!(f, "  Address:       {icao} {address_type}")?;
                 writeln!(f, "  Air/Ground:    {capability}")?;
                 writeln!(f, "  Ident:         {cn}")?;
                 writeln!(f, "  Category:      {tc}{ca}")?;
             }
-            ME::SurfacePosition(..) => {
+            ME::SurfacePosition { .. } => {
                 writeln!(f, " Extended Squitter{transponder}Surface position")?;
                 writeln!(f, "  Address:       {icao} {address_type}")?;
             }
-            ME::AirbornePositionBaroAltitude(altitude) => {
+            ME::AirbornePositionBaroAltitude { id: _, value: altitude } => {
                 writeln!(
                     f,
                     " Extended Squitter{transponder}Airborne position (barometric altitude)"
@@ -197,12 +197,12 @@ impl ME {
                     writeln!(f, "  Address:       {icao} {address_type}")?;
                 }
             },
-            ME::AirbornePositionGNSSAltitude(altitude) => {
+            ME::AirbornePositionGNSSAltitude { id: _, value: altitude } => {
                 writeln!(f, " Extended Squitter{transponder}Airborne position (GNSS altitude)",)?;
                 writeln!(f, "  Address:      {icao} {address_type}")?;
                 write!(f, "{altitude}")?;
             }
-            ME::Reserved0(_) | ME::Reserved1(_) => {
+            ME::Reserved0(_) | ME::Reserved1 { .. } => {
                 writeln!(f, " Extended Squitter{transponder}Unknown")?;
                 writeln!(f, "  Address:       {icao} {address_type}")?;
                 writeln!(f, "  Air/Ground:    {capability}")?;
@@ -273,7 +273,7 @@ impl ME {
                 writeln!(f, "  Address:       {icao} {address_type}")?;
                 writeln!(f, "  Air/Ground:    {capability}")?;
                 write!(f, "  Aircraft Operational Status:\n {opstatus_surface}")?;
-            },
+            }
             ME::AircraftOperationStatus(OperationStatus::Reserved { .. }) => {
                 writeln!(
                     f,
@@ -970,11 +970,11 @@ impl AirborneVelocitySubFields {
             AirborneVelocityType::Subsonic => {
                 u16::from_reader_with_ctx(reader, (deku::ctx::Endian::Big, deku::ctx::BitSize(10)))
                     .map(|value| value - 1)
-            },
+            }
             AirborneVelocityType::Supersonic => {
                 u16::from_reader_with_ctx(reader, (deku::ctx::Endian::Big, deku::ctx::BitSize(10)))
                     .map(|value| 4 * (value - 1))
-            },
+            }
         }
     }
 }

@@ -131,10 +131,7 @@ fn testing05() {
     let bytes = hex!("5dab3d17d4ba29");
     let cursor = Cursor::new(bytes);
     let frame = Frame::from_reader(cursor);
-    if let DF::AllCallReply {
-        icao, capability, ..
-    } = frame.unwrap().df
-    {
+    if let DF::AllCallReply { icao, capability, .. } = frame.unwrap().df {
         assert_eq_hex!(icao.0, hex!("ab3d17"));
         assert_eq!(capability, Capability::AG_AIRBORNE);
         return;
@@ -194,10 +191,7 @@ fn testing08() {
     let bytes = hex!("5da039b46d7d81");
     let cursor = Cursor::new(bytes);
     let frame = Frame::from_reader(cursor);
-    if let DF::AllCallReply {
-        icao, capability, ..
-    } = frame.unwrap().df
-    {
+    if let DF::AllCallReply { icao, capability, .. } = frame.unwrap().df {
         assert_eq_hex!(icao.0, hex!("a039b4"));
         assert_eq!(capability, Capability::AG_AIRBORNE);
         return;
