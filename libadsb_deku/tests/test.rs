@@ -1,5 +1,6 @@
+use std::io::Cursor;
+
 use adsb_deku::adsb::{VerticalRateSource, ME};
-use adsb_deku::deku::prelude::*;
 use adsb_deku::{CPRFormat, Capability, Frame, DF};
 use assert_hex::assert_eq_hex;
 use hexlit::hex;
@@ -8,9 +9,10 @@ use hexlit::hex;
 fn testing01() {
     // from adsb-rs
     let bytes = hex!("8D40621D58C382D690C8AC2863A7");
-    let frame = Frame::from_bytes((&bytes, 0));
-    if let DF::ADSB(adsb) = frame.unwrap().1.df {
-        if let ME::AirbornePositionBaroAltitude(me) = adsb.me {
+    let cursor = Cursor::new(bytes);
+    let frame = Frame::from_reader(cursor);
+    if let DF::ADSB(adsb) = frame.unwrap().df {
+        if let ME::AirbornePositionBaroAltitude { value: me, .. } = adsb.me {
             assert_eq!(me.alt, Some(38000));
             assert_eq!(me.lat_cpr, 93000);
             assert_eq!(me.lon_cpr, 51372);
@@ -25,8 +27,9 @@ fn testing01() {
 fn testing02() {
     // from adsb-rs
     let bytes = hex!("8da3d42599250129780484712c50");
-    let frame = Frame::from_bytes((&bytes, 0));
-    if let DF::ADSB(adsb) = frame.unwrap().1.df {
+    let cursor = Cursor::new(bytes);
+    let frame = Frame::from_reader(cursor);
+    if let DF::ADSB(adsb) = frame.unwrap().df {
         if let ME::AirborneVelocity(me) = adsb.me {
             let (heading, ground_speed, vertical_rate) = me.calculate().unwrap();
             assert!((heading - 322.197_2).abs() < f32::EPSILON);
@@ -58,8 +61,9 @@ fn testing03() {
     //   MCP selected altitude:   14016 ft
     //   QNH:                     1012.8 millibars
     let bytes = hex!("8da08f94ea1b785e8f3c088ab467");
-    let frame = Frame::from_bytes((&bytes, 0));
-    if let DF::ADSB(adsb) = frame.unwrap().1.df {
+    let cursor = Cursor::new(bytes);
+    let frame = Frame::from_reader(cursor);
+    if let DF::ADSB(adsb) = frame.unwrap().df {
         if let ME::TargetStateAndStatusInformation(me) = adsb.me {
             assert_eq!(me.subtype, 1);
             assert!(!me.is_fms);
@@ -103,8 +107,9 @@ fn testing03() {
 fn testing04() {
     // TODO
     let bytes = hex!("8dacc040f8210002004ab8569c35");
-    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-    if let DF::ADSB(adsb) = frame.df {
+    let cursor = Cursor::new(bytes);
+    let frame = Frame::from_reader(cursor);
+    if let DF::ADSB(adsb) = frame.unwrap().df {
         assert_eq_hex!(adsb.icao.0, [0xac, 0xc0, 0x40]);
         assert_eq!(adsb.capability, Capability::AG_AIRBORNE);
         return;
@@ -124,8 +129,9 @@ fn testing04() {
 #[test]
 fn testing05() {
     let bytes = hex!("5dab3d17d4ba29");
-    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-    if let DF::AllCallReply { icao, capability, .. } = frame.df {
+    let cursor = Cursor::new(bytes);
+    let frame = Frame::from_reader(cursor);
+    if let DF::AllCallReply { icao, capability, .. } = frame.unwrap().df {
         assert_eq_hex!(icao.0, hex!("ab3d17"));
         assert_eq!(capability, Capability::AG_AIRBORNE);
         return;
@@ -151,8 +157,9 @@ fn testing05() {
 #[test]
 fn testing06() {
     let bytes = hex!("8dab3d17ea486860015f4870b796");
-    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-    if let DF::ADSB(adsb) = frame.df {
+    let cursor = Cursor::new(bytes);
+    let frame = Frame::from_reader(cursor);
+    if let DF::ADSB(adsb) = frame.unwrap().df {
         if let ME::TargetStateAndStatusInformation(me) = adsb.me {
             assert_eq!(me.subtype, 1);
             assert!(!me.is_fms);
@@ -182,8 +189,9 @@ fn testing06() {
 #[test]
 fn testing08() {
     let bytes = hex!("5da039b46d7d81");
-    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
-    if let DF::AllCallReply { icao, capability, .. } = frame.df {
+    let cursor = Cursor::new(bytes);
+    let frame = Frame::from_reader(cursor);
+    if let DF::AllCallReply { icao, capability, .. } = frame.unwrap().df {
         assert_eq_hex!(icao.0, hex!("a039b4"));
         assert_eq!(capability, Capability::AG_AIRBORNE);
         return;
@@ -204,7 +212,8 @@ fn testing08() {
 #[test]
 fn testing_df_shortairairsurveillance() {
     let bytes = hex!("02e19cb02512c3");
-    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let cursor = Cursor::new(bytes);
+    let frame = Frame::from_reader(cursor).unwrap();
     let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Short Air-Air Surveillance
@@ -270,7 +279,8 @@ fn testing_df_shortairairsurveillance() {
 #[test]
 fn testing_df_extendedsquitteraircraftopstatus() {
     let bytes = hex!("8d0d097ef8230007005ab8547268");
-    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let cursor = Cursor::new(bytes);
+    let frame = Frame::from_reader(cursor).unwrap();
     let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Extended Squitter Aircraft operational status (airborne)
@@ -291,7 +301,8 @@ fn testing_df_extendedsquitteraircraftopstatus() {
     );
 
     let bytes = hex!("8da1a8daf82300060049b870c88b");
-    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let cursor = Cursor::new(bytes);
+    let frame = Frame::from_reader(cursor).unwrap();
     let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Extended Squitter Aircraft operational status (airborne)
@@ -315,7 +326,8 @@ fn testing_df_extendedsquitteraircraftopstatus() {
 #[test]
 fn testing_allcall_reply() {
     let bytes = hex!("5da58fd4561b39");
-    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let cursor = Cursor::new(bytes);
+    let frame = Frame::from_reader(cursor).unwrap();
     let resulting_string = format!("{frame}");
     assert_eq!(
         r#" All Call Reply
@@ -329,7 +341,8 @@ fn testing_allcall_reply() {
 #[test]
 fn testing_airbornepositionbaroaltitude() {
     let bytes = hex!("8da2c1bd587ba2adb31799cb802b");
-    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let cursor = Cursor::new(bytes);
+    let frame = Frame::from_reader(cursor).unwrap();
     let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Extended Squitter Airborne position (barometric altitude)
@@ -348,7 +361,8 @@ fn testing_airbornepositionbaroaltitude() {
 #[test]
 fn testing_surveillancealtitudereply() {
     let bytes = hex!("200012b0d96e39");
-    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let cursor = Cursor::new(bytes);
+    let frame = Frame::from_reader(cursor).unwrap();
     let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Surveillance, Altitude Reply
@@ -362,14 +376,15 @@ fn testing_surveillancealtitudereply() {
 
 #[test]
 fn testing_surveillanceidentityreply_err() {
+    env_logger::init();
     let bytes = hex!("245093892a1bfd");
-    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let cursor = Cursor::new(bytes);
+    let frame = Frame::from_reader(cursor).unwrap();
     let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Surveillance, Altitude Reply
   ICAO Address:  a168ad (Mode S / ADS-B)
   Air/Ground:    airborne?
-  Altitude:      6500 ft barometric
 "#,
         resulting_string
     );
@@ -380,7 +395,8 @@ fn testing_surveillanceidentityreply_err() {
 #[test]
 fn testing_surveillanceidentityreply() {
     let bytes = hex!("2A00516D492B80");
-    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let cursor = Cursor::new(bytes);
+    let frame = Frame::from_reader(cursor).unwrap();
     let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Surveillance, Identity Reply
@@ -395,7 +411,8 @@ fn testing_surveillanceidentityreply() {
 #[test]
 fn testing_airbornevelocity() {
     let bytes = hex!("8dac8e1a9924263950043944cf32");
-    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let cursor = Cursor::new(bytes);
+    let frame = Frame::from_reader(cursor).unwrap();
     let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Extended Squitter Airborne velocity over ground, subsonic
@@ -410,7 +427,8 @@ fn testing_airbornevelocity() {
     );
 
     let bytes = hex!("8da3f9cb9910100da8148571db11");
-    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let cursor = Cursor::new(bytes);
+    let frame = Frame::from_reader(cursor).unwrap();
     let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Extended Squitter Airborne velocity over ground, subsonic
@@ -428,7 +446,8 @@ fn testing_airbornevelocity() {
 #[test]
 fn testing_targetstateandstatusinformation() {
     let bytes = hex!("8da97753ea2d0858015c003ee5de");
-    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let cursor = Cursor::new(bytes);
+    let frame = Frame::from_reader(cursor).unwrap();
     let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Extended Squitter Target state and status (V2)
@@ -450,7 +469,8 @@ fn testing_targetstateandstatusinformation() {
 #[test]
 fn testing_aircraftidentificationandcategory() {
     let bytes = hex!("8da3f9cb213b3d75c1582080f4d9");
-    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let cursor = Cursor::new(bytes);
+    let frame = Frame::from_reader(cursor).unwrap();
     let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Extended Squitter Aircraft identification and category
@@ -466,7 +486,8 @@ fn testing_aircraftidentificationandcategory() {
 #[test]
 fn testing_issue_01() {
     let bytes = hex!("8dad50a9ea466867811c08abbaa2");
-    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let cursor = Cursor::new(bytes);
+    let frame = Frame::from_reader(cursor).unwrap();
     let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Extended Squitter Target state and status (V2)
@@ -489,7 +510,8 @@ fn testing_issue_01() {
 #[test]
 fn testing_issue_03() {
     let bytes = hex!("80e1969058b5025b9850641d2974");
-    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let cursor = Cursor::new(bytes);
+    let frame = Frame::from_reader(cursor).unwrap();
     let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Long Air-Air ACAS
@@ -504,7 +526,8 @@ fn testing_issue_03() {
 #[test]
 fn testing_issue_04() {
     let bytes = hex!("0621776e99b6ad");
-    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let cursor = Cursor::new(bytes);
+    let frame = Frame::from_reader(cursor).unwrap();
     let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Short Air-Air Surveillance
@@ -518,7 +541,8 @@ fn testing_issue_04() {
 #[test]
 fn testing_df_21() {
     let bytes = hex!("AE24238D15EE315463718B1AF755");
-    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let cursor = Cursor::new(bytes);
+    let frame = Frame::from_reader(cursor).unwrap();
     let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Comm-B, Identity Reply
@@ -533,7 +557,8 @@ fn testing_df_21() {
 #[test]
 fn testing_df_24() {
     let bytes = hex!("daca7f82613c2db14a49c535a3a2");
-    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let cursor = Cursor::new(bytes);
+    let frame = Frame::from_reader(cursor).unwrap();
     let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Comm-D Extended Length Message
@@ -547,7 +572,8 @@ fn testing_df_24() {
 fn testing_df_18() {
     // test github issue #2 (with sample output from dump1090_fa as control)
     let bytes = hex!("95298FCA680946499671468C7ACA");
-    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let cursor = Cursor::new(bytes);
+    let frame = Frame::from_reader(cursor).unwrap();
     let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Extended Squitter (Non-Transponder) Airborne position (barometric altitude)
@@ -564,7 +590,8 @@ fn testing_df_18() {
 
     // test github issue #3 (with sample output from dump1090_fa as control)
     let bytes = hex!("96A082FB213B1CF2113820D6EDDF");
-    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let cursor = Cursor::new(bytes);
+    let frame = Frame::from_reader(cursor).unwrap();
     let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Extended Squitter (Non-Transponder) Aircraft identification and category
@@ -578,7 +605,8 @@ fn testing_df_18() {
 
     // test github issue #4 (with sample output from dump1090_fa as control)
     let bytes = hex!("96A6C24699141E0E8018074AA959");
-    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let cursor = Cursor::new(bytes);
+    let frame = Frame::from_reader(cursor).unwrap();
     let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Extended Squitter (Non-Transponder) Airborne velocity over ground, subsonic
@@ -594,7 +622,8 @@ fn testing_df_18() {
 
     // test github issue #5 (with sample output from dump1090_fa as control)
     let bytes = hex!("92A24528993C238900062053CDEF");
-    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let cursor = Cursor::new(bytes);
+    let frame = Frame::from_reader(cursor).unwrap();
     let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Extended Squitter (Non-Transponder) Airborne velocity over ground, subsonic
@@ -610,7 +639,8 @@ fn testing_df_18() {
 
     // test github issue #6 (with sample output from dump1090_fa as control)
     let bytes = hex!("96130D9D910F86188A7A71EF6DCB");
-    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let cursor = Cursor::new(bytes);
+    let frame = Frame::from_reader(cursor).unwrap();
     let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Extended Squitter (Non-Transponder) Airborne position (barometric altitude)
@@ -627,7 +657,8 @@ fn testing_df_18() {
 
     // test github issue #7 (with sample output from dump1090_fa as control)
     let bytes = hex!("91ADF9CEC11C0524407F11538EE5");
-    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let cursor = Cursor::new(bytes);
+    let frame = Frame::from_reader(cursor).unwrap();
     let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Extended Squitter (Non-Transponder) Reserved for surface system status
@@ -638,7 +669,8 @@ fn testing_df_18() {
     );
 
     let bytes = hex!("97CAEEF737FB1341BF58DF19118A");
-    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let cursor = Cursor::new(bytes);
+    let frame = Frame::from_reader(cursor).unwrap();
     let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Extended Squitter (Non-Transponder) Surface position
@@ -649,7 +681,8 @@ fn testing_df_18() {
 
     // test github issue #8 (with sample output from dump1090_fa as control)
     let bytes = hex!("96A4D01FF900210600493075E234");
-    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let cursor = Cursor::new(bytes);
+    let frame = Frame::from_reader(cursor).unwrap();
     let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Extended Squitter (Non-Transponder) Aircraft operational status (surface)
@@ -673,7 +706,8 @@ fn testing_df_18() {
 #[test]
 fn test_emergency() {
     let bytes = hex!("8dc06800e1108500000000baa81f");
-    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let cursor = Cursor::new(bytes);
+    let frame = Frame::from_reader(cursor).unwrap();
     let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Extended Squitter Emergency/priority status
@@ -689,7 +723,8 @@ fn test_emergency() {
 #[test]
 fn issue_10() {
     let bytes = hex!("8DA35EBC9B000024B00C0004E897");
-    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let cursor = Cursor::new(bytes);
+    let frame = Frame::from_reader(cursor).unwrap();
     let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Extended Squitter Airspeed and heading, subsonic
@@ -706,7 +741,8 @@ fn issue_10() {
 #[test]
 fn issue_11_12() {
     let bytes = hex!("8da90a6e000000000000005cab8b");
-    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let cursor = Cursor::new(bytes);
+    let frame = Frame::from_reader(cursor).unwrap();
     let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Extended Squitter No position information
@@ -717,7 +753,8 @@ fn issue_11_12() {
     );
 
     let bytes = hex!("92ef92b301154cb9ab09466702c6");
-    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let cursor = Cursor::new(bytes);
+    let frame = Frame::from_reader(cursor).unwrap();
     let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Extended Squitter (Non-Transponder) No position information
@@ -731,7 +768,8 @@ fn issue_11_12() {
 #[test]
 fn fix_issue_unknown() {
     let bytes = hex!("8d85d792beaf5654b710d87357ee");
-    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let cursor = Cursor::new(bytes);
+    let frame = Frame::from_reader(cursor).unwrap();
     let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Extended Squitter Unknown
@@ -742,7 +780,8 @@ fn fix_issue_unknown() {
     );
 
     let bytes = hex!("972ae8d6d73e298fcaa6bec4c338");
-    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let cursor = Cursor::new(bytes);
+    let frame = Frame::from_reader(cursor).unwrap();
     let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Extended Squitter (Non-Transponder) Unknown
@@ -757,7 +796,8 @@ fn fix_issue_unknown() {
 fn fix_issue_13() {
     // 1
     let bytes = hex!("8dab92a2593e0664204c69d8fe84");
-    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let cursor = Cursor::new(bytes);
+    let frame = Frame::from_reader(cursor).unwrap();
     let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Extended Squitter Airborne position (barometric altitude)
@@ -774,7 +814,8 @@ fn fix_issue_13() {
 
     // 2
     let bytes = hex!("8dab92a299105e93001486608c6d");
-    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let cursor = Cursor::new(bytes);
+    let frame = Frame::from_reader(cursor).unwrap();
     let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Extended Squitter Airborne velocity over ground, subsonic
@@ -790,7 +831,8 @@ fn fix_issue_13() {
 
     // 3
     let bytes = hex!("020007a0d08ff4");
-    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let cursor = Cursor::new(bytes);
+    let frame = Frame::from_reader(cursor).unwrap();
     let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Short Air-Air Surveillance
@@ -803,7 +845,8 @@ fn fix_issue_13() {
 
     // 4
     let bytes = hex!("5dab92a2b04912");
-    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let cursor = Cursor::new(bytes);
+    let frame = Frame::from_reader(cursor).unwrap();
     let resulting_string = format!("{frame}");
     assert_eq!(
         r#" All Call Reply
@@ -815,7 +858,8 @@ fn fix_issue_13() {
 
     // 4
     let bytes = hex!("8dab92a2593e0664204c69d8fe84");
-    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let cursor = Cursor::new(bytes);
+    let frame = Frame::from_reader(cursor).unwrap();
     let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Extended Squitter Airborne position (barometric altitude)
@@ -834,7 +878,8 @@ fn fix_issue_13() {
 #[test]
 fn test_issue_14() {
     let bytes = hex!("a0001910204d7075d35820c25c0c");
-    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let cursor = Cursor::new(bytes);
+    let frame = Frame::from_reader(cursor).unwrap();
     let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Comm-B, Altitude Reply
@@ -847,7 +892,8 @@ fn test_issue_14() {
     );
 
     let bytes = hex!("a000171810030a80f6000012bd7b");
-    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let cursor = Cursor::new(bytes);
+    let frame = Frame::from_reader(cursor).unwrap();
     let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Comm-B, Altitude Reply
@@ -862,7 +908,8 @@ fn test_issue_14() {
 #[test]
 fn test_issue_09() {
     let bytes = hex!("a00017b010030a80f60000a0fc1e");
-    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let cursor = Cursor::new(bytes);
+    let frame = Frame::from_reader(cursor).unwrap();
     let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Comm-B, Altitude Reply
@@ -874,7 +921,8 @@ fn test_issue_09() {
     );
 
     let bytes = hex!("a000179f0000000000000019a524");
-    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let cursor = Cursor::new(bytes);
+    let frame = Frame::from_reader(cursor).unwrap();
     let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Comm-B, Altitude Reply
@@ -889,7 +937,8 @@ fn test_issue_09() {
 #[test]
 fn test_issue_16() {
     let bytes = hex!("a227ed3417826515bebd01707629");
-    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let cursor = Cursor::new(bytes);
+    let frame = Frame::from_reader(cursor).unwrap();
     let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Comm-B, Altitude Reply
@@ -904,7 +953,8 @@ fn test_issue_16() {
 #[test]
 fn test_operational_coordination() {
     let bytes = hex!("9143e8eef79baeeacca522b044bf");
-    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let cursor = Cursor::new(bytes);
+    let frame = Frame::from_reader(cursor).unwrap();
     let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Extended Squitter (Non-Transponder) Aircraft Operational Coordination
@@ -917,7 +967,8 @@ fn test_operational_coordination() {
 #[test]
 fn test_issue_25() {
     let bytes = hex!("92479249fcb22e16fbdc3bac5b56");
-    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let cursor = Cursor::new(bytes);
+    let frame = Frame::from_reader(cursor).unwrap();
     let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Extended Squitter (Non-Transponder) Aircraft operational status (reserved)
@@ -930,7 +981,8 @@ fn test_issue_25() {
 #[test]
 fn test_issue_22() {
     let bytes = hex!("911c059d9805a452cf109f64924f");
-    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let cursor = Cursor::new(bytes);
+    let frame = Frame::from_reader(cursor).unwrap();
     let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Extended Squitter (Non-Transponder) Airborne Velocity status (reserved)
@@ -943,7 +995,8 @@ fn test_issue_22() {
 #[test]
 fn test_df17_error() {
     let bytes = hex!("8da04e60ea3ab860015f889746a9");
-    let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+    let cursor = Cursor::new(bytes);
+    let frame = Frame::from_reader(cursor).unwrap();
     let resulting_string = format!("{frame}");
     assert_eq!(
         r#" Extended Squitter Target state and status (V2)

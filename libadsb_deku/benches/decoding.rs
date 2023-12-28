@@ -1,5 +1,6 @@
+use std::io::Cursor;
+
 use adsb_deku::cpr::get_position;
-use adsb_deku::deku::prelude::*;
 use adsb_deku::{Altitude, CPRFormat, Frame};
 use criterion::{criterion_group, criterion_main, Criterion};
 
@@ -47,7 +48,8 @@ fn lax_message() {
         let hex = &mut line.to_string()[1..len - 1].to_string();
         let bytes = hex::decode(&hex).unwrap();
         // test non panic decode
-        let _frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+        let cursor = Cursor::new(bytes);
+        let _frame = Frame::from_reader(cursor).unwrap();
     }
 }
 
