@@ -15,7 +15,7 @@ use deku::prelude::*;
 use crate::aircraft_identification_read;
 
 #[derive(Debug, PartialEq, Eq, DekuRead, Clone)]
-#[deku(type = "u8")]
+#[deku(id_type = "u8")]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum BDS {
     /// (1, 0) Table A-2-16
