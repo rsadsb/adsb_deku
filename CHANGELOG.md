@@ -6,6 +6,9 @@ Libraries are released without a new release date within this changelog,
 since this pertains to binary (package) releases.
 
 ## [Package Unreleased]
+### radar / 1090 Unreleased
+- Bump dependancy `ratatui` to `0.26.0```
+
 ## [2023-11-22]
 ### radar / 1090 v0.6.3
 - Bump dependancy `libm` to `0.2.8`
