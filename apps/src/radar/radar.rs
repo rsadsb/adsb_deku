@@ -43,7 +43,7 @@ use ratatui::style::{Color, Style};
 use ratatui::symbols::DOT;
 use ratatui::text::Span;
 use ratatui::widgets::canvas::{Line, Points};
-use ratatui::widgets::{Block, Borders, Paragraph, TableState, Tabs};
+use ratatui::widgets::{Block, Paragraph, TableState, Tabs};
 use ratatui::Terminal;
 use rsadsb_common::{AirplaneDetails, Airplanes};
 use time::UtcOffset;
@@ -732,11 +732,10 @@ fn draw(
 
             let tab = Tabs::new(titles)
                 .block(
-                    Block::default()
+                    Block::bordered()
                         .title(format!(
                             "rsadsb/radar(v{version}) - ({lat:.DEFAULT_PRECISION$},{long:.DEFAULT_PRECISION$}) {view_type}"
                         ))
-                        .borders(Borders::ALL),
                 )
                 .style(Style::default().fg(Color::White))
                 .highlight_style(Style::default().fg(Color::Green))
@@ -797,13 +796,13 @@ fn draw_bottom_chunks(
             ])
             .split(bottom_chunks[0]);
 
-        let block01 = Block::default().title("Zoom Out").borders(Borders::ALL);
+        let block01 = Block::bordered().title("Zoom Out");
         f.render_widget(block01, touchscreen_chunks[0]);
 
-        let block02 = Block::default().title("Zoom In").borders(Borders::ALL);
+        let block02 = Block::bordered().title("Zoom In");
         f.render_widget(block02, touchscreen_chunks[1]);
 
-        let block03 = Block::default().title("Reset").borders(Borders::ALL);
+        let block03 = Block::bordered().title("Reset");
         f.render_widget(block03, touchscreen_chunks[2]);
 
         Some(touchscreen_chunks.to_vec())

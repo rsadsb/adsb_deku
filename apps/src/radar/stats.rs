@@ -3,7 +3,7 @@ use std::time::SystemTime;
 use adsb_deku::ICAO;
 use ratatui::layout::{Constraint, Rect};
 use ratatui::style::{Color, Style};
-use ratatui::widgets::{Block, Borders, Row, Table};
+use ratatui::widgets::{Block, Row, Table};
 use rsadsb_common::{Added, AirplaneCoor, Airplanes};
 use tracing::info;
 
@@ -92,11 +92,11 @@ pub fn build_tab_stats(
     rows.push(Row::new(vec!["Total Airplanes", "All Time", &total_airplanes_s]));
 
     // draw table
-    let table = Table::new(rows)
+    let widths = &[Constraint::Length(16), Constraint::Length(15), Constraint::Length(200)];
+    let table = Table::new(rows, widths)
         .style(Style::default().fg(Color::White))
         .header(Row::new(vec!["Type", "DateTime", "Value"]).bottom_margin(1))
-        .block(Block::default().title("Stats").borders(Borders::ALL))
-        .widths(&[Constraint::Length(16), Constraint::Length(15), Constraint::Length(200)])
+        .block(Block::bordered().title("Stats"))
         .column_spacing(1);
     f.render_widget(table, chunks[1]);
 }

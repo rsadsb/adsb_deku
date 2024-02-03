@@ -2,7 +2,7 @@ use ratatui::layout::Rect;
 use ratatui::style::{Color, Style};
 use ratatui::text::Span;
 use ratatui::widgets::canvas::{Canvas, Line, Points};
-use ratatui::widgets::{Block, Borders};
+use ratatui::widgets::Block;
 use rsadsb_common::{AirplaneDetails, Airplanes};
 
 use crate::{draw_lines, draw_locations, Settings, DEFAULT_PRECISION, MAX_PLOT_HIGH, MAX_PLOT_LOW};
@@ -15,7 +15,7 @@ pub fn build_tab_map(
     adsb_airplanes: &Airplanes,
 ) {
     let canvas = Canvas::default()
-        .block(Block::default().title("Map").borders(Borders::ALL))
+        .block(Block::bordered().title("Map"))
         .x_bounds([MAX_PLOT_LOW, MAX_PLOT_HIGH])
         .y_bounds([MAX_PLOT_LOW, MAX_PLOT_HIGH])
         .paint(|ctx| {
