@@ -27,4 +27,4 @@ tracing-appender = "0.2.3"
 anyhow = { version = "1.0", features = ["backtrace"] }
 csv = { version = "1.3" }
 serde = { version = "1.0", features = ["derive"] }
-time = { version = "0.3.34", features = ["local-offset"] }
+time = { version = "0.3.35", features = ["local-offset"] }
