@@ -21,12 +21,11 @@ mod help;
 use crate::help::build_tab_help;
 
 mod airplanes;
-use std::io::{self, BufRead, BufReader, BufWriter};
+use std::io::{self, BufRead, BufReader, BufWriter, Cursor};
 use std::net::{SocketAddr, TcpStream};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
-use adsb_deku::deku::DekuContainerRead;
 use adsb_deku::{Frame, ICAO};
 use anyhow::{Context, Result};
 use clap::Parser;
@@ -43,7 +42,7 @@ use ratatui::style::{Color, Style};
 use ratatui::symbols::DOT;
 use ratatui::text::Span;
 use ratatui::widgets::canvas::{Line, Points};
-use ratatui::widgets::{Block, Paragraph, TableState, Tabs};
+use ratatui::widgets::{Block, Borders, Paragraph, TableState, Tabs};
 use ratatui::Terminal;
 use rsadsb_common::{AirplaneDetails, Airplanes};
 use time::UtcOffset;
@@ -386,18 +385,16 @@ fn main() -> Result<()> {
             };
             if df_adsb {
                 // parse the entire DF frame
-                let frame = Frame::from_bytes((&bytes, 0));
+                let cursor = Cursor::new(bytes);
+                let frame = Frame::from_reader(cursor);
                 match frame {
-                    Ok((left_over, frame)) => {
+                    Ok(frame) => {
                         debug!("ADS-B Frame: {frame}");
                         let airplane_added = adsb_airplanes.action(
                             frame,
                             (settings.lat, settings.long),
                             settings.opts.max_range,
                         );
-                        if left_over.1 != 0 {
-                            error!("{left_over:x?}");
-                        }
                         // update stats
                         stats.update(&adsb_airplanes, airplane_added);
                     }
@@ -732,10 +729,11 @@ fn draw(
 
             let tab = Tabs::new(titles)
                 .block(
-                    Block::bordered()
+                    Block::default()
                         .title(format!(
                             "rsadsb/radar(v{version}) - ({lat:.DEFAULT_PRECISION$},{long:.DEFAULT_PRECISION$}) {view_type}"
                         ))
+                        .borders(Borders::ALL),
                 )
                 .style(Style::default().fg(Color::White))
                 .highlight_style(Style::default().fg(Color::Green))
@@ -796,13 +794,13 @@ fn draw_bottom_chunks(
             ])
             .split(bottom_chunks[0]);
 
-        let block01 = Block::bordered().title("Zoom Out");
+        let block01 = Block::default().title("Zoom Out").borders(Borders::ALL);
         f.render_widget(block01, touchscreen_chunks[0]);
 
-        let block02 = Block::bordered().title("Zoom In");
+        let block02 = Block::default().title("Zoom In").borders(Borders::ALL);
         f.render_widget(block02, touchscreen_chunks[1]);
 
-        let block03 = Block::bordered().title("Reset");
+        let block03 = Block::default().title("Reset").borders(Borders::ALL);
         f.render_widget(block03, touchscreen_chunks[2]);
 
         Some(touchscreen_chunks.to_vec())

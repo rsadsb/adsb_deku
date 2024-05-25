@@ -1,6 +1,6 @@
 use ratatui::layout::{Constraint, Rect};
 use ratatui::style::{Color, Modifier, Style};
-use ratatui::widgets::{Block, Row, Table, TableState};
+use ratatui::widgets::{Block, Borders, Row, Table, TableState};
 use rsadsb_common::{AirplaneDetails, Airplanes};
 
 use crate::DEFAULT_PRECISION;
@@ -57,19 +57,7 @@ pub fn build_tab_airplanes(
     }
 
     // draw table
-    let widths = &[
-        Constraint::Length(6),
-        Constraint::Length(9),
-        Constraint::Length(7),
-        Constraint::Length(7),
-        Constraint::Length(7),
-        Constraint::Length(8),
-        Constraint::Length(6),
-        Constraint::Length(5),
-        Constraint::Length(8),
-        Constraint::Length(6),
-    ];
-    let table = Table::new(rows, widths)
+    let table = Table::new(rows)
         .style(Style::default().fg(Color::White))
         .header(
             Row::new(vec![
@@ -86,7 +74,19 @@ pub fn build_tab_airplanes(
             ])
             .bottom_margin(1),
         )
-        .block(Block::bordered().title(format!("Airplanes({rows_len})")))
+        .block(Block::default().title(format!("Airplanes({rows_len})")).borders(Borders::ALL))
+        .widths(&[
+            Constraint::Length(6),
+            Constraint::Length(9),
+            Constraint::Length(7),
+            Constraint::Length(7),
+            Constraint::Length(7),
+            Constraint::Length(8),
+            Constraint::Length(6),
+            Constraint::Length(5),
+            Constraint::Length(8),
+            Constraint::Length(6),
+        ])
         .column_spacing(1)
         .highlight_style(Style::default().add_modifier(Modifier::BOLD))
         .highlight_symbol(">> ");

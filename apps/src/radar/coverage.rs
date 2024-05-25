@@ -3,7 +3,7 @@ use adsb_deku::ICAO;
 use ratatui::layout::Rect;
 use ratatui::style::Color;
 use ratatui::widgets::canvas::{Canvas, Points};
-use ratatui::widgets::Block;
+use ratatui::widgets::{Block, Borders};
 use rsadsb_common::Airplanes;
 
 use crate::{draw_locations, Settings, MAX_PLOT_HIGH, MAX_PLOT_LOW};
@@ -69,7 +69,7 @@ pub fn build_tab_coverage(
     coverage_airplanes: &[(f64, f64, u32, ICAO)],
 ) {
     let canvas = Canvas::default()
-        .block(Block::bordered().title("Coverage"))
+        .block(Block::default().title("Coverage").borders(Borders::ALL))
         .x_bounds([MAX_PLOT_LOW, MAX_PLOT_HIGH])
         .y_bounds([MAX_PLOT_LOW, MAX_PLOT_HIGH])
         .paint(|ctx| {

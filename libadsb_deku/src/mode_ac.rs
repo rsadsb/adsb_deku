@@ -50,13 +50,13 @@ pub(crate) fn decode_id13_field(id13_field: u32) -> u32 {
     hex_gillham
 }
 
-pub(crate) fn mode_a_to_mode_c(mode_a: u32) -> result::Result<u32, &'static str> {
+pub(crate) fn mode_a_to_mode_c(mode_a: u32) -> result::Result<i32, &'static str> {
     let mut five_hundreds: u32 = 0;
     let mut one_hundreds: u32 = 0;
 
     // check zero bits are zero, D1 set is illegal; C1,,C4 cannot be Zero
     if (mode_a & 0xffff_8889) != 0 || (mode_a & 0x0000_00f0) == 0 {
-        return Err("Invalid altitude");
+        return Err("Invalid altitude, zero bits aren't zero or C1,,C4 is 0");
     }
 
     if mode_a & 0x0010 != 0 {
@@ -76,7 +76,7 @@ pub(crate) fn mode_a_to_mode_c(mode_a: u32) -> result::Result<u32, &'static str>
 
     // Check for invalid codes, only 1 to 5 are valid
     if one_hundreds > 5 {
-        return Err("Invalid altitude");
+        return Err("Invalid altitude : Only 1 to 5 are valid");
     }
 
     // if mode_a & 0x0001 {five_hundreds ^= 0x1FF;} // D1 never used for altitude
@@ -112,10 +112,5 @@ pub(crate) fn mode_a_to_mode_c(mode_a: u32) -> result::Result<u32, &'static str>
         one_hundreds = 6 - one_hundreds;
     }
 
-    let n = (five_hundreds * 5) + one_hundreds;
-    if n >= 13 {
-        Ok(n - 13)
-    } else {
-        Err("Invalid altitude")
-    }
+    Ok((five_hundreds as i32 * 5) + one_hundreds as i32 - 13)
 }

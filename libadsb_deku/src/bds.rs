@@ -3,9 +3,11 @@
 use alloc::format;
 use alloc::string::String;
 #[cfg(feature = "alloc")]
+use alloc::vec;
+#[cfg(feature = "alloc")]
 use core::{
-    clone::Clone, cmp::PartialEq, fmt, fmt::Debug, prelude::rust_2021::derive, result::Result,
-    result::Result::Ok, writeln,
+    clone::Clone, cmp::PartialEq, fmt, fmt::Debug, prelude::rust_2021::derive, result::Result::Ok,
+    writeln,
 };
 
 use deku::prelude::*;
@@ -13,7 +15,7 @@ use deku::prelude::*;
 use crate::aircraft_identification_read;
 
 #[derive(Debug, PartialEq, Eq, DekuRead, Clone)]
-#[deku(type = "u8", bits = "8")]
+#[deku(id_type = "u8")]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum BDS {
     /// (1, 0) Table A-2-16
@@ -26,10 +28,10 @@ pub enum BDS {
 
     /// (2, 0) Table A-2-32
     #[deku(id = "0x20")]
-    AircraftIdentification(#[deku(reader = "aircraft_identification_read(deku::rest)")] String),
+    AircraftIdentification(#[deku(reader = "aircraft_identification_read(deku::reader)")] String),
 
     #[deku(id_pat = "_")]
-    Unknown([u8; 6]),
+    Unknown { id: u8, value: [u8; 5] },
 }
 
 impl fmt::Display for BDS {
@@ -45,7 +47,7 @@ impl fmt::Display for BDS {
             Self::DataLinkCapability(_) => {
                 writeln!(f, "Comm-B format: BDS1,0 Datalink capabilities")?;
             }
-            Self::Unknown(_) => {
+            Self::Unknown { id: _, value: _ } => {
                 writeln!(f, "Comm-B format: unknown format")?;
             }
         }
@@ -57,32 +59,32 @@ impl fmt::Display for BDS {
 #[derive(Debug, PartialEq, Eq, DekuRead, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct DataLinkCapability {
-    #[deku(bits = "1")]
+    #[deku(bits = 1)]
     #[deku(pad_bits_after = "5")] // reserved
     pub continuation_flag: bool,
-    #[deku(bits = "1")]
+    #[deku(bits = 1)]
     pub overlay_command_capability: bool,
-    #[deku(bits = "1")]
+    #[deku(bits = 1)]
     pub acas: bool,
-    #[deku(bits = "7")]
+    #[deku(bits = 7)]
     pub mode_s_subnetwork_version_number: u8,
-    #[deku(bits = "1")]
+    #[deku(bits = 1)]
     pub transponder_enhanced_protocol_indicator: bool,
-    #[deku(bits = "1")]
+    #[deku(bits = 1)]
     pub mode_s_specific_services_capability: bool,
-    #[deku(bits = "3")]
+    #[deku(bits = 3)]
     pub uplink_elm_average_throughput_capability: u8,
-    #[deku(bits = "4")]
+    #[deku(bits = 4)]
     pub downlink_elm: u8,
-    #[deku(bits = "1")]
+    #[deku(bits = 1)]
     pub aircraft_identification_capability: bool,
-    #[deku(bits = "1")]
+    #[deku(bits = 1)]
     pub squitter_capability_subfield: bool,
-    #[deku(bits = "1")]
+    #[deku(bits = 1)]
     pub surveillance_identifier_code: bool,
-    #[deku(bits = "1")]
+    #[deku(bits = 1)]
     pub common_usage_gicb_capability_report: bool,
-    #[deku(bits = "4")]
+    #[deku(bits = 4)]
     pub reserved_acas: u8,
     pub bit_array: u16,
 }

@@ -271,6 +271,7 @@ pub fn modes_checksum(message: &[u8], bits: usize) -> result::Result<u32, DekuEr
     let mut rem: u32 = 0;
     let n = bits / 8;
 
+    log::trace!("{message:02x?}");
     if (n < 3) || (message.len() < n) {
         return Err(DekuError::Incomplete(NeedSize::new(4)));
     }

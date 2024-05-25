@@ -17,9 +17,11 @@ std = ["deku/std", "alloc"]
 alloc = ["deku/alloc"]
 
 [dependencies]
-deku = { version = "0.16", default-features = false }
+deku = { version = "0.17.0", default-features = false }
 serde = { version = "1.0", features = ["derive"], optional = true }
 libm = "0.2.8"
+env_logger = "*"
+log = "*"
 
 [dev-dependencies]
 hex = "0.4"

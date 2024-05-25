@@ -53,10 +53,9 @@ struct and then executing the `fmt::Display` Trait for display of information.
 ```rust
 use hexlit::hex;
 use adsb_deku::Frame;
-use adsb_deku::deku::DekuContainerRead;
 
 let bytes = hex!("8da2c1bd587ba2adb31799cb802b");
-let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+let frame = Frame::from_reader(bytes.as_ref()).unwrap();
 assert_eq!(
         r#" Extended Squitter Airborne position (barometric altitude)
   Address:       a2c1bd (Mode S / ADS-B)
@@ -101,11 +100,11 @@ This library is also fuzzed, ensuring no panic when parsing from demodulated byt
 
 ## Benchmark
 Benchmarking is done against a file containing `215606` ADS-B messages: [lax-messages.txt](tests/lax-messages.txt).
-Quick math `(215606 / 692.80)` says the average speed of decoding is `~311.21 ms` a message.
+Quick math `(215606 / 1000.00)` says the average speed of decoding is `~215.6 ms` a message.
 A `~3%` speedup can be gained on some systems by using  `RUSTFLAGS="-C target-cpu=native"`
 ```text
 > cargo bench
-lax_messsages           time:   [680.70 ms 692.82 ms 704.99 ms]
+lax_messsages           time:   [1.0625 s 1.0665 s 1.0708 s]
 ```
 
 ## Derivation
