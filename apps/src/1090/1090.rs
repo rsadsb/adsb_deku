@@ -1,7 +1,6 @@
-use std::io::{BufRead, BufReader};
+use std::io::{BufRead, BufReader, Cursor};
 use std::net::TcpStream;
 
-use adsb_deku::deku::DekuContainerRead;
 use adsb_deku::Frame;
 use clap::Parser;
 
@@ -22,7 +21,7 @@ struct Options {
     /// Panic on adsb_deku::Frame::fmt::Display not implemented
     #[arg(long)]
     panic_display: bool,
-    /// Panic on adsb_deku::Frame::from_bytes() error
+    /// Panic on adsb_deku::Frame::from_reader() error
     #[arg(long)]
     panic_decode: bool,
     /// Display debug of adsb::Frame
@@ -58,8 +57,9 @@ fn main() {
             }
 
             // decode
-            match Frame::from_bytes((&bytes, 0)) {
-                Ok((_, frame)) => {
+            let cursor = Cursor::new(bytes);
+            match Frame::from_reader(cursor) {
+                Ok(frame) => {
                     if options.debug {
                         println!("{frame:#?}");
                     }

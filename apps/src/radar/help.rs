@@ -1,6 +1,6 @@
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::style::{Color, Style};
-use ratatui::widgets::{Block, Row, Table};
+use ratatui::widgets::{Block, Borders, Row, Table};
 
 /// Render Help tab for tui display
 pub fn build_tab_help(f: &mut ratatui::Frame, chunks: &[Rect]) {
@@ -40,12 +40,12 @@ pub fn build_tab_help(f: &mut ratatui::Frame, chunks: &[Rect]) {
         Row::new(vec!["q", "Quit this app"]),
         Row::new(vec!["ctrl+c", "Quit this app"]),
     ];
-    let widths = &[Constraint::Percentage(10), Constraint::Percentage(90)];
-    let table = Table::new(rows, widths)
+    let table = Table::new(rows)
         .style(Style::default().fg(Color::White))
         .header(Row::new(vec!["Key", "Action"]).bottom_margin(1))
+        .widths(&[Constraint::Percentage(10), Constraint::Percentage(90)])
         .column_spacing(1)
-        .block(Block::bordered().title("Key Bindings - Any Tab"));
+        .block(Block::default().title("Key Bindings - Any Tab").borders(Borders::ALL));
     f.render_widget(table, vertical_chunks[1]);
 
     // Second help section
@@ -58,11 +58,12 @@ pub fn build_tab_help(f: &mut ratatui::Frame, chunks: &[Rect]) {
         Row::new(vec!["Right", "Move map right"]),
         Row::new(vec!["Enter", "Map position reset"]),
     ];
-    let table = Table::new(rows, widths)
+    let table = Table::new(rows)
         .style(Style::default().fg(Color::White))
         .header(Row::new(vec!["Key", "Action"]).bottom_margin(1))
+        .widths(&[Constraint::Percentage(10), Constraint::Percentage(90)])
         .column_spacing(1)
-        .block(Block::bordered().title("Key Bindings - Map or Coverage"));
+        .block(Block::default().title("Key Bindings - Map or Coverage").borders(Borders::ALL));
     f.render_widget(table, vertical_chunks[2]);
 
     // Third help section
@@ -71,10 +72,11 @@ pub fn build_tab_help(f: &mut ratatui::Frame, chunks: &[Rect]) {
         Row::new(vec!["Down", "Move selection downward"]),
         Row::new(vec!["Enter", "Center Map tab on selected aircraft"]),
     ];
-    let table = Table::new(rows, widths)
+    let table = Table::new(rows)
         .style(Style::default().fg(Color::White))
         .header(Row::new(vec!["Key", "Action"]).bottom_margin(1))
+        .widths(&[Constraint::Percentage(10), Constraint::Percentage(90)])
         .column_spacing(1)
-        .block(Block::bordered().title("Key Bindings - Airplanes"));
+        .block(Block::default().title("Key Bindings - Airplanes").borders(Borders::ALL));
     f.render_widget(table, vertical_chunks[3]);
 }
