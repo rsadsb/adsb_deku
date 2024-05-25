@@ -7,6 +7,7 @@ since this pertains to binary (package) releases.
 
 ## [Package Unreleased]
 ### radar / 1090 Unreleased
+- MSRV is now `1.71.0`
 - Bump dependancy `ratatui` to `0.26.0`
 - Bump dependancy `deku` to `0.17.0`
 
