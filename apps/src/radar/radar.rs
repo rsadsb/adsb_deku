@@ -365,7 +365,7 @@ fn main() -> Result<()> {
             // convert from string hex -> bytes
             let hex = &mut input.to_string()[1..len - 2].to_string();
             debug!("bytes: {hex}");
-            let bytes = if let Ok(bytes) = hex::decode(&hex) {
+            let bytes = if let Ok(bytes) = hex::decode(hex) {
                 bytes
             } else {
                 continue;
