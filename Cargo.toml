@@ -4,7 +4,7 @@ exclude = ["ensure_no_std"]
 resolver = "2"
 
 [workspace.package]
-rust-version = "1.70.0"
+rust-version = "1.74.0"
 license = "MIT"
 edition = "2021"
 
