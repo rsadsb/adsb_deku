@@ -2,6 +2,7 @@ use std::fs::File;
 
 use serde::Deserialize;
 
+#[allow(dead_code)]
 #[derive(Clone, Debug, Deserialize)]
 pub struct Airport {
     pub icao: String,
