@@ -122,24 +122,49 @@ impl Airplanes {
     /// Return true if entry was added into `Airplanes`
     pub fn action(&mut self, frame: Frame, lat_long: (f64, f64), max_rang: f64) -> Added {
         let mut airplane_added = Added::No;
-        if let DF::ADSB(ref adsb) = frame.df {
-            airplane_added = match &adsb.me {
-                ME::AircraftIdentification(identification) => {
-                    self.add_identification(adsb.icao, identification)
-                }
-                ME::AirborneVelocity(vel) => self.add_airborne_velocity(adsb.icao, vel),
-                ME::AirbornePositionGNSSAltitude(altitude)
-                | ME::AirbornePositionBaroAltitude(altitude) => {
-                    self.add_altitude(adsb.icao, altitude, lat_long, max_rang)
-                }
-                _ => Added::No,
-            };
-            let incr_airplane_added = self.incr_messages(adsb.icao);
-            airplane_added = if incr_airplane_added == Added::Yes || airplane_added == Added::Yes {
-                Added::Yes
-            } else {
-                Added::No
-            };
+        match frame.df {
+            DF::ADSB(ref adsb) => {
+                airplane_added = match &adsb.me {
+                    ME::AircraftIdentification(identification) => {
+                        self.add_identification(adsb.icao, identification)
+                    }
+                    ME::AirborneVelocity(vel) => self.add_airborne_velocity(adsb.icao, vel),
+                    ME::AirbornePositionGNSSAltitude(altitude)
+                    | ME::AirbornePositionBaroAltitude(altitude) => {
+                        self.update_position(adsb.icao, altitude, lat_long, max_rang)
+                    }
+                    _ => Added::No,
+                };
+                let incr_airplane_added = self.incr_messages(adsb.icao);
+                airplane_added =
+                    if incr_airplane_added == Added::Yes || airplane_added == Added::Yes {
+                        Added::Yes
+                    } else {
+                        Added::No
+                    };
+            }
+            DF::TisB { cf, pi } => {
+                info!("TISB: {cf:?}, {pi:?}");
+                airplane_added = match cf.me {
+                    ME::AircraftIdentification(identification) => {
+                        self.add_identification(pi, &identification)
+                    }
+                    ME::AirborneVelocity(vel) => self.add_airborne_velocity(pi, &vel),
+                    ME::AirbornePositionGNSSAltitude(altitude)
+                    | ME::AirbornePositionBaroAltitude(altitude) => {
+                        self.update_position(pi, &altitude, lat_long, max_rang)
+                    }
+                    _ => Added::No,
+                };
+                let incr_airplane_added = self.incr_messages(pi);
+                airplane_added =
+                    if incr_airplane_added == Added::Yes || airplane_added == Added::Yes {
+                        Added::Yes
+                    } else {
+                        Added::No
+                    };
+            }
+            _ => (),
         }
 
         airplane_added
@@ -263,7 +288,7 @@ impl Airplanes {
     /// update from `ME::AirbornePosition{GNSSAltitude, BaroAltitude}`
     ///
     /// Return true if entry was added into `Airplanes`
-    fn add_altitude(
+    fn update_position(
         &mut self,
         icao: ICAO,
         altitude: &Altitude,
@@ -272,7 +297,7 @@ impl Airplanes {
     ) -> Added {
         let (state, airplane_added) = self.entry_or_insert(icao);
         info!(
-            "[{icao}] with altitude: {:?}, cpr lat: {}, cpr long: {}",
+            "[{icao}] with: {:?}, cpr lat: {}, cpr long: {}",
             altitude.alt, altitude.lat_cpr, altitude.lon_cpr
         );
         let mut temp_coords = match altitude.odd_flag {
