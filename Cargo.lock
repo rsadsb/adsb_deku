@@ -411,8 +411,24 @@ dependencies = [
  "bitflags",
  "crossterm_winapi",
  "libc",
- "mio",
+ "mio 0.8.11",
  "parking_lot",
+ "signal-hook",
+ "signal-hook-mio",
+ "winapi",
+]
+
+[[package]]
+name = "crossterm"
+version = "0.28.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "11b0533cb6d95d1301523bfa592dd15a501323a026fcb12a0cd720a2291470d1"
+dependencies = [
+ "bitflags",
+ "crossterm_winapi",
+ "mio 1.0.1",
+ "parking_lot",
+ "rustix",
  "signal-hook",
  "signal-hook-mio",
  "winapi",
@@ -855,6 +871,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "mio"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4569e456d394deccd22ce1c1913e6ea0e54519f577285001215d33557431afe4"
+dependencies = [
+ "hermit-abi",
+ "libc",
+ "log",
+ "wasi",
+ "windows-sys 0.52.0",
+]
+
+[[package]]
 name = "nu-ansi-term"
 version = "0.46.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1027,7 +1056,7 @@ dependencies = [
  "bitflags",
  "cassowary",
  "compact_str",
- "crossterm",
+ "crossterm 0.27.0",
  "itertools 0.12.1",
  "lru",
  "paste",
@@ -1118,7 +1147,7 @@ dependencies = [
  "adsb_deku",
  "anyhow",
  "clap",
- "crossterm",
+ "crossterm 0.28.0",
  "csv",
  "gpsd_proto",
  "hex",
@@ -1270,12 +1299,13 @@ dependencies = [
 
 [[package]]
 name = "signal-hook-mio"
-version = "0.2.3"
+version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "29ad2e15f37ec9a6cc544097b78a1ec90001e9f71b81338ca39f430adaca99af"
+checksum = "34db1a06d485c9142248b7a054f034b349b212551f3dfd19c94d45a754a217cd"
 dependencies = [
  "libc",
- "mio",
+ "mio 0.8.11",
+ "mio 1.0.1",
  "signal-hook",
 ]
 
