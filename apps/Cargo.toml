@@ -17,7 +17,7 @@ path = "src/1090/1090.rs"
 adsb_deku = { path = "../libadsb_deku" }
 rsadsb_common = { path = "../rsadsb_common" }
 hex = "0.4.0"
-crossterm = "0.27.0"
+crossterm = "0.28.1"
 clap = { version = "4.5.13", features = ["color", "derive", "wrap_help"] }
 ratatui = "0.27.0"
 gpsd_proto = "1.0.0"
