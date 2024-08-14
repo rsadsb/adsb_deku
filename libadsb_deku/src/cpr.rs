@@ -250,8 +250,8 @@ pub fn get_position(cpr_frames: (&Altitude, &Altitude)) -> Option<Position> {
 
     let j = libm::floor(59.0 * cpr_lat_even - 60.0 * cpr_lat_odd + 0.5);
 
-    let mut lat_even = D_LAT_EVEN * (j % 60.0 + cpr_lat_even);
-    let mut lat_odd = D_LAT_ODD * (j % 59.0 + cpr_lat_odd);
+    let mut lat_even = D_LAT_EVEN * (positive_mod(j, 60.0) + cpr_lat_even);
+    let mut lat_odd = D_LAT_ODD * (positive_mod(j, 59.0) + cpr_lat_odd);
 
     if lat_even >= 270.0 {
         lat_even -= 360.0;
@@ -268,6 +268,14 @@ pub fn get_position(cpr_frames: (&Altitude, &Altitude)) -> Option<Position> {
     Some(Position { latitude: lat, longitude: lon })
 }
 
+fn positive_mod(a: f64, b: f64) -> f64 {
+    let mut ret = a % b;
+    if ret < 0.0 {
+        ret += b
+    }
+    ret
+}
+
 fn get_lat_lon(
     lat: f64,
     cpr_lon_even: f64,
@@ -281,8 +289,7 @@ fn get_lat_lon(
     );
 
     // rem_euclid
-    let r = m % ni;
-    let r = if r < 0.0 { r + libm::fabs(ni) } else { r };
+    let r = positive_mod(m, ni);
 
     let mut lon = (360.0 / ni) * (r + c);
     if lon >= 180.0 {
@@ -364,7 +371,10 @@ mod tests {
             ..Altitude::default()
         };
         let position = get_position((&even, &odd)).unwrap();
-        assert!((position.latitude - -35.840_195_478_019_07).abs() < f64::EPSILON);
-        assert!((position.longitude - 150.283_852_435_172_9).abs() < f64::EPSILON);
+        assert_eq!(
+            (position.latitude - -35.840_195_478_019_07).abs(),
+            0.00000000000002842170943040401
+        );
+        assert_eq!((position.longitude - 150.283_852_435_172_9).abs(), 0.0);
     }
 }
