@@ -6,12 +6,17 @@ Libraries are released without a new release date within this changelog,
 since this pertains to binary (package) releases.
 
 ## [Package Unreleased]
-### radar / 1090
-- Bump dependancy `ratatui` to `0.26.0```
+
+## [2024-09-02]
+### radar / 1090 v0.7.0
+- Bump dependancy `ratatui` to `0.27.0```
 - Bumped MSRV to `1.74.0`
-### rsadsb_common
+### rsadsb_common v0.7.0
+- Rename `add_position` to `update_position`
+- Add `DF::TisB` to update_position
 - Bumped MSRV to `1.74.0`
-### adsb_deku
+### adsb_deku v0.7.1
+- Fix cpr calculations by forcing mod operation to be positive
 - Bumped MSRV to `1.74.0`
 
 ## [2023-11-22]

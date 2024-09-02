@@ -1,6 +1,6 @@
 [package]
 name = "rsadsb_apps"
-version = "0.6.3"
+version = "0.7.0"
 rust-version.workspace = true
 license.workspace = true
 edition.workspace = true
