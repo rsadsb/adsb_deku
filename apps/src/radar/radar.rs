@@ -492,7 +492,7 @@ fn init_tcp_reader(
             .direction(Direction::Vertical)
             .margin(1)
             .constraints([Constraint::Min(3), Constraint::Percentage(100)].as_ref())
-            .split(f.size());
+            .split(f.area());
 
         let paragraph = Paragraph::new(format!("radar: Waiting for connection to {ip}:{port}"))
             .alignment(Alignment::Left);
@@ -712,7 +712,7 @@ fn draw(
                 .direction(Direction::Vertical)
                 .margin(1)
                 .constraints([Constraint::Min(3), Constraint::Percentage(100)].as_ref())
-                .split(f.size());
+                .split(f.area());
 
             // render tabs
             let airplane_len = format!("Airplanes({})", adsb_airplanes.len());
