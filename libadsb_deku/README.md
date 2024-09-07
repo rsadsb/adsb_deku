@@ -53,10 +53,9 @@ struct and then executing the `fmt::Display` Trait for display of information.
 ```rust
 use hexlit::hex;
 use adsb_deku::Frame;
-use adsb_deku::deku::DekuContainerRead;
 
 let bytes = hex!("8da2c1bd587ba2adb31799cb802b");
-let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+let frame = Frame::from_bytes(&bytes).unwrap();
 assert_eq!(
         r#" Extended Squitter Airborne position (barometric altitude)
   Address:       a2c1bd (Mode S / ADS-B)

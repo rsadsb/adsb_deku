@@ -19,7 +19,7 @@ See [`rsadsb.github.io`] for more details.
 | 19       | [`Extended Squitter(Military)`]     | 3.1.2.8.8   |
 | 20       | [`Comm-B Altitude Reply`]           | 3.1.2.6.6   |
 | 21       | [`Comm-B Identity Reply`]           | 3.1.2.6.8   |
-| 24       | [`Comm-D`]                          | 3.1.2.7.3   |
+| 24..=31  | [`ModeS Extended Squitter`]          | 3.1.2.7.3   |
 
 # [`Comm-B Altitude Reply`] and [`Comm-B Identity Reply`] Comm-B Support
 
@@ -48,17 +48,15 @@ See [`rsadsb.github.io`] for more details.
 | 31                  | [`ME::AircraftOperationStatus`]        |
 
 # Example
-To begin using `adsb_deku`, import the [`Frame`] struct as well as the trait [`deku::DekuContainerRead`].
-This trait is re-exported for your convenience. [`Frame::from_bytes()`] provides the interface for decoding bytes
+To begin using `adsb_deku`, import the [`Frame`] struct. [`Frame::from_bytes()`] provides the interface for decoding bytes
 into adsb data.
 
 ```rust
 use hexlit::hex;
 use adsb_deku::Frame;
-use adsb_deku::deku::DekuContainerRead;
 
 let bytes = hex!("8da2c1bd587ba2adb31799cb802b");
-let frame = Frame::from_bytes((&bytes, 0)).unwrap().1;
+let frame = Frame::from_bytes(&bytes).unwrap();
 assert_eq!(
         r#" Extended Squitter Airborne position (barometric altitude)
   Address:       a2c1bd (Mode S / ADS-B)
@@ -90,7 +88,7 @@ different `adsb_deku` uses. See the [`README.md`] for examples of use.
 [`Extended Squitter(Military)`]: crate::DF::ExtendedQuitterMilitaryApplication
 [`Comm-B Altitude Reply`]: crate::DF::CommBAltitudeReply
 [`Comm-B Identity Reply`]: crate::DF::CommBIdentityReply
-[`Comm-D`]: crate::DF::CommDExtendedLengthMessage
+[`ModeS Extended Squitter`]: crate::DF::ModeSExtendedSquitter
 
 [`Empty`]: crate::bds::BDS::Empty
 [`Data Link Capability`]: crate::bds::BDS::DataLinkCapability
@@ -119,9 +117,6 @@ different `adsb_deku` uses. See the [`README.md`] for examples of use.
 // good reference: http://www.anteni.net/adsb/Doc/1090-WP30-18-DRAFT_DO-260B-V42.pdf
 //
 // Maybe always reference this in the future?
-
-/// re-export deku
-pub use deku;
 
 extern crate alloc;
 
@@ -154,26 +149,71 @@ mod readme_test {}
 
 use adsb::{ControlField, ADSB};
 use bds::BDS;
-use deku::bitvec::{BitSlice, Msb0};
+use deku::ctx::{BitSize, Endian};
+use deku::no_std_io::{Cursor, Read, Seek};
 use deku::prelude::*;
 
+/// Every read to this struct will be saved into an internal cache. This is to keep the cache
+/// around for the crc without reading from the buffer twice!
+struct ReaderCrc<R: Read + Seek> {
+    reader: R,
+    cache: Vec<u8>,
+    just_seeked: bool,
+}
+
+impl<R: Read + Seek> Read for ReaderCrc<R> {
+    fn read(&mut self, buf: &mut [u8]) -> deku::no_std_io::Result<usize> {
+        let n = self.reader.read(buf);
+        if !self.just_seeked {
+            if let Ok(n) = n {
+                self.cache.extend_from_slice(&buf[..n]);
+            }
+        }
+        self.just_seeked = false;
+        n
+    }
+}
+
+impl<R: Read + Seek> Seek for ReaderCrc<R> {
+    fn seek(&mut self, pos: deku::no_std_io::SeekFrom) -> deku::no_std_io::Result<u64> {
+        self.just_seeked = true;
+        self.reader.seek(pos)
+    }
+}
+
 /// Downlink ADS-B Packet
-#[derive(Debug, PartialEq, DekuRead, Clone)]
+#[derive(Debug)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Frame {
     /// Starting with 5 bit identifier, decode packet
     pub df: DF,
     /// Calculated from all bits, used as ICAO for Response packets
-    #[deku(reader = "Self::read_crc(df, deku::input_bits)")]
     pub crc: u32,
 }
 
 impl Frame {
+    pub fn from_bytes(buf: &[u8]) -> Result<Frame, DekuError> {
+        let cursor = Cursor::new(buf);
+        Self::from_reader(cursor)
+    }
+
+    pub fn from_reader<R: Read + Seek>(r: R) -> Result<Frame, DekuError> {
+        let mut reader_crc = ReaderCrc { reader: r, cache: vec![], just_seeked: false };
+        let mut reader = Reader::new(&mut reader_crc);
+        let df = DF::from_reader_with_ctx(&mut reader, ())?;
+
+        let crc = Self::read_crc(&df, &mut reader_crc)?;
+
+        Ok(Self { df, crc })
+    }
+}
+
+impl Frame {
     /// Read rest as CRC bits
-    fn read_crc<'b>(
+    fn read_crc<R: Read + Seek>(
         df: &DF,
-        rest: &'b BitSlice<u8, Msb0>,
-    ) -> result::Result<(&'b BitSlice<u8, Msb0>, u32), DekuError> {
+        reader: &mut ReaderCrc<R>,
+    ) -> result::Result<u32, DekuError> {
         const MODES_LONG_MSG_BYTES: usize = 14;
         const MODES_SHORT_MSG_BYTES: usize = 7;
 
@@ -188,9 +228,14 @@ impl Frame {
             MODES_LONG_MSG_BYTES * 8
         };
 
-        let (_, remaining_bytes, _) = rest.domain().region().unwrap();
-        let crc = crc::modes_checksum(remaining_bytes, bit_len)?;
-        Ok((rest, crc))
+        if bit_len > reader.cache.len() * 8 {
+            let mut buf = vec![];
+            reader.read_to_end(&mut buf).unwrap();
+            reader.cache.append(&mut buf);
+        }
+
+        let crc = crc::modes_checksum(&reader.cache, bit_len)?;
+        Ok(crc)
     }
 }
 
@@ -263,8 +308,8 @@ impl fmt::Display for Frame {
                 writeln!(f, "    Squawk:        {id:x?}")?;
                 write!(f, "    {bds}")?;
             }
-            DF::CommDExtendedLengthMessage { .. } => {
-                writeln!(f, " Comm-D Extended Length Message")?;
+            DF::ModeSExtendedSquitter { .. } => {
+                writeln!(f, " Mode S Extended Squitter Message")?;
                 writeln!(f, "    ICAO Address:     {crc:x?} (Mode S / ADS-B)")?;
             }
         }
@@ -277,7 +322,7 @@ impl fmt::Display for Frame {
 /// Starting with 5 bits, decode the rest of the message as the correct data packets
 #[derive(Debug, PartialEq, DekuRead, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[deku(type = "u8", bits = "5")]
+#[deku(id_type = "u8", bits = "5")]
 pub enum DF {
     /// 17: Extended Squitter, Downlink Format 17 (3.1.2.8.6)
     ///
@@ -413,8 +458,6 @@ pub enum DF {
         alt: AC13Field,
         /// MB Message, Comm-B
         bds: BDS,
-        /// AP: address/parity
-        parity: ICAO,
     },
 
     /// 21: COMM-B Reply, Downlink Format 21 (3.1.2.6.8)
@@ -439,21 +482,31 @@ pub enum DF {
         parity: ICAO,
     },
 
-    /// 24..=31: Comm-D(ELM), Downlink Format 24 (3.1.2.7.3)
+    /// | DF | Name                   |
+    /// | -- | -----------------------|
+    /// | 24 | Comm-B                 |
+    /// | 25 | Comm-C ELM             |
+    /// | 26 | Comm-D ELM             |
+    /// | 27 | TisB/ADS-R             |
+    /// | 28 | Reserved               |
+    /// | 29 | Reserved               |
+    /// | 30 | ACAS/TCAS(Coordination)|
+    /// | 31 | ACAS/TCAS(Resolution)  |
     #[deku(id_pat = "24..=31")]
-    CommDExtendedLengthMessage {
-        /// Spare - 1 bit
-        #[deku(bits = "1")]
-        spare: u8,
-        /// KE: control, ELM
-        ke: KE,
-        /// ND: number of D-segment
-        #[deku(bits = "4")]
-        nd: u8,
-        /// MD: message, Comm-D, 80 bits
-        #[deku(count = "10")]
-        md: Vec<u8>,
-        /// AP: address/parity
+    ModeSExtendedSquitter {
+        #[deku(bits = 5)]
+        df: u8,
+
+        /// CA: Capability
+        capability: Capability,
+        icao: ICAO,
+
+        #[deku(bits = 5)]
+        type_code: u8,
+
+        #[deku(bits = 51)]
+        adsb_data: u64,
+
         parity: ICAO,
     },
 }
@@ -467,7 +520,7 @@ pub struct Altitude {
     pub ss: SurveillanceStatus,
     #[deku(bits = "1")]
     pub saf_or_imf: u8,
-    #[deku(reader = "Self::read(deku::rest)")]
+    #[deku(reader = "Self::read(deku::reader)")]
     pub alt: Option<u16>,
     /// UTC sync or not
     #[deku(bits = "1")]
@@ -496,9 +549,8 @@ impl fmt::Display for Altitude {
 
 impl Altitude {
     /// `decodeAC12Field`
-    fn read(rest: &BitSlice<u8, Msb0>) -> Result<(&BitSlice<u8, Msb0>, Option<u16>), DekuError> {
-        let (rest, num) = u32::read(rest, (deku::ctx::Endian::Big, deku::ctx::BitSize(12)))?;
-
+    fn read<R: Read + Seek>(reader: &mut Reader<R>) -> Result<Option<u16>, DekuError> {
+        let num = u32::from_reader_with_ctx(reader, (Endian::Big, BitSize(12)))?;
         let q = num & 0x10;
 
         if q > 0 {
@@ -506,17 +558,17 @@ impl Altitude {
             let n = n * 25;
             if n > 1000 {
                 // TODO: maybe replace with Result->Option
-                Ok((rest, u16::try_from(n - 1000).ok()))
+                Ok(u16::try_from(n - 1000).ok())
             } else {
-                Ok((rest, None))
+                Ok(None)
             }
         } else {
             let mut n = ((num & 0x0fc0) << 1) | (num & 0x003f);
             n = mode_ac::decode_id13_field(n);
             if let Ok(n) = mode_ac::mode_a_to_mode_c(n) {
-                Ok((rest, u16::try_from(n * 100).ok()))
+                Ok(u16::try_from(n * 100).ok())
             } else {
-                Ok((rest, None))
+                Ok(None)
             }
         }
     }
@@ -525,7 +577,7 @@ impl Altitude {
 /// SPI Condition
 #[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[deku(type = "u8", bits = "2")]
+#[deku(id_type = "u8", bits = "2")]
 pub enum SurveillanceStatus {
     NoCondition = 0,
     PermanentAlert = 1,
@@ -542,7 +594,7 @@ impl Default for SurveillanceStatus {
 /// Even / Odd
 #[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[deku(type = "u8", bits = "1")]
+#[deku(id_type = "u8", bits = "1")]
 pub enum CPRFormat {
     Even = 0,
     Odd = 1,
@@ -570,7 +622,7 @@ impl fmt::Display for CPRFormat {
 /// Positive / Negative
 #[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[deku(type = "u8", bits = "1")]
+#[deku(id_type = "u8", bits = "1")]
 pub enum Sign {
     Positive = 0,
     Negative = 1,
@@ -602,11 +654,11 @@ impl fmt::Display for Sign {
 /// 13 bit identity code
 #[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct IdentityCode(#[deku(reader = "Self::read(deku::rest)")] pub u16);
+pub struct IdentityCode(#[deku(reader = "Self::read(deku::reader)")] pub u16);
 
 impl IdentityCode {
-    fn read(rest: &BitSlice<u8, Msb0>) -> result::Result<(&BitSlice<u8, Msb0>, u16), DekuError> {
-        let (rest, num) = u32::read(rest, (deku::ctx::Endian::Big, deku::ctx::BitSize(13)))?;
+    fn read<R: Read + Seek>(reader: &mut Reader<R>) -> result::Result<u16, DekuError> {
+        let num = u32::from_reader_with_ctx(reader, (Endian::Big, BitSize(13)))?;
 
         let c1 = (num & 0b1_0000_0000_0000) >> 12;
         let a1 = (num & 0b0_1000_0000_0000) >> 11;
@@ -627,7 +679,7 @@ impl IdentityCode {
         let d = d4 << 2 | d2 << 1 | d1;
 
         let num: u16 = (a << 12 | b << 8 | c << 4 | d) as u16;
-        Ok((rest, num))
+        Ok(num)
     }
 }
 
@@ -659,20 +711,28 @@ impl core::str::FromStr for ICAO {
 /// Type of `DownlinkRequest`
 #[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[deku(type = "u8", bits = "5")]
+#[deku(id_type = "u8", bits = "5")]
 pub enum DownlinkRequest {
-    None = 0b00000,
-    RequestSendCommB = 0b00001,
-    CommBBroadcastMsg1 = 0b00100,
-    CommBBroadcastMsg2 = 0b00101,
+    #[deku(id = 0b00000)]
+    None,
+
+    #[deku(id = 0b00001)]
+    RequestSendCommB,
+
+    #[deku(id = 0b00100)]
+    CommBBroadcastMsg1,
+
+    #[deku(id = 0b00101)]
+    CommBBroadcastMsg2,
+
     #[deku(id_pat = "_")]
-    Unknown,
+    Unknown(#[deku(bits = 5)] u8),
 }
 
 /// Uplink / Downlink
 #[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[deku(type = "u8", bits = "1")]
+#[deku(id_type = "u8", bits = "1")]
 pub enum KE {
     DownlinkELMTx = 0,
     UplinkELMAck = 1,
@@ -689,7 +749,7 @@ pub struct UtilityMessage {
 /// Message Type
 #[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[deku(type = "u8", bits = "2")]
+#[deku(id_type = "u8", bits = "2")]
 pub enum UtilityMessageType {
     NoInformation = 0b00,
     CommB = 0b01,
@@ -700,7 +760,7 @@ pub enum UtilityMessageType {
 /// Airborne / Ground and SPI
 #[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[deku(type = "u8", bits = "3")]
+#[deku(id_type = "u8", bits = "3")]
 pub enum FlightStatus {
     NoAlertNoSPIAirborne = 0b000,
     NoAlertNoSPIOnGround = 0b001,
@@ -733,34 +793,39 @@ impl fmt::Display for FlightStatus {
 /// 13 bit encoded altitude
 #[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct AC13Field(#[deku(reader = "Self::read(deku::rest)")] pub u16);
+pub struct AC13Field(#[deku(reader = "Self::read(deku::reader)")] pub u16);
 
 impl AC13Field {
     // TODO Add unit
-    fn read(rest: &BitSlice<u8, Msb0>) -> result::Result<(&BitSlice<u8, Msb0>, u16), DekuError> {
-        let (rest, num) = u32::read(rest, (deku::ctx::Endian::Big, deku::ctx::BitSize(13)))?;
+    fn read<R: Read + Seek>(reader: &mut Reader<R>) -> result::Result<u16, DekuError> {
+        let num = u16::from_reader_with_ctx(reader, (Endian::Big, BitSize(13)))?;
+
+        // Handle invalid or special codes
+        if num == 0 || num == 0b1111111111111 {
+            return Ok(0);
+        }
 
         let m_bit = num & 0x0040;
         let q_bit = num & 0x0010;
 
         if m_bit != 0 {
-            // TODO: this might be wrong?
-            Ok((rest, 0))
+            // TODO: read altitude when meter is selected
+            Ok(0)
         } else if q_bit != 0 {
             let n = ((num & 0x1f80) >> 2) | ((num & 0x0020) >> 1) | (num & 0x000f);
             let n = n * 25;
             if n > 1000 {
-                Ok((rest, (n - 1000) as u16))
+                Ok(n - 1000)
             } else {
                 // TODO: add error
-                Ok((rest, 0))
+                Ok(0)
             }
         } else {
             // TODO 11 bit gillham coded altitude
-            if let Ok(n) = mode_ac::mode_a_to_mode_c(mode_ac::decode_id13_field(num)) {
-                Ok((rest, (100 * n) as u16))
+            if let Ok(n) = mode_ac::mode_a_to_mode_c(mode_ac::decode_id13_field(num as u32)) {
+                Ok((100 * n) as u16)
             } else {
-                Ok((rest, 0))
+                Ok(0)
             }
         }
     }
@@ -769,22 +834,32 @@ impl AC13Field {
 /// Transponder level and additional information (3.1.2.5.2.2.1)
 #[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[deku(type = "u8", bits = "3")]
+#[deku(id_type = "u8", bits = "3")]
 #[allow(non_camel_case_types)]
 pub enum Capability {
     /// Level 1 transponder (surveillance only), and either airborne or on the ground
-    AG_UNCERTAIN = 0x00,
+    #[deku(id = 0x00)]
+    AG_UNCERTAIN,
+
     #[deku(id_pat = "0x01..=0x03")]
-    Reserved,
+    Reserved(#[deku(bits = 3)] u8),
+
     /// Level 2 or above transponder, on ground
-    AG_GROUND = 0x04,
+    #[deku(id = 0x04)]
+    AG_GROUND,
+
     /// Level 2 or above transponder, airborne
-    AG_AIRBORNE = 0x05,
+    #[deku(id = 0x05)]
+    AG_AIRBORNE,
+
     /// Level 2 or above transponder, either airborne or on ground
-    AG_UNCERTAIN2 = 0x06,
+    #[deku(id = 0x06)]
+    AG_UNCERTAIN2,
+
     /// DR field is not equal to 0, or fs field equal 2, 3, 4, or 5, and either airborne or on
     /// ground
-    AG_UNCERTAIN3 = 0x07,
+    #[deku(id = 0x07)]
+    AG_UNCERTAIN3,
 }
 
 impl fmt::Display for Capability {
@@ -794,7 +869,7 @@ impl fmt::Display for Capability {
             "{}",
             match self {
                 Self::AG_UNCERTAIN => "uncertain1",
-                Self::Reserved => "reserved",
+                Self::Reserved(_) => "reserved",
                 Self::AG_GROUND => "ground",
                 Self::AG_AIRBORNE => "airborne",
                 Self::AG_UNCERTAIN2 => "uncertain2",
@@ -806,20 +881,17 @@ impl fmt::Display for Capability {
 
 const CHAR_LOOKUP: &[u8; 64] = b"#ABCDEFGHIJKLMNOPQRSTUVWXYZ##### ###############0123456789######";
 
-pub(crate) fn aircraft_identification_read(
-    rest: &BitSlice<u8, Msb0>,
-) -> Result<(&BitSlice<u8, Msb0>, String), DekuError> {
-    let mut inside_rest = rest;
-
+pub(crate) fn aircraft_identification_read<R: Read + Seek>(
+    reader: &mut Reader<R>,
+) -> Result<String, DekuError> {
     let mut chars = vec![];
     for _ in 0..=6 {
-        let (for_rest, c) = <u8>::read(inside_rest, deku::ctx::BitSize(6))?;
+        let c = <u8>::from_reader_with_ctx(reader, BitSize(6))?;
         if c != 32 {
             chars.push(c);
         }
-        inside_rest = for_rest;
     }
     let encoded = chars.into_iter().map(|b| CHAR_LOOKUP[b as usize] as char).collect::<String>();
 
-    Ok((inside_rest, encoded))
+    Ok(encoded)
 }

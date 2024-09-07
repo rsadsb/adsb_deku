@@ -1,7 +1,6 @@
 use std::io::{BufRead, BufReader};
 use std::net::TcpStream;
 
-use adsb_deku::deku::DekuContainerRead;
 use adsb_deku::Frame;
 use clap::Parser;
 
@@ -58,8 +57,8 @@ fn main() {
             }
 
             // decode
-            match Frame::from_bytes((&bytes, 0)) {
-                Ok((_, frame)) => {
+            match Frame::from_bytes(&bytes) {
+                Ok(frame) => {
                     if options.debug {
                         println!("{frame:#?}");
                     }

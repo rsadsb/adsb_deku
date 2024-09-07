@@ -5,7 +5,6 @@
 #![no_main]
 #![feature(core_intrinsics, lang_items, alloc_error_handler)]
 
-use adsb_deku::deku::DekuContainerRead;
 use adsb_deku::Frame;
 use hexlit::hex;
 use rsadsb_common::Airplanes;
@@ -45,6 +44,6 @@ extern "C" fn eh_personality() {}
 #[no_mangle]
 pub extern "C" fn main() {
     let buffer = hex!("8da7c32758ab75f3291315f10261");
-    let _ = Frame::from_bytes((&buffer, 0)).unwrap().0;
+    let _ = Frame::from_bytes(&buffer).unwrap();
     let _ = Airplanes::new();
 }

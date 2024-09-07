@@ -17,7 +17,7 @@ std = ["deku/std", "alloc"]
 alloc = ["deku/alloc"]
 
 [dependencies]
-deku = { version = "0.16", default-features = false }
+deku = { version = "0.18.1", default-features = false, features = ["bits"] }
 serde = { version = "1.0", features = ["derive"], optional = true }
 libm = "0.2.8"
 
@@ -26,6 +26,7 @@ hex = "0.4"
 hexlit = "0.5"
 assert_hex = "0.4"
 criterion = "0.5"
+test-log = "0.2.16"
 
 [[bench]]
 name = "decoding"
