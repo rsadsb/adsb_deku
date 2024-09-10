@@ -26,7 +26,6 @@ use std::net::{SocketAddr, TcpStream};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
-use adsb_deku::deku::DekuContainerRead;
 use adsb_deku::{Frame, ICAO};
 use anyhow::{Context, Result};
 use clap::Parser;
@@ -386,18 +385,15 @@ fn main() -> Result<()> {
             };
             if df_adsb {
                 // parse the entire DF frame
-                let frame = Frame::from_bytes((&bytes, 0));
+                let frame = Frame::from_bytes(&bytes);
                 match frame {
-                    Ok((left_over, frame)) => {
+                    Ok(frame) => {
                         debug!("ADS-B Frame: {frame}");
                         let airplane_added = adsb_airplanes.action(
                             frame,
                             (settings.lat, settings.long),
                             settings.opts.max_range,
                         );
-                        if left_over.1 != 0 {
-                            error!("{left_over:x?}");
-                        }
                         // update stats
                         stats.update(&adsb_airplanes, airplane_added);
                     }
