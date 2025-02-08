@@ -12,8 +12,9 @@ use core::{
     clone::Clone, default::Default, fmt::Debug, marker::Copy, prelude::rust_2021::derive,
     result::Result::Ok, writeln,
 };
+
 #[cfg(feature = "std")]
-use std::time::SystemTime;
+use std::time::Instant;
 
 use adsb_deku::adsb::{AirborneVelocity, Identification, ME};
 use adsb_deku::{cpr, Altitude, CPRFormat, Frame, DF, ICAO};
@@ -217,15 +218,11 @@ impl Airplanes {
     #[cfg(feature = "std")]
     pub fn prune(&mut self, filter_time: u64) {
         self.0.retain(|k, v| {
-            if let Ok(time) = v.last_time.elapsed() {
-                if time < std::time::Duration::from_secs(filter_time) {
-                    true
-                } else {
-                    info!("[{k}] non-active, removing");
-                    false
-                }
+            let time = v.last_time.elapsed();
+            if time < std::time::Duration::from_secs(filter_time) {
+                true
             } else {
-                info!("[{k}] non-active(time error), removing");
+                info!("[{k}] non-active, removing");
                 false
             }
         });
@@ -253,7 +250,7 @@ impl Airplanes {
         state.num_messages += 1;
         #[cfg(feature = "std")]
         {
-            state.last_time = std::time::SystemTime::now();
+            state.last_time = std::time::Instant::now();
         }
 
         airplane_added
@@ -365,7 +362,7 @@ pub struct AirplaneState {
     pub on_ground: Option<bool>,
     pub num_messages: u32,
     #[cfg(feature = "std")]
-    pub last_time: SystemTime,
+    pub last_time: Instant,
     pub track: Option<Vec<AirplaneCoor>>,
 }
 
@@ -381,7 +378,7 @@ impl Default for AirplaneState {
             on_ground: None,
             num_messages: 0,
             #[cfg(feature = "std")]
-            last_time: SystemTime::now(),
+            last_time: Instant::now(),
             track: None,
         }
     }
@@ -396,7 +393,7 @@ pub struct AirplaneCoor {
     pub position: Option<cpr::Position>,
     /// last good time
     #[cfg(feature = "std")]
-    pub last_time: Option<SystemTime>,
+    pub last_time: Option<Instant>,
     /// distance from receiver lat/long
     pub kilo_distance: Option<f64>,
 }
@@ -443,7 +440,7 @@ impl AirplaneCoor {
                 self.position);
             #[cfg(feature = "std")]
             {
-                self.last_time = Some(SystemTime::now());
+                self.last_time = Some(Instant::now());
             }
         }
         true
