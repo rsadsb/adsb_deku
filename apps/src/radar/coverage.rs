@@ -2,7 +2,7 @@ use adsb_deku::cpr::Position;
 use adsb_deku::ICAO;
 use ratatui::layout::Rect;
 use ratatui::style::Color;
-use ratatui::widgets::canvas::{Canvas, Points};
+use ratatui::widgets::canvas::{Canvas, Points, Line, Circle};
 use ratatui::widgets::Block;
 use rsadsb_common::Airplanes;
 
@@ -61,6 +61,52 @@ pub fn populate_coverage(
     }
 }
 
+/// Draw range circles around the receiver location
+fn draw_range_circles(
+    ctx: &mut ratatui::widgets::canvas::Context<'_>,
+    settings: &Settings,
+) {
+    // Skip drawing if disabled
+    if settings.opts.disable_range_circles {
+        return;
+    }
+    
+    // Get the range circles from the command line options
+    let ranges = &settings.opts.range_circles.0;
+    
+    // Get the receiver location (0,0) in the canvas coordinates
+    let (x, y) = settings.to_xy(settings.lat, settings.long);
+    
+    // Draw each range circle
+    for &range in ranges {
+
+        let lat_offset = range / 111.0;
+        let point_at_range = settings.to_xy(settings.lat + lat_offset, settings.long);
+        
+        // Calculate the radius in canvas units
+        let radius = ((point_at_range.1 - y).powi(2) + (point_at_range.0 - x).powi(2)).sqrt();
+        
+        // Draw the circle
+        ctx.draw(&Circle {
+            x,
+            y,
+            radius,
+            color: Color::DarkGray,
+        });
+        
+        let label_x = x;
+        let label_y = y - radius;
+        ctx.print(
+            label_x,
+            label_y,
+            ratatui::text::Span::styled(
+                format!("{}km", range),
+                ratatui::style::Style::default().fg(Color::DarkGray),
+            ),
+        );
+    }
+}
+
 /// Render Coverage tab for tui display
 pub fn build_tab_coverage(
     f: &mut ratatui::Frame,
@@ -75,6 +121,9 @@ pub fn build_tab_coverage(
         .paint(|ctx| {
             // draw locations
             draw_locations(ctx, settings);
+            
+            // draw range circles
+            draw_range_circles(ctx, settings);
 
             // draw ADSB tab airplanes
             for (lat, long, seen_number, _) in coverage_airplanes.iter() {
