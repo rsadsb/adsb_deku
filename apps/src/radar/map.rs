@@ -1,11 +1,58 @@
 use ratatui::layout::Rect;
 use ratatui::style::{Color, Style};
 use ratatui::text::Span;
-use ratatui::widgets::canvas::{Canvas, Line, Points};
+use ratatui::widgets::canvas::{Canvas, Line, Points, Circle};
 use ratatui::widgets::Block;
 use rsadsb_common::{AirplaneDetails, Airplanes};
 
 use crate::{draw_lines, draw_locations, Settings, DEFAULT_PRECISION, MAX_PLOT_HIGH, MAX_PLOT_LOW};
+
+/// Draw range circles around the receiver location
+fn draw_range_circles(
+    ctx: &mut ratatui::widgets::canvas::Context<'_>,
+    settings: &Settings,
+) {
+    // Skip drawing if disabled
+    if settings.opts.disable_range_circles {
+        return;
+    }
+    
+    // Get the range circles from the command line options
+    let ranges = &settings.opts.range_circles.0;
+    
+    // Get the receiver location (0,0) in the canvas coordinates
+    let (x, y) = settings.to_xy(settings.lat, settings.long);
+    
+    // Draw each range circle
+    for &range in ranges {
+
+        let lat_offset = range / 111.0;
+        let point_at_range = settings.to_xy(settings.lat + lat_offset, settings.long);
+        
+        // Calculate the radius in canvas units
+        let radius = ((point_at_range.1 - y).powi(2) + (point_at_range.0 - x).powi(2)).sqrt();
+        
+        // Draw the circle
+        ctx.draw(&Circle {
+            x,
+            y,
+            radius,
+            color: Color::DarkGray,
+        });
+        
+        // Add a label for the range
+        let label_x = x;
+        let label_y = y - radius; // Place label at the top of the circle
+        ctx.print(
+            label_x,
+            label_y,
+            Span::styled(
+                format!("{}km", range),
+                Style::default().fg(Color::DarkGray),
+            ),
+        );
+    }
+}
 
 /// Render Map tab for tui display
 pub fn build_tab_map(
@@ -23,6 +70,9 @@ pub fn build_tab_map(
 
             // draw locations
             draw_locations(ctx, settings);
+            
+            // draw range circles
+            draw_range_circles(ctx, settings);
 
             // draw ADSB tab airplanes
             for (key, value) in adsb_airplanes.iter() {
