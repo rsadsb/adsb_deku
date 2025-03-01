@@ -17,8 +17,9 @@ pub fn build_tab_help(f: &mut ratatui::Frame, chunks: &[Rect]) {
         .direction(Direction::Vertical)
         .constraints([
             Constraint::Percentage(2),
-            Constraint::Percentage(40),
-            Constraint::Percentage(40),
+            Constraint::Percentage(35),
+            Constraint::Percentage(35),
+            Constraint::Percentage(10),
             Constraint::Percentage(10),
             Constraint::Percentage(2),
         ])
@@ -36,6 +37,7 @@ pub fn build_tab_help(f: &mut ratatui::Frame, chunks: &[Rect]) {
         Row::new(vec!["h", "control --disable-heading"]),
         Row::new(vec!["t", "control --disable-track"]),
         Row::new(vec!["n", "toggle --disable-callsign"]),
+        Row::new(vec!["r", "toggle --disable-range-circles"]),
         Row::new(vec!["TAB", "Move to Next screen"]),
         Row::new(vec!["q", "Quit this app"]),
         Row::new(vec!["ctrl+c", "Quit this app"]),
@@ -77,4 +79,17 @@ pub fn build_tab_help(f: &mut ratatui::Frame, chunks: &[Rect]) {
         .column_spacing(1)
         .block(Block::bordered().title("Key Bindings - Airplanes"));
     f.render_widget(table, vertical_chunks[3]);
+    
+    // Range circles help section
+    let rows = [
+        Row::new(vec!["--range-circles", "Set range circles (km) as comma-separated values"]),
+        Row::new(vec!["--disable-range-circles", "Hide range circles"]),
+        Row::new(vec!["r", "Toggle range circles visibility"]),
+    ];
+    let table = Table::new(rows, widths)
+        .style(Style::default().fg(Color::White))
+        .header(Row::new(vec!["Option", "Description"]).bottom_margin(1))
+        .column_spacing(1)
+        .block(Block::bordered().title("Range Circles"));
+    f.render_widget(table, vertical_chunks[4]);
 }
