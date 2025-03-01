@@ -2,7 +2,7 @@ use adsb_deku::cpr::Position;
 use adsb_deku::ICAO;
 use ratatui::layout::Rect;
 use ratatui::style::Color;
-use ratatui::widgets::canvas::{Canvas, Points, Line, Circle};
+use ratatui::widgets::canvas::{Canvas, Points, Circle};
 use ratatui::widgets::Block;
 use rsadsb_common::Airplanes;
 
