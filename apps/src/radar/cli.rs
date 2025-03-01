@@ -1,7 +1,6 @@
 use std::net::Ipv4Addr;
 use std::num::ParseFloatError;
 use std::str::FromStr;
-
 use clap::Parser;
 
 /// Parsing struct for the --locations clap parameter
