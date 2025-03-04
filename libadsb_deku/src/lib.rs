@@ -673,12 +673,12 @@ impl IdentityCode {
         let b4 = (num & 0b0_0000_0000_0010) >> 1;
         let d4 = num & 0b0_0000_0000_0001;
 
-        let a = a4 << 2 | a2 << 1 | a1;
-        let b = b4 << 2 | b2 << 1 | b1;
-        let c = c4 << 2 | c2 << 1 | c1;
-        let d = d4 << 2 | d2 << 1 | d1;
+        let a = (a4 << 2) | (a2 << 1) | a1;
+        let b = (b4 << 2) | (b2 << 1) | b1;
+        let c = (c4 << 2) | (c2 << 1) | c1;
+        let d = (d4 << 2) | (d2 << 1) | d1;
 
-        let num: u16 = (a << 12 | b << 8 | c << 4 | d) as u16;
+        let num: u16 = ((a << 12) | (b << 8) | (c << 4) | d) as u16;
         Ok(num)
     }
 }
