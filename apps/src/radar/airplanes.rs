@@ -1,9 +1,9 @@
 use ratatui::layout::{Constraint, Rect};
-use ratatui::style::{Color, Modifier, Style};
+use ratatui::style::{Modifier, Style, Stylize};
 use ratatui::widgets::{Block, Row, Table, TableState};
 use rsadsb_common::{AirplaneDetails, Airplanes};
 
-use crate::DEFAULT_PRECISION;
+use crate::{BLUE, DEFAULT_PRECISION, WHITE};
 
 /// Render Airplanes tab for tui display
 pub fn build_tab_airplanes(
@@ -70,7 +70,7 @@ pub fn build_tab_airplanes(
         Constraint::Length(6),
     ];
     let table = Table::new(rows, widths)
-        .style(Style::default().fg(Color::White))
+        .style(Style::default().fg(WHITE))
         .header(
             Row::new(vec![
                 "ICAO",
@@ -84,11 +84,12 @@ pub fn build_tab_airplanes(
                 "Distance",
                 "Msgs",
             ])
+            .fg(BLUE)
             .bottom_margin(1),
         )
-        .block(Block::bordered().title(format!("Airplanes({rows_len})")))
+        .block(Block::bordered().title(format!("Airplanes({rows_len})").fg(BLUE)))
         .column_spacing(1)
-        .highlight_style(Style::default().add_modifier(Modifier::BOLD))
+        .row_highlight_style(Style::default().add_modifier(Modifier::BOLD))
         .highlight_symbol(">> ");
     f.render_stateful_widget(table, chunks[1], &mut airplanes_state.clone());
 }

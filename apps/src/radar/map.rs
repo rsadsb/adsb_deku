@@ -1,11 +1,14 @@
 use ratatui::layout::Rect;
-use ratatui::style::{Color, Style};
+use ratatui::style::{Style, Stylize};
 use ratatui::text::Span;
 use ratatui::widgets::canvas::{Canvas, Line, Points};
 use ratatui::widgets::Block;
 use rsadsb_common::{AirplaneDetails, Airplanes};
 
-use crate::{draw_lines, draw_locations, Settings, DEFAULT_PRECISION, MAX_PLOT_HIGH, MAX_PLOT_LOW};
+use crate::{
+    draw_lines, draw_locations, Settings, BLUE, DEFAULT_PRECISION, GREEN, MAX_PLOT_HIGH,
+    MAX_PLOT_LOW, WHITE,
+};
 
 /// Render Map tab for tui display
 pub fn build_tab_map(
@@ -15,7 +18,7 @@ pub fn build_tab_map(
     adsb_airplanes: &Airplanes,
 ) {
     let canvas = Canvas::default()
-        .block(Block::bordered().title("Map"))
+        .block(Block::bordered().style(Style::default().fg(WHITE)).title("Map".fg(BLUE)))
         .x_bounds([MAX_PLOT_LOW, MAX_PLOT_HIGH])
         .y_bounds([MAX_PLOT_LOW, MAX_PLOT_HIGH])
         .paint(|ctx| {
@@ -39,7 +42,7 @@ pub fn build_tab_map(
                                         settings.to_xy(position.latitude, position.longitude);
 
                                     // draw dot on location
-                                    ctx.draw(&Points { coords: &[(x, y)], color: Color::White });
+                                    ctx.draw(&Points { coords: &[(x, y)], color: WHITE });
                                 }
                             }
                         }
@@ -73,13 +76,7 @@ pub fn build_tab_map(
                             let y_2 = y + f64::from(LENGTH * (n_heading.to_radians()).cos());
                             let x_2 = x + f64::from(LENGTH * (n_heading.to_radians()).sin());
 
-                            ctx.draw(&Line {
-                                x1: x_1,
-                                x2: x_2,
-                                y1: y_1,
-                                y2: y_2,
-                                color: Color::Blue,
-                            });
+                            ctx.draw(&Line { x1: x_1, x2: x_2, y1: y_1, y2: y_2, color: BLUE });
 
                             // repeat for the other side (addition, so just modding)
                             let n_heading = (heading + angle) % 360.0;
@@ -88,13 +85,7 @@ pub fn build_tab_map(
                             let y_2 = y + f64::from(LENGTH * (n_heading.to_radians()).cos());
                             let x_2 = x + f64::from(LENGTH * (n_heading.to_radians()).sin());
 
-                            ctx.draw(&Line {
-                                x1: x_1,
-                                x2: x_2,
-                                y1: y_1,
-                                y2: y_2,
-                                color: Color::Blue,
-                            });
+                            ctx.draw(&Line { x1: x_1, x2: x_2, y1: y_1, y2: y_2, color: BLUE });
                         }
                     }
 
@@ -121,12 +112,12 @@ pub fn build_tab_map(
                         ctx.print(
                             x,
                             y + 20.0,
-                            Span::styled(name.to_string(), Style::default().fg(Color::White)),
+                            Span::styled(name.to_string(), Style::default().fg(GREEN)),
                         );
                     }
 
                     // draw dot on actual lat/lon
-                    ctx.draw(&Points { coords: &[(x, y)], color: Color::Blue });
+                    ctx.draw(&Points { coords: &[(x, y)], color: BLUE });
                 }
             }
         });

@@ -1,6 +1,8 @@
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
-use ratatui::style::{Color, Style};
+use ratatui::style::{Style, Stylize};
 use ratatui::widgets::{Block, Row, Table};
+
+use crate::{BLUE, WHITE};
 
 /// Render Help tab for tui display
 pub fn build_tab_help(f: &mut ratatui::Frame, chunks: &[Rect]) {
@@ -42,10 +44,10 @@ pub fn build_tab_help(f: &mut ratatui::Frame, chunks: &[Rect]) {
     ];
     let widths = &[Constraint::Percentage(10), Constraint::Percentage(90)];
     let table = Table::new(rows, widths)
-        .style(Style::default().fg(Color::White))
+        .style(Style::default().fg(WHITE))
         .header(Row::new(vec!["Key", "Action"]).bottom_margin(1))
         .column_spacing(1)
-        .block(Block::bordered().title("Key Bindings - Any Tab"));
+        .block(Block::bordered().title("Key Bindings - Any Tab".fg(BLUE)));
     f.render_widget(table, vertical_chunks[1]);
 
     // Second help section
@@ -59,10 +61,10 @@ pub fn build_tab_help(f: &mut ratatui::Frame, chunks: &[Rect]) {
         Row::new(vec!["Enter", "Map position reset"]),
     ];
     let table = Table::new(rows, widths)
-        .style(Style::default().fg(Color::White))
+        .style(Style::default().fg(WHITE))
         .header(Row::new(vec!["Key", "Action"]).bottom_margin(1))
         .column_spacing(1)
-        .block(Block::bordered().title("Key Bindings - Map or Coverage"));
+        .block(Block::bordered().title("Key Bindings - Map or Coverage".fg(BLUE)));
     f.render_widget(table, vertical_chunks[2]);
 
     // Third help section
@@ -72,9 +74,9 @@ pub fn build_tab_help(f: &mut ratatui::Frame, chunks: &[Rect]) {
         Row::new(vec!["Enter", "Center Map tab on selected aircraft"]),
     ];
     let table = Table::new(rows, widths)
-        .style(Style::default().fg(Color::White))
+        .style(Style::default().fg(WHITE))
         .header(Row::new(vec!["Key", "Action"]).bottom_margin(1))
         .column_spacing(1)
-        .block(Block::bordered().title("Key Bindings - Airplanes"));
+        .block(Block::bordered().title("Key Bindings - Airplanes".fg(BLUE)));
     f.render_widget(table, vertical_chunks[3]);
 }

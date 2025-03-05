@@ -38,7 +38,7 @@ use crossterm::ExecutableCommand;
 use gpsd_proto::{get_data, handshake, ResponseData};
 use ratatui::backend::{Backend, CrosstermBackend};
 use ratatui::layout::{Alignment, Constraint, Direction, Layout, Rect};
-use ratatui::style::{Color, Style};
+use ratatui::style::{Color, Style, Styled};
 use ratatui::symbols::DOT;
 use ratatui::text::Span;
 use ratatui::widgets::canvas::{Line, Points};
@@ -50,6 +50,18 @@ use tracing::{debug, error, info, trace};
 use tracing_subscriber::EnvFilter;
 
 use crate::airplanes::build_tab_airplanes;
+
+// Ayu bell colors
+const BLUE: Color = Color::Rgb(0x59, 0xc2, 0xff);
+const PURPLE: Color = Color::Rgb(0xd2, 0xa6, 0xff);
+const ORANGE: Color = Color::Rgb(0xff, 0x8f, 0x40);
+const YELLOW: Color = Color::Rgb(0xe6, 0xb4, 0x50);
+const GREEN: Color = Color::Rgb(0xaa, 0xd9, 0x4c);
+const RED: Color = Color::Rgb(0xff, 0x33, 0x33);
+const DARK_GRAY: Color = Color::Rgb(0x20, 0x27, 0x34);
+const GRAY: Color = Color::Rgb(0x44, 0x44, 0x44);
+const GRAY_FG: Color = Color::Rgb(100, 100, 100);
+const WHITE: Color = Color::Rgb(255, 255, 255);
 
 /// Amount of zoom out from your original lat/long position
 const MAX_PLOT_HIGH: f64 = 400.0;
@@ -731,10 +743,11 @@ fn draw(
                     Block::bordered()
                         .title(format!(
                             "rsadsb/radar(v{version}) - ({lat:.DEFAULT_PRECISION$},{long:.DEFAULT_PRECISION$}) {view_type}"
-                        ))
+                        )
+                    .set_style(Style::default().fg(GREEN)))
                 )
-                .style(Style::default().fg(Color::White))
-                .highlight_style(Style::default().fg(Color::Green))
+                .style(Style::default().fg(WHITE))
+                .highlight_style(Style::default().fg(ORANGE))
                 .select(settings.tab_selection as usize)
                 .divider(DOT);
 
@@ -820,8 +833,8 @@ fn draw_bottom_chunks(
 
 /// Draw vertical and horizontal lines
 fn draw_lines(ctx: &mut ratatui::widgets::canvas::Context<'_>) {
-    ctx.draw(&Line { x1: MAX_PLOT_HIGH, y1: 0.0, x2: MAX_PLOT_LOW, y2: 0.0, color: Color::White });
-    ctx.draw(&Line { x1: 0.0, y1: MAX_PLOT_HIGH, x2: 0.0, y2: MAX_PLOT_LOW, color: Color::White });
+    ctx.draw(&Line { x1: MAX_PLOT_HIGH, y1: 0.0, x2: MAX_PLOT_LOW, y2: 0.0, color: WHITE });
+    ctx.draw(&Line { x1: 0.0, y1: MAX_PLOT_HIGH, x2: 0.0, y2: MAX_PLOT_LOW, color: WHITE });
 }
 
 /// Draw locations on the map
@@ -830,20 +843,20 @@ pub fn draw_locations(ctx: &mut ratatui::widgets::canvas::Context<'_>, settings:
         let (x, y) = settings.to_xy(location.lat, location.long);
 
         // draw location coor
-        ctx.draw(&Points { coords: &[(x, y)], color: Color::Green });
+        ctx.draw(&Points { coords: &[(x, y)], color: GREEN });
 
         // draw location name
-        ctx.print(x, y, Span::styled(location.name.clone(), Style::default().fg(Color::Green)));
+        ctx.print(x, y, Span::styled(location.name.clone(), Style::default().fg(GREEN)));
     }
     if let Some(ref airports) = settings.airports {
         for Airport { icao, lat, lon, .. } in airports {
             let (x, y) = settings.to_xy(*lat, *lon);
 
             // draw city coor
-            ctx.draw(&Points { coords: &[(x, y)], color: Color::Green });
+            ctx.draw(&Points { coords: &[(x, y)], color: GREEN });
 
             // draw city name
-            ctx.print(x, y, Span::styled(icao.to_string(), Style::default().fg(Color::Green)));
+            ctx.print(x, y, Span::styled(icao.to_string(), Style::default().fg(GREEN)));
         }
     }
 }
