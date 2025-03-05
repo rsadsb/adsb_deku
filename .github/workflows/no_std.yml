@@ -11,15 +11,14 @@ name: ensure_no_std
 
 jobs:
   build-no-std:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
       - name: Populate cache
         uses: ./.github/workflows/cache
 
-      - uses: dtolnay/rust-toolchain@439cf607258077187679211f12aa6f19af4a0af7 # master
+      - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: nightly
           target: thumbv7em-none-eabihf
-      - uses: Swatinem/rust-cache@3cf7f8cc28d1b4e7d01e3783be10a97d55d483c8 # v2.7.1
       - run: cargo build --manifest-path ensure_no_std/Cargo.toml

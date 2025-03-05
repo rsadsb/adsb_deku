@@ -13,14 +13,15 @@ name: ci
 jobs:
   # build, test all supported targets
   build-test-stable:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.job.os }}
+    env:
+      BUILD_CMD: cargo
     strategy:
       matrix:
-        targets:
-          - x86_64-unknown-linux-gnu
-          - armv7-unknown-linux-gnueabihf
-            #- aarch64-linux-android
-          - aarch64-unknown-linux-gnu
+        job:
+          - { target: x86_64-unknown-linux-gnu,      os: ubuntu-24.04, use-cross: true }
+          - { target: armv7-unknown-linux-gnueabihf, os: ubuntu-24.04, use-cross: true }
+          - { target: aarch64-unknown-linux-gnu,     os: ubuntu-24.04, use-cross: true }
         toolchain:
           - stable
             # msrv
@@ -31,25 +32,29 @@ jobs:
       - name: Populate cache
         uses: ./.github/workflows/cache
 
-      - uses: dtolnay/rust-toolchain@439cf607258077187679211f12aa6f19af4a0af7 # master
+      - name: Overwrite build command env variable
+        if: matrix.job.use-cross
+        shell: bash
+        run: |
+          echo "BUILD_CMD=cross" >> $GITHUB_ENV
+          RUSTFLAGS="-C target-feature=-crt-static" cargo install cross --git https://github.com/cross-rs/cross
+
+      - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ matrix.toolchain }}
-          target: ${{ matrix.targets }}
-      - run: cargo install cargo-quickinstall
-      - run: cargo quickinstall cross@0.2.5 --force
-      - run: cross build --locked --workspace --target ${{ matrix.targets }}
-      - run: cross test --locked --workspace --target ${{ matrix.targets }}
+          targets: ${{ matrix.job.target }}
+      - run: $BUILD_CMD build --locked --workspace --target ${{ matrix.job.target }}
+      - run: $BUILD_CMD test --locked --workspace --target ${{ matrix.job.target }}
 
   # fmt and clippy
   fmt-clippy:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-      - uses: dtolnay/rust-toolchain@439cf607258077187679211f12aa6f19af4a0af7 # master
+      - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable
-          target: x86_64-unknown-linux-gnu
           components: rustfmt, clippy
       - run: cargo fmt --all --check
       - run: cargo clippy --workspace -- -D warnings

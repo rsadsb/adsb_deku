@@ -11,14 +11,17 @@ name: binaries
 jobs:
   # release binaries
   release-bins:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.job.os }}
+    env:
+      BUILD_CMD: cargo
     strategy:
       matrix:
-        targets:
-          - x86_64-unknown-linux-gnu
-          - armv7-unknown-linux-gnueabihf
-            #- aarch64-linux-android
-          - aarch64-unknown-linux-gnu
+        job:
+          - { target: x86_64-unknown-linux-gnu,      os: ubuntu-24.04, use-cross: true }
+          - { target: armv7-unknown-linux-gnueabihf, os: ubuntu-24.04, use-cross: true }
+          - { target: aarch64-unknown-linux-gnu,     os: ubuntu-24.04, use-cross: true }         
+        toolchain:
+          - stable
         bins:
           - radar
           - 1090
@@ -28,30 +31,35 @@ jobs:
       - name: Populate cache
         uses: ./.github/workflows/cache
 
-      - uses: dtolnay/rust-toolchain@d76c2a93c593483c9892fd8d2538734f73ed8588 # stable
+      - name: Overwrite build command env variable
+        if: matrix.job.use-cross
+        shell: bash
+        run: |
+          echo "BUILD_CMD=cross" >> $GITHUB_ENV
+          RUSTFLAGS="-C target-feature=-crt-static" cargo install cross --git https://github.com/cross-rs/cross
+
+      - uses: dtolnay/rust-toolchain@master
         with:
-          target: ${{ matrix.targets }}
-      - uses: Swatinem/rust-cache@3cf7f8cc28d1b4e7d01e3783be10a97d55d483c8 # v2.7.1
-      - run: cargo install cargo-quickinstall
-      - run: cargo quickinstall cross@0.2.5 --force
-      - run: cross build --bin ${{ matrix.bins }} --locked --release --target ${{ matrix.targets }}
+          toolchain: ${{ matrix.toolchain }}
+          targets: ${{ matrix.job.target }}
+      - run: $BUILD_CMD +${{ matrix.toolchain }} build ${{ matrix.features }} --target ${{ matrix.job.target }} --release --locked --workspace
 
       - name: archive
         run: |
-          tar -czvf ${{ matrix.bins }}-${{ matrix.targets }}.tar.gz \
-              -C target/${{ matrix.targets }}/release/ ${{ matrix.bins }}
+          tar -czvf ${{ matrix.bins }}-${{ matrix.job.target }}.tar.gz \
+              -C target/${{ matrix.job.target }}/release/ ${{ matrix.bins }}
 
-      - uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+      - uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b # v4.5.0
         with:
-          name: ${{ matrix.bins }}-${{ matrix.targets }}.tar.gz
-          path: ${{ matrix.bins }}-${{ matrix.targets }}.tar.gz
+          name: ${{ matrix.bins }}-${{ matrix.job.target }}.tar.gz
+          path: ${{ matrix.bins }}-${{ matrix.job.target }}.tar.gz
 
       - name: Upload binary to release
         if: ${{ startsWith(github.ref, 'refs/tags/v') }}
         uses: svenstaro/upload-release-action@1beeb572c19a9242f4361f4cee78f8e0d9aec5df # v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ${{ matrix.bins }}-${{ matrix.targets }}.tar.gz
-          asset_name: ${{ matrix.bins }}-${{ matrix.targets }}.tar.gz
+          file: ${{ matrix.bins }}-${{ matrix.job.target }}.tar.gz
+          asset_name: ${{ matrix.bins }}-${{ matrix.job.target }}.tar.gz
           tag: ${{ github.ref }}
           overwrite: true
