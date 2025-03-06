@@ -1,7 +1,6 @@
 use std::net::Ipv4Addr;
 use std::num::ParseFloatError;
 use std::str::FromStr;
-
 use clap::Parser;
 
 /// Parsing struct for the --locations clap parameter
@@ -22,6 +21,19 @@ impl FromStr for Location {
         let long_fromstr = coords[2].parse::<f64>()?;
 
         Ok(Self { name: coords[0].to_string(), lat: lat_fromstr, long: long_fromstr })
+    }
+}
+
+/// Parsing struct for the --range-circles clap parameter
+#[derive(Debug, Clone, PartialEq)]
+pub struct RangeCircles(pub Vec<f64>);
+
+impl FromStr for RangeCircles {
+    type Err = ParseFloatError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let ranges: Result<Vec<f64>, ParseFloatError> = s.split(',').map(|r| r.parse::<f64>()).collect();
+        Ok(Self(ranges?))
     }
 }
 
@@ -128,6 +140,15 @@ pub struct Opts {
     /// Control the max range of the receiver in km
     #[arg(long, default_value = "500")]
     pub max_range: f64,
+    
+    /// Comma-separated list of range circles to display (in km)
+    /// Example: --range-circles=100,200,300,400
+    #[arg(long, default_value = "100,200,300,400")]
+    pub range_circles: RangeCircles,
+    
+    /// Disable display of range circles on Map and Coverage
+    #[arg(long)]
+    pub disable_range_circles: bool,
 }
 
 #[cfg(test)]
@@ -160,6 +181,8 @@ mod tests {
             disable_track: false,
             retry_tcp: false,
             max_range: 500.0,
+            range_circles: RangeCircles(vec![100.0, 200.0, 300.0, 400.0]),
+            disable_range_circles: false,
         };
         assert_eq!(exp_opt, opt);
 
@@ -197,6 +220,8 @@ mod tests {
             disable_track: false,
             retry_tcp: false,
             max_range: 500.0,
+            range_circles: RangeCircles(vec![100.0, 200.0, 300.0, 400.0]),
+            disable_range_circles: false,
         };
         assert_eq!(exp_opt, opt);
     }
