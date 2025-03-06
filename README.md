@@ -29,6 +29,7 @@ and stores this info, allowing an operator to control the display of the data.
 - **Coverage Tab** - Plot all detected aircraft lat/long positions since starting radar. Features grayscale heatmap.
 - **Aircraft Tab** - Show detailed table of information about currently detected aircraft. Set aircraft position as center lat/long.
 - **gpsd** - Derive lat/long from a gpsd instance using `--gpsd` flag.
+- **Range Circles** - Display concentric circles showing distance from receiver in kilometers. Customize with `--range-circles` option (e.g. `--range-circles=100,200,300,400`). Toggle visibility with `r` key or `--disable-range-circles` option.
 
 See [apps/README.md](apps) for map control keybindings.
 
