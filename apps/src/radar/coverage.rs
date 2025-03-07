@@ -1,12 +1,12 @@
 use adsb_deku::cpr::Position;
 use adsb_deku::ICAO;
 use ratatui::layout::Rect;
-use ratatui::style::Color;
+use ratatui::style::{Color, Style, Stylize};
 use ratatui::widgets::canvas::{Canvas, Points};
 use ratatui::widgets::Block;
 use rsadsb_common::Airplanes;
 
-use crate::{draw_locations, Settings, MAX_PLOT_HIGH, MAX_PLOT_LOW};
+use crate::{draw_locations, Settings, BLUE, MAX_PLOT_HIGH, MAX_PLOT_LOW, WHITE};
 
 /// Accuracy of latitude/longitude for Coverage is affected by this variable.
 ///
@@ -69,7 +69,7 @@ pub fn build_tab_coverage(
     coverage_airplanes: &[(f64, f64, u32, ICAO)],
 ) {
     let canvas = Canvas::default()
-        .block(Block::bordered().title("Coverage"))
+        .block(Block::bordered().style(Style::default().fg(WHITE)).title("Coverage".fg(BLUE)))
         .x_bounds([MAX_PLOT_LOW, MAX_PLOT_HIGH])
         .y_bounds([MAX_PLOT_LOW, MAX_PLOT_HIGH])
         .paint(|ctx| {
