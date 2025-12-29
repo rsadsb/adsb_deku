@@ -176,6 +176,19 @@ impl<R: Read + Seek> Read for ReaderCrc<R> {
 
 impl<R: Read + Seek> Seek for ReaderCrc<R> {
     fn seek(&mut self, pos: deku::no_std_io::SeekFrom) -> deku::no_std_io::Result<u64> {
+        // When seeking forward, we need to read and cache the skipped bytes
+        // for the CRC calculation to work correctly
+        if let deku::no_std_io::SeekFrom::Current(offset) = pos {
+            if offset > 0 {
+                // Read and cache the bytes we're seeking over
+                let mut buf = vec![0u8; offset as usize];
+                let n = self.reader.read(&mut buf)?;
+                self.cache.extend_from_slice(&buf[..n]);
+                // Get current position after read
+                return self.reader.stream_position();
+            }
+        }
+
         self.just_seeked = true;
         self.reader.seek(pos)
     }
@@ -322,6 +335,7 @@ impl fmt::Display for Frame {
 /// Starting with 5 bits, decode the rest of the message as the correct data packets
 #[derive(Debug, PartialEq, DekuRead, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[repr(u8)]
 #[deku(id_type = "u8", bits = "5")]
 pub enum DF {
     /// 17: Extended Squitter, Downlink Format 17 (3.1.2.8.6)
@@ -573,35 +587,27 @@ impl Altitude {
 }
 
 /// SPI Condition
-#[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone, Default)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[repr(u8)]
 #[deku(id_type = "u8", bits = "2")]
 pub enum SurveillanceStatus {
+    #[default]
     NoCondition = 0,
     PermanentAlert = 1,
     TemporaryAlert = 2,
     SPICondition = 3,
 }
 
-impl Default for SurveillanceStatus {
-    fn default() -> Self {
-        Self::NoCondition
-    }
-}
-
 /// Even / Odd
-#[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone, Default)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[repr(u8)]
 #[deku(id_type = "u8", bits = "1")]
 pub enum CPRFormat {
+    #[default]
     Even = 0,
     Odd = 1,
-}
-
-impl Default for CPRFormat {
-    fn default() -> Self {
-        Self::Even
-    }
 }
 
 impl fmt::Display for CPRFormat {
@@ -620,6 +626,7 @@ impl fmt::Display for CPRFormat {
 /// Positive / Negative
 #[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[repr(u8)]
 #[deku(id_type = "u8", bits = "1")]
 pub enum Sign {
     Positive = 0,
@@ -709,6 +716,7 @@ impl core::str::FromStr for ICAO {
 /// Type of `DownlinkRequest`
 #[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[repr(u8)]
 #[deku(id_type = "u8", bits = "5")]
 pub enum DownlinkRequest {
     #[deku(id = 0b00000)]
@@ -730,6 +738,7 @@ pub enum DownlinkRequest {
 /// Uplink / Downlink
 #[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[repr(u8)]
 #[deku(id_type = "u8", bits = "1")]
 pub enum KE {
     DownlinkELMTx = 0,
@@ -747,6 +756,7 @@ pub struct UtilityMessage {
 /// Message Type
 #[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[repr(u8)]
 #[deku(id_type = "u8", bits = "2")]
 pub enum UtilityMessageType {
     NoInformation = 0b00,
@@ -758,6 +768,7 @@ pub enum UtilityMessageType {
 /// Airborne / Ground and SPI
 #[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[repr(u8)]
 #[deku(id_type = "u8", bits = "3")]
 pub enum FlightStatus {
     NoAlertNoSPIAirborne = 0b000,
@@ -832,6 +843,7 @@ impl AC13Field {
 /// Transponder level and additional information (3.1.2.5.2.2.1)
 #[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[repr(u8)]
 #[deku(id_type = "u8", bits = "3")]
 #[allow(non_camel_case_types)]
 pub enum Capability {

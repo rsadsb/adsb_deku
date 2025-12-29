@@ -55,7 +55,7 @@ use crate::airplanes::build_tab_airplanes;
 
 /// Amount of zoom out from your original lat/long position
 const MAX_PLOT_HIGH: f64 = 400.0;
-const MAX_PLOT_LOW: f64 = MAX_PLOT_HIGH * -1.0;
+const MAX_PLOT_LOW: f64 = -MAX_PLOT_HIGH;
 
 mod scale {
     /// Diff between scale changes
@@ -168,7 +168,7 @@ impl Settings {
         let (local_x, local_y) = self.local_lat_lon();
         let (x, y) = self.to_mercator(latitude, longitude);
         let (x, y) = (x - local_x, y - local_y);
-        (x, y * -1.0)
+        (x, -y)
     }
 
     /// Calculate mercator for local lat/long
