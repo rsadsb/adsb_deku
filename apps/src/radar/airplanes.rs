@@ -88,7 +88,7 @@ pub fn build_tab_airplanes(
         )
         .block(Block::bordered().title(format!("Airplanes({rows_len})")))
         .column_spacing(1)
-        .highlight_style(Style::default().add_modifier(Modifier::BOLD))
+        .row_highlight_style(Style::default().add_modifier(Modifier::BOLD))
         .highlight_symbol(">> ");
     f.render_stateful_widget(table, chunks[1], &mut airplanes_state.clone());
 }

@@ -1,5 +1,6 @@
 use ratatui::layout::Rect;
 use ratatui::style::{Color, Style};
+use ratatui::symbols::Marker;
 use ratatui::text::Span;
 use ratatui::widgets::canvas::{Canvas, Line, Points};
 use ratatui::widgets::Block;
@@ -17,6 +18,7 @@ pub fn build_tab_map(
 ) {
     let canvas = Canvas::default()
         .block(Block::bordered().title("Map"))
+        .marker(Marker::Braille)
         .x_bounds([MAX_PLOT_LOW, MAX_PLOT_HIGH])
         .y_bounds([MAX_PLOT_LOW, MAX_PLOT_HIGH])
         .paint(|ctx| {
