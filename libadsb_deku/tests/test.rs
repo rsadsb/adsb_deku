@@ -10,7 +10,7 @@ fn testing01() {
     let bytes = hex!("8D40621D58C382D690C8AC2863A7");
     let frame = Frame::from_bytes(&bytes);
     if let DF::ADSB(adsb) = frame.unwrap().df {
-        if let ME::AirbornePositionBaroAltitude { id, altitude } = adsb.me {
+        if let ME::AirbornePositionBaroAltitude { id: _, altitude } = adsb.me {
             assert_eq!(altitude.alt, Some(38000));
             assert_eq!(altitude.lat_cpr, 93000);
             assert_eq!(altitude.lon_cpr, 51372);

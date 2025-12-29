@@ -587,37 +587,27 @@ impl Altitude {
 }
 
 /// SPI Condition
-#[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone, Default)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[repr(u8)]
 #[deku(id_type = "u8", bits = "2")]
 pub enum SurveillanceStatus {
+    #[default]
     NoCondition = 0,
     PermanentAlert = 1,
     TemporaryAlert = 2,
     SPICondition = 3,
 }
 
-impl Default for SurveillanceStatus {
-    fn default() -> Self {
-        Self::NoCondition
-    }
-}
-
 /// Even / Odd
-#[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, DekuRead, Copy, Clone, Default)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[repr(u8)]
 #[deku(id_type = "u8", bits = "1")]
 pub enum CPRFormat {
+    #[default]
     Even = 0,
     Odd = 1,
-}
-
-impl Default for CPRFormat {
-    fn default() -> Self {
-        Self::Even
-    }
 }
 
 impl fmt::Display for CPRFormat {
