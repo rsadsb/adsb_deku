@@ -2,6 +2,7 @@ use adsb_deku::cpr::Position;
 use adsb_deku::ICAO;
 use ratatui::layout::Rect;
 use ratatui::style::Color;
+use ratatui::symbols::Marker;
 use ratatui::widgets::canvas::{Canvas, Points};
 use ratatui::widgets::Block;
 use rsadsb_common::Airplanes;
@@ -71,6 +72,7 @@ pub fn build_tab_coverage(
 ) {
     let canvas = Canvas::default()
         .block(Block::bordered().title("Coverage"))
+        .marker(Marker::Braille)
         .x_bounds([MAX_PLOT_LOW, MAX_PLOT_HIGH])
         .y_bounds([MAX_PLOT_LOW, MAX_PLOT_HIGH])
         .paint(|ctx| {
