@@ -1,5 +1,5 @@
 use ratatui::layout::Rect;
-use ratatui::style::{Color, Style};
+use ratatui::style::Style;
 use ratatui::text::Span;
 use ratatui::widgets::canvas::{Canvas, Line, Points};
 use ratatui::widgets::Block;
@@ -16,11 +16,16 @@ pub fn build_tab_map(
     adsb_airplanes: &Airplanes,
 ) {
     let canvas = Canvas::default()
-        .block(Block::bordered().title("Map"))
+        .block(
+            Block::bordered()
+                .title("Map")
+                .title_style(Style::default().fg(settings.theme.title))
+                .border_style(Style::default().fg(settings.theme.border)),
+        )
         .x_bounds([MAX_PLOT_LOW, MAX_PLOT_HIGH])
         .y_bounds([MAX_PLOT_LOW, MAX_PLOT_HIGH])
         .paint(|ctx| {
-            draw_lines(ctx);
+            draw_lines(ctx, settings);
 
             // draw locations
             draw_locations(ctx, settings);
@@ -43,7 +48,10 @@ pub fn build_tab_map(
                                         settings.to_xy(position.latitude, position.longitude);
 
                                     // draw dot on location
-                                    ctx.draw(&Points { coords: &[(x, y)], color: Color::White });
+                                    ctx.draw(&Points {
+                                        coords: &[(x, y)],
+                                        color: settings.theme.track,
+                                    });
                                 }
                             }
                         }
@@ -82,7 +90,7 @@ pub fn build_tab_map(
                                 x2: x_2,
                                 y1: y_1,
                                 y2: y_2,
-                                color: Color::Blue,
+                                color: settings.theme.heading,
                             });
 
                             // repeat for the other side (addition, so just modding)
@@ -97,7 +105,7 @@ pub fn build_tab_map(
                                 x2: x_2,
                                 y1: y_1,
                                 y2: y_2,
-                                color: Color::Blue,
+                                color: settings.theme.heading,
                             });
                         }
                     }
@@ -121,16 +129,22 @@ pub fn build_tab_map(
                     };
 
                     if !settings.opts.disable_icao {
-                        // draw plane ICAO name
+                        // draw plane ICAO/callsign name with accent color
+                        let label_color =
+                            if value.callsign.is_some() && !settings.opts.disable_callsign {
+                                settings.theme.accent // Orange for callsigns
+                            } else {
+                                settings.theme.accent_secondary // Yellow for ICAO
+                            };
                         ctx.print(
                             x,
                             y + 20.0,
-                            Span::styled(name.to_string(), Style::default().fg(Color::White)),
+                            Span::styled(name.to_string(), Style::default().fg(label_color)),
                         );
                     }
 
                     // draw dot on actual lat/lon
-                    ctx.draw(&Points { coords: &[(x, y)], color: Color::Blue });
+                    ctx.draw(&Points { coords: &[(x, y)], color: settings.theme.aircraft });
                 }
             }
         });
