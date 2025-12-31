@@ -1,7 +1,4 @@
-use ratatui::{
-    style::Color,
-    widgets::canvas::{Circle, Context},
-};
+use ratatui::widgets::canvas::{Circle, Context};
 
 use crate::Settings;
 
@@ -27,7 +24,7 @@ pub fn draw_range_circles(ctx: &mut Context<'_>, settings: &Settings) {
         let radius = ((point_at_range.1 - y).powi(2) + (point_at_range.0 - x).powi(2)).sqrt();
 
         // Draw the circle
-        ctx.draw(&Circle { x, y, radius, color: Color::DarkGray });
+        ctx.draw(&Circle { x, y, radius, color: settings.theme.range_circles });
 
         let label_x = x;
         let label_y = y - radius;
@@ -36,7 +33,7 @@ pub fn draw_range_circles(ctx: &mut Context<'_>, settings: &Settings) {
             label_y,
             ratatui::text::Span::styled(
                 format!("{}km", range),
-                ratatui::style::Style::default().fg(Color::DarkGray),
+                ratatui::style::Style::default().fg(settings.theme.range_labels),
             ),
         );
     }
