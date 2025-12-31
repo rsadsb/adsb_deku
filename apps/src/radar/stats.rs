@@ -2,7 +2,8 @@ use std::time::SystemTime;
 
 use adsb_deku::ICAO;
 use ratatui::layout::{Constraint, Rect};
-use ratatui::style::{Color, Style};
+use ratatui::style::Style;
+use ratatui::text::Span;
 use ratatui::widgets::{Block, Row, Table};
 use rsadsb_common::{Added, AirplaneCoor, Airplanes};
 use tracing::info;
@@ -72,7 +73,11 @@ pub fn build_tab_stats(
     } else {
         ("None".to_string(), "".to_string())
     };
-    rows.push(Row::new(vec!["Max Distance", &time, &value]));
+    rows.push(Row::new(vec![
+        Span::styled("Max Distance", Style::default().fg(settings.theme.location)),
+        Span::styled(time, Style::default().fg(settings.theme.accent_secondary)),
+        Span::styled(value, Style::default().fg(settings.theme.text)),
+    ]));
 
     // Most airplanes tracked at one time
     let (time, value) = if let Some((time, most_airplanes)) = stats.most_airplanes {
@@ -85,18 +90,35 @@ pub fn build_tab_stats(
     } else {
         ("None".to_string(), "".to_string())
     };
-    rows.push(Row::new(vec!["Most Airplanes", &time, &value]));
+    rows.push(Row::new(vec![
+        Span::styled("Most Airplanes", Style::default().fg(settings.theme.aircraft)),
+        Span::styled(time, Style::default().fg(settings.theme.accent_secondary)),
+        Span::styled(value, Style::default().fg(settings.theme.text)),
+    ]));
 
     // Total Airplanes Tracked
     let total_airplanes_s = stats.total_airplanes.to_string();
-    rows.push(Row::new(vec!["Total Airplanes", "All Time", &total_airplanes_s]));
+    rows.push(Row::new(vec![
+        Span::styled("Total Airplanes", Style::default().fg(settings.theme.track)),
+        Span::styled("All Time", Style::default().fg(settings.theme.accent_secondary)),
+        Span::styled(total_airplanes_s, Style::default().fg(settings.theme.text)),
+    ]));
 
     // draw table
     let widths = &[Constraint::Length(16), Constraint::Length(15), Constraint::Length(200)];
     let table = Table::new(rows, widths)
-        .style(Style::default().fg(Color::White))
-        .header(Row::new(vec!["Type", "DateTime", "Value"]).bottom_margin(1))
-        .block(Block::bordered().title("Stats"))
+        .style(Style::default().fg(settings.theme.text))
+        .header(
+            Row::new(vec!["Type", "DateTime", "Value"])
+                .style(Style::default().fg(settings.theme.table_header))
+                .bottom_margin(1),
+        )
+        .block(
+            Block::bordered()
+                .title("Stats")
+                .title_style(Style::default().fg(settings.theme.title))
+                .border_style(Style::default().fg(settings.theme.border)),
+        )
         .column_spacing(1);
     f.render_widget(table, chunks[1]);
 }
