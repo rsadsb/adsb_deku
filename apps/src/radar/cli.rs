@@ -3,6 +3,8 @@ use std::net::Ipv4Addr;
 use std::num::ParseFloatError;
 use std::str::FromStr;
 
+use crate::theme::ColorTheme;
+
 /// Parsing struct for the --locations clap parameter
 #[derive(Debug, Clone, PartialEq)]
 pub struct Location {
@@ -150,6 +152,10 @@ pub struct Opts {
     /// Disable display of range circles on Map and Coverage
     #[arg(long)]
     pub disable_range_circles: bool,
+
+    /// Color theme to use (ayu-dark, ayu-light)
+    #[arg(long, default_value = "ayu-dark")]
+    pub color_theme: ColorTheme,
 }
 
 #[cfg(test)]
@@ -184,6 +190,7 @@ mod tests {
             max_range: 500.0,
             range_circles: RangeCircles(vec![100.0, 200.0, 300.0, 400.0]),
             disable_range_circles: false,
+            color_theme: ColorTheme::AyuDark,
         };
         assert_eq!(exp_opt, opt);
 
@@ -223,6 +230,7 @@ mod tests {
             max_range: 500.0,
             range_circles: RangeCircles(vec![100.0, 200.0, 300.0, 400.0]),
             disable_range_circles: false,
+            color_theme: ColorTheme::AyuDark,
         };
         assert_eq!(exp_opt, opt);
     }
