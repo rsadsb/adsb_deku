@@ -115,7 +115,9 @@ pub fn build_tab_airplanes(
                 .border_style(Style::default().fg(settings.theme.border)),
         )
         .column_spacing(1)
-        .highlight_style(Style::default().fg(settings.theme.accent).add_modifier(Modifier::BOLD))
+        .row_highlight_style(
+            Style::default().fg(settings.theme.accent).add_modifier(Modifier::BOLD),
+        )
         .highlight_symbol(">> ");
     f.render_stateful_widget(table, vertical_chunks[0], &mut airplanes_state.clone());
 

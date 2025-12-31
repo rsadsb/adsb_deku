@@ -1,19 +1,20 @@
-use ratatui::style::Color;
+use ratatui_core::style::Color;
 
 mod ayu_dark {
     use super::Color;
+    use ratatui_style_ayu::ayu_dark_heretek as ayu_dark;
 
-    pub const FG: Color = Color::Rgb(0xCB, 0xCB, 0xC9);
-    pub const GUIDE: Color = Color::Rgb(0x70, 0x73, 0x80);
-    pub const ORANGE: Color = Color::Rgb(0xFF, 0xA7, 0x59);
-    pub const YELLOW: Color = Color::Rgb(0xFF, 0xD5, 0x73);
-    pub const BLUE: Color = Color::Rgb(0x39, 0xBA, 0xE6);
-    pub const GREEN: Color = Color::Rgb(0xB8, 0xE6, 0x73);
-    pub const PURPLE: Color = Color::Rgb(0xD2, 0xA6, 0xFF);
-    pub const CYAN: Color = Color::Rgb(0x5C, 0xCC, 0xCC);
-    pub const UI_BORDER: Color = Color::Rgb(0x3E, 0x4B, 0x59);
-    pub const SELECTION: Color = Color::Rgb(0x40, 0x9F, 0xFF);
-    pub const CYAN_BRIGHT: Color = Color::Rgb(0x95, 0xE6, 0xCB);
+    pub const FG: Color = ayu_dark::FOREGROUND;
+    pub const GUIDE: Color = ayu_dark::COMMENT;
+    pub const ORANGE: Color = ayu_dark::ORANGE;
+    pub const YELLOW: Color = ayu_dark::YELLOW;
+    pub const BLUE: Color = ayu_dark::BLUE;
+    pub const GREEN: Color = ayu_dark::GREEN;
+    pub const PURPLE: Color = ayu_dark::PURPLE;
+    pub const CYAN: Color = ayu_dark::CYAN;
+    pub const UI_BORDER: Color = ayu_dark::SELECTION;
+    pub const SELECTION: Color = ayu_dark::BLUE;
+    pub const CYAN_BRIGHT: Color = ayu_dark::CYAN;
     pub const PINK: Color = Color::Rgb(0xF2, 0x8F, 0xB0);
 
     pub const COV_0: Color = Color::Rgb(0x73, 0xB8, 0x73);
@@ -30,18 +31,19 @@ mod ayu_dark {
 
 mod ayu_light {
     use super::Color;
+    use ratatui_style_ayu::ayu_light;
 
-    pub const FG: Color = Color::Rgb(0x5C, 0x63, 0x66);
-    pub const GUIDE: Color = Color::Rgb(0x82, 0x8C, 0x8F);
-    pub const ORANGE: Color = Color::Rgb(0xFF, 0x91, 0x40);
-    pub const YELLOW: Color = Color::Rgb(0xF2, 0xAE, 0x49);
-    pub const BLUE: Color = Color::Rgb(0x41, 0xA6, 0xD9);
-    pub const GREEN: Color = Color::Rgb(0x86, 0xB3, 0x00);
-    pub const PURPLE: Color = Color::Rgb(0xA3, 0x7A, 0xCC);
-    pub const CYAN: Color = Color::Rgb(0x4C, 0xBF, 0x99);
-    pub const UI_BORDER: Color = Color::Rgb(0xD9, 0xD8, 0xD7);
-    pub const SELECTION: Color = Color::Rgb(0x55, 0xB4, 0xD4);
-    pub const RED: Color = Color::Rgb(0xF0, 0x74, 0x71);
+    pub const FG: Color = ayu_light::FOREGROUND;
+    pub const GUIDE: Color = ayu_light::COMMENT;
+    pub const ORANGE: Color = ayu_light::ORANGE;
+    pub const YELLOW: Color = ayu_light::YELLOW;
+    pub const BLUE: Color = ayu_light::BLUE;
+    pub const GREEN: Color = ayu_light::GREEN;
+    pub const PURPLE: Color = ayu_light::PURPLE;
+    pub const CYAN: Color = ayu_light::CYAN;
+    pub const UI_BORDER: Color = ayu_light::SELECTION;
+    pub const SELECTION: Color = ayu_light::BLUE;
+    pub const RED: Color = ayu_light::RED;
 
     pub const COV_0: Color = Color::Rgb(0x86, 0xB3, 0x00);
     pub const COV_1: Color = Color::Rgb(0xA0, 0xC6, 0x20);
@@ -130,7 +132,7 @@ impl Default for ThemeColors {
 impl ThemeColors {
     pub fn ayu_dark() -> Self {
         Self {
-            text: ayu_dark::FG,
+            text: Color::White,
             text_dim: ayu_dark::GUIDE,
             accent: ayu_dark::ORANGE,
             accent_secondary: ayu_dark::YELLOW,
