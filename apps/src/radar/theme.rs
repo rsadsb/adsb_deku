@@ -227,7 +227,7 @@ mod tests {
     #[test]
     fn test_ayu_dark_colors() {
         let colors = ColorTheme::AyuDark.colors();
-        assert_eq!(colors.text, ayu_dark::FG);
+        assert_eq!(colors.text, Color::White);
         assert_eq!(colors.accent, ayu_dark::ORANGE);
         assert_eq!(colors.border, ayu_dark::GREEN);
     }
