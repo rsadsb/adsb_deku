@@ -15,7 +15,7 @@ Decoder for [ADS-B(Automatic Dependent Surveillance-Broadcast)](https://en.wikip
 
 ## Applications
 
-Minimum required rust version: `1.84.0`.
+Minimum required rust version: `1.85.0`.
 
 ### Client Applications
 

@@ -4,9 +4,9 @@ exclude = ["ensure_no_std"]
 resolver = "2"
 
 [workspace.package]
-rust-version = "1.84.0"
+rust-version = "1.85.0"
 license = "MIT"
-edition = "2021"
+edition = "2024"
 
 [profile.release]
 strip = true
