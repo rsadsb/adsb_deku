@@ -26,7 +26,7 @@ impl Airport {
         for result in rdr.deserialize() {
             let record: Self = result.unwrap();
 
-            if let Some(ref time_zones) = time_zones {
+            if let Some(time_zones) = time_zones {
                 for tz in time_zones.split(',') {
                     if record.tz.contains(tz) {
                         airports.push(record.clone());
