@@ -19,9 +19,9 @@ jobs:
     strategy:
       matrix:
         job:
-          - { target: x86_64-unknown-linux-gnu,      os: ubuntu-24.04, use-cross: true }
-          - { target: armv7-unknown-linux-gnueabihf, os: ubuntu-24.04, use-cross: true }
-          - { target: aarch64-unknown-linux-gnu,     os: ubuntu-24.04, use-cross: true }
+          - { target: x86_64-unknown-linux-musl,      os: ubuntu-24.04, use-cross: true }
+          - { target: armv7-unknown-linux-musleabihf, os: ubuntu-24.04, use-cross: true }
+          - { target: aarch64-unknown-linux-musl,     os: ubuntu-24.04, use-cross: true }
         toolchain:
           - stable
             # msrv
@@ -32,7 +32,7 @@ jobs:
       - name: Populate cache
         uses: ./.github/workflows/cache
 
-      - name: Overwrite build command env variable
+      - name: Overwrite build command env variable / install cross if required
         if: matrix.job.use-cross
         shell: bash
         run: |
@@ -43,8 +43,8 @@ jobs:
         with:
           toolchain: ${{ matrix.toolchain }}
           targets: ${{ matrix.job.target }}
-      - run: $BUILD_CMD build --locked --workspace --target ${{ matrix.job.target }}
-      - run: $BUILD_CMD test --locked --workspace --target ${{ matrix.job.target }}
+      - run: $BUILD_CMD build -v --locked --workspace --target ${{ matrix.job.target }}
+      - run: $BUILD_CMD test -v --locked --workspace --target ${{ matrix.job.target }}
 
   # fmt and clippy
   fmt-clippy:
