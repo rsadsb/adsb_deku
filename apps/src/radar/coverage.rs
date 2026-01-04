@@ -1,13 +1,11 @@
-use adsb_deku::cpr::Position;
 use adsb_deku::ICAO;
+use adsb_deku::cpr::Position;
 use ratatui::layout::Rect;
-use ratatui::style::Color;
 use ratatui::widgets::canvas::{Canvas, Points};
-use ratatui::widgets::Block;
 use rsadsb_common::Airplanes;
 
 use crate::range_circles::draw_range_circles;
-use crate::{draw_locations, Settings, MAX_PLOT_HIGH, MAX_PLOT_LOW};
+use crate::{MAX_PLOT_HIGH, MAX_PLOT_LOW, Settings, draw_locations};
 
 /// Accuracy of latitude/longitude for Coverage is affected by this variable.
 ///
@@ -69,8 +67,16 @@ pub fn build_tab_coverage(
     settings: &Settings,
     coverage_airplanes: &[(f64, f64, u32, ICAO)],
 ) {
+    use ratatui::style::Style;
+    use ratatui::widgets::Block;
+
     let canvas = Canvas::default()
-        .block(Block::bordered().title("Coverage"))
+        .block(
+            Block::bordered()
+                .title("Coverage")
+                .title_style(Style::default().fg(settings.theme.title))
+                .border_style(Style::default().fg(settings.theme.border)),
+        )
         .x_bounds([MAX_PLOT_LOW, MAX_PLOT_HIGH])
         .y_bounds([MAX_PLOT_LOW, MAX_PLOT_HIGH])
         .paint(|ctx| {
@@ -84,14 +90,10 @@ pub fn build_tab_coverage(
             for (lat, long, seen_number, _) in coverage_airplanes.iter() {
                 let (x, y) = settings.to_xy(*lat, *long);
 
-                let number: u32 = 100 + *seen_number * 50;
-                let color_number: u8 =
-                    if number > u32::from(u8::MAX) { u8::MAX } else { number as u8 };
-
                 // draw dot on location
                 ctx.draw(&Points {
                     coords: &[(x, y)],
-                    color: Color::Rgb(color_number, color_number, color_number),
+                    color: settings.theme.coverage_color(*seen_number),
                 });
             }
         });

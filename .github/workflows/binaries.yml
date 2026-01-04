@@ -17,9 +17,9 @@ jobs:
     strategy:
       matrix:
         job:
-          - { target: x86_64-unknown-linux-gnu,      os: ubuntu-24.04, use-cross: true }
-          - { target: armv7-unknown-linux-gnueabihf, os: ubuntu-24.04, use-cross: true }
-          - { target: aarch64-unknown-linux-gnu,     os: ubuntu-24.04, use-cross: true }         
+          - { target: x86_64-unknown-linux-musl,      os: ubuntu-24.04, use-cross: true }
+          - { target: armv7-unknown-linux-musleabihf, os: ubuntu-24.04, use-cross: true }
+          - { target: aarch64-unknown-linux-musl,     os: ubuntu-24.04, use-cross: true }         
         toolchain:
           - stable
         bins:

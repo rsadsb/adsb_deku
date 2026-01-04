@@ -15,7 +15,7 @@ mod map;
 use crate::map::build_tab_map;
 
 mod stats;
-use crate::stats::{build_tab_stats, Stats};
+use crate::stats::{Stats, build_tab_stats};
 
 mod help;
 use crate::help::build_tab_help;
@@ -23,6 +23,9 @@ use crate::help::build_tab_help;
 mod range_circles;
 
 mod airplanes;
+
+mod theme;
+use crate::theme::ThemeColors;
 use std::io::{self, BufRead, BufReader, BufWriter};
 use std::net::{SocketAddr, TcpStream};
 use std::sync::{Arc, Mutex};
@@ -31,21 +34,21 @@ use std::time::Duration;
 use adsb_deku::{Frame, ICAO};
 use anyhow::{Context, Result};
 use clap::Parser;
+use crossterm::ExecutableCommand;
 use crossterm::event::{
-    poll, read, EnableMouseCapture, Event, KeyCode, KeyEvent, MouseButton, MouseEvent,
-    MouseEventKind,
+    EnableMouseCapture, Event, KeyCode, KeyEvent, MouseButton, MouseEvent, MouseEventKind, poll,
+    read,
 };
 use crossterm::terminal::enable_raw_mode;
-use crossterm::ExecutableCommand;
-use gpsd_proto::{get_data, handshake, ResponseData};
+use gpsd_proto::{ResponseData, get_data, handshake};
+use ratatui::Terminal;
 use ratatui::backend::{Backend, CrosstermBackend};
 use ratatui::layout::{Alignment, Constraint, Direction, Layout, Rect};
-use ratatui::style::{Color, Style};
+use ratatui::style::Style;
 use ratatui::symbols::DOT;
 use ratatui::text::Span;
 use ratatui::widgets::canvas::{Line, Points};
 use ratatui::widgets::{Block, Paragraph, TableState, Tabs};
-use ratatui::Terminal;
 use rsadsb_common::{AirplaneDetails, Airplanes};
 use time::UtcOffset;
 use tracing::{debug, error, info, trace};
@@ -143,10 +146,13 @@ pub struct Settings {
     airports: Option<Vec<Airport>>,
     /// DateTime offset
     utc_offset: UtcOffset,
+    /// Color theme
+    pub theme: ThemeColors,
 }
 
 impl Settings {
     fn new(opts: Opts, utc_offset: UtcOffset) -> Self {
+        let theme = opts.color_theme.colors();
         Self {
             quit: None,
             tab_selection: Tab::Map,
@@ -155,10 +161,11 @@ impl Settings {
             long: opts.long,
             custom_lat: None,
             custom_long: None,
-            opts,
             last_mouse_dragging: None,
             airports: None,
             utc_offset,
+            theme,
+            opts,
         }
     }
 
@@ -735,9 +742,11 @@ fn draw(
                         .title(format!(
                             "rsadsb/radar(v{version}) - ({lat:.DEFAULT_PRECISION$},{long:.DEFAULT_PRECISION$}) {view_type}"
                         ))
+                        .title_style(Style::default().fg(settings.theme.title))
+                        .border_style(Style::default().fg(settings.theme.border))
                 )
-                .style(Style::default().fg(Color::White))
-                .highlight_style(Style::default().fg(Color::Green))
+                .style(Style::default().fg(settings.theme.text))
+                .highlight_style(Style::default().fg(settings.theme.accent))
                 .select(settings.tab_selection as usize)
                 .divider(DOT);
 
@@ -795,13 +804,22 @@ fn draw_bottom_chunks(
             ])
             .split(bottom_chunks[0]);
 
-        let block01 = Block::bordered().title("Zoom Out");
+        let block01 = Block::bordered()
+            .title("Zoom Out")
+            .title_style(Style::default().fg(settings.theme.accent))
+            .border_style(Style::default().fg(settings.theme.border));
         f.render_widget(block01, touchscreen_chunks[0]);
 
-        let block02 = Block::bordered().title("Zoom In");
+        let block02 = Block::bordered()
+            .title("Zoom In")
+            .title_style(Style::default().fg(settings.theme.accent_secondary))
+            .border_style(Style::default().fg(settings.theme.border));
         f.render_widget(block02, touchscreen_chunks[1]);
 
-        let block03 = Block::bordered().title("Reset");
+        let block03 = Block::bordered()
+            .title("Reset")
+            .title_style(Style::default().fg(settings.theme.location))
+            .border_style(Style::default().fg(settings.theme.border));
         f.render_widget(block03, touchscreen_chunks[2]);
 
         Some(touchscreen_chunks.to_vec())
@@ -813,18 +831,32 @@ fn draw_bottom_chunks(
     match settings.tab_selection {
         Tab::Map => build_tab_map(f, &bottom_chunks, settings, adsb_airplanes),
         Tab::Coverage => build_tab_coverage(f, &bottom_chunks, settings, coverage_airplanes),
-        Tab::Airplanes => build_tab_airplanes(f, &bottom_chunks, adsb_airplanes, airplanes_state),
+        Tab::Airplanes => {
+            build_tab_airplanes(f, &bottom_chunks, adsb_airplanes, airplanes_state, settings)
+        }
         Tab::Stats => build_tab_stats(f, &bottom_chunks, stats, settings),
-        Tab::Help => build_tab_help(f, &bottom_chunks),
+        Tab::Help => build_tab_help(f, &bottom_chunks, settings),
     }
 
     tui_info
 }
 
 /// Draw vertical and horizontal lines
-fn draw_lines(ctx: &mut ratatui::widgets::canvas::Context<'_>) {
-    ctx.draw(&Line { x1: MAX_PLOT_HIGH, y1: 0.0, x2: MAX_PLOT_LOW, y2: 0.0, color: Color::White });
-    ctx.draw(&Line { x1: 0.0, y1: MAX_PLOT_HIGH, x2: 0.0, y2: MAX_PLOT_LOW, color: Color::White });
+fn draw_lines(ctx: &mut ratatui::widgets::canvas::Context<'_>, settings: &Settings) {
+    ctx.draw(&Line {
+        x1: MAX_PLOT_HIGH,
+        y1: 0.0,
+        x2: MAX_PLOT_LOW,
+        y2: 0.0,
+        color: settings.theme.grid,
+    });
+    ctx.draw(&Line {
+        x1: 0.0,
+        y1: MAX_PLOT_HIGH,
+        x2: 0.0,
+        y2: MAX_PLOT_LOW,
+        color: settings.theme.grid,
+    });
 }
 
 /// Draw locations on the map
@@ -833,20 +865,28 @@ pub fn draw_locations(ctx: &mut ratatui::widgets::canvas::Context<'_>, settings:
         let (x, y) = settings.to_xy(location.lat, location.long);
 
         // draw location coor
-        ctx.draw(&Points { coords: &[(x, y)], color: Color::Green });
+        ctx.draw(&Points { coords: &[(x, y)], color: settings.theme.location });
 
         // draw location name
-        ctx.print(x, y, Span::styled(location.name.clone(), Style::default().fg(Color::Green)));
+        ctx.print(
+            x,
+            y,
+            Span::styled(location.name.clone(), Style::default().fg(settings.theme.location)),
+        );
     }
     if let Some(ref airports) = settings.airports {
         for Airport { icao, lat, lon, .. } in airports {
             let (x, y) = settings.to_xy(*lat, *lon);
 
-            // draw city coor
-            ctx.draw(&Points { coords: &[(x, y)], color: Color::Green });
+            // draw airport coor (use different color from locations)
+            ctx.draw(&Points { coords: &[(x, y)], color: settings.theme.airport });
 
-            // draw city name
-            ctx.print(x, y, Span::styled(icao.to_string(), Style::default().fg(Color::Green)));
+            // draw airport ICAO code
+            ctx.print(
+                x,
+                y,
+                Span::styled(icao.to_string(), Style::default().fg(settings.theme.airport)),
+            );
         }
     }
 }

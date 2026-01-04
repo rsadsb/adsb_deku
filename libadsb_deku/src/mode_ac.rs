@@ -27,7 +27,7 @@ pub(crate) fn decode_id13_field(id13_field: u32) -> u32 {
     if id13_field & 0x0080 != 0 {
         hex_gillham |= 0x4000;
     } // Bit  7 = A4
-      //if id13_field & 0x0040 != 0 {hex_gillham |= 0x0800;} // Bit  6 = X  or M
+    //if id13_field & 0x0040 != 0 {hex_gillham |= 0x0800;} // Bit  6 = X  or M
     if id13_field & 0x0020 != 0 {
         hex_gillham |= 0x0100;
     } // Bit  5 = B1
@@ -113,9 +113,5 @@ pub(crate) fn mode_a_to_mode_c(mode_a: u32) -> result::Result<u32, &'static str>
     }
 
     let n = (five_hundreds * 5) + one_hundreds;
-    if n >= 13 {
-        Ok(n - 13)
-    } else {
-        Err("Invalid altitude")
-    }
+    if n >= 13 { Ok(n - 13) } else { Err("Invalid altitude") }
 }

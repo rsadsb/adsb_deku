@@ -1,6 +1,6 @@
 use adsb_deku::cpr::get_position;
 use adsb_deku::{Altitude, CPRFormat, Frame};
-use criterion::{criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, criterion_group, criterion_main};
 
 const TEST_STR: &str = include_str!("../tests/lax-messages.txt");
 

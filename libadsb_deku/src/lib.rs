@@ -147,7 +147,7 @@ mod mode_ac;
 #[doc = include_str!("../README.md")]
 mod readme_test {}
 
-use adsb::{ControlField, ADSB};
+use adsb::{ADSB, ControlField};
 use bds::BDS;
 use deku::ctx::{BitSize, Endian};
 use deku::no_std_io::{Cursor, Read, Seek};
@@ -231,11 +231,7 @@ impl Frame {
         const MODES_SHORT_MSG_BYTES: usize = 7;
 
         let bit_len = if let Ok(id) = df.deku_id() {
-            if id & 0x10 != 0 {
-                MODES_LONG_MSG_BYTES * 8
-            } else {
-                MODES_SHORT_MSG_BYTES * 8
-            }
+            if id & 0x10 != 0 { MODES_LONG_MSG_BYTES * 8 } else { MODES_SHORT_MSG_BYTES * 8 }
         } else {
             // In this case, it's the DF::CommD, which has multiple ids
             MODES_LONG_MSG_BYTES * 8
