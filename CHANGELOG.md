@@ -6,7 +6,7 @@ Libraries are released without a new release date within this changelog,
 since this pertains to binary (package) releases.
 
 ## [Package Unreleased]
-- Bumped MSRV to `1.85.0`
+- Bumped MSRV to `1.86.0`
 
 ## [2025-05-03]
 ### radar / 1090 v0.8.0
