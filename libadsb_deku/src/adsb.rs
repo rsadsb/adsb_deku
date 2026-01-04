@@ -27,7 +27,7 @@ use deku::no_std_io::{Read, Seek};
 use deku::prelude::*;
 
 use crate::mode_ac::decode_id13_field;
-use crate::{aircraft_identification_read, Altitude, CPRFormat, Capability, Sign, ICAO};
+use crate::{Altitude, CPRFormat, Capability, ICAO, Sign, aircraft_identification_read};
 
 /// [`crate::DF::ADSB`] || [`crate::DF::TisB`]
 #[derive(Debug, PartialEq, DekuRead, Clone)]

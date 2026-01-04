@@ -1,11 +1,11 @@
-use adsb_deku::cpr::Position;
 use adsb_deku::ICAO;
+use adsb_deku::cpr::Position;
 use ratatui::layout::Rect;
 use ratatui::widgets::canvas::{Canvas, Points};
 use rsadsb_common::Airplanes;
 
 use crate::range_circles::draw_range_circles;
-use crate::{draw_locations, Settings, MAX_PLOT_HIGH, MAX_PLOT_LOW};
+use crate::{MAX_PLOT_HIGH, MAX_PLOT_LOW, Settings, draw_locations};
 
 /// Accuracy of latitude/longitude for Coverage is affected by this variable.
 ///

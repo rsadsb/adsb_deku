@@ -1,5 +1,5 @@
-use adsb_deku::adsb::{VerticalRateSource, ME};
-use adsb_deku::{CPRFormat, Capability, Frame, DF};
+use adsb_deku::adsb::{ME, VerticalRateSource};
+use adsb_deku::{CPRFormat, Capability, DF, Frame};
 use assert_hex::assert_eq_hex;
 use hexlit::hex;
 use test_log::test;

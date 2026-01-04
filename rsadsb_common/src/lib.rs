@@ -16,7 +16,7 @@ use core::{
 use std::time::SystemTime;
 
 use adsb_deku::adsb::{AirborneVelocity, Identification, ME};
-use adsb_deku::{cpr, Altitude, CPRFormat, Frame, DF, ICAO};
+use adsb_deku::{Altitude, CPRFormat, DF, Frame, ICAO, cpr};
 use tracing::{debug, info, warn};
 
 // Max absurd distance an aircraft travelled between messages
@@ -276,7 +276,9 @@ impl Airplanes {
     fn add_airborne_velocity(&mut self, icao: ICAO, vel: &AirborneVelocity) -> Added {
         let (state, airplane_added) = self.entry_or_insert(icao);
         if let Some((heading, ground_speed, vert_speed)) = vel.calculate() {
-            info!("[{icao}] with airborne velocity: heading: {heading}, speed: {ground_speed}, vertical speed: {vert_speed}");
+            info!(
+                "[{icao}] with airborne velocity: heading: {heading}, speed: {ground_speed}, vertical speed: {vert_speed}"
+            );
             state.heading = Some(heading);
             state.speed = Some(ground_speed as f32);
             state.vert_speed = Some(vert_speed);
@@ -427,7 +429,9 @@ impl AirplaneCoor {
             if let (Some(current_position), Some(test_position)) = (self.position, test_position) {
                 let distance = Self::haversine_distance_position(current_position, test_position);
                 if distance > MAX_AIRCRAFT_DISTANCE {
-                    warn!("distance: {distance} old: {current_position:?}, invalid: {test_position:?}");
+                    warn!(
+                        "distance: {distance} old: {current_position:?}, invalid: {test_position:?}"
+                    );
                     return false;
                 }
                 debug!("distance: {distance}");
@@ -435,12 +439,10 @@ impl AirplaneCoor {
 
             // Good new position!
             self.position = test_position;
-            debug!("update_position: odd: (lat: {}, long: {}), even: (lat: {}, long: {}), position: {:?}",
-                odd.lat_cpr,
-                odd.lon_cpr,
-                even.lat_cpr,
-                even.lat_cpr,
-                self.position);
+            debug!(
+                "update_position: odd: (lat: {}, long: {}), even: (lat: {}, long: {}), position: {:?}",
+                odd.lat_cpr, odd.lon_cpr, even.lat_cpr, even.lat_cpr, self.position
+            );
             #[cfg(feature = "std")]
             {
                 self.last_time = Some(SystemTime::now());

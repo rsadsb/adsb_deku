@@ -1,12 +1,12 @@
 use ratatui::layout::Rect;
 use ratatui::style::Style;
 use ratatui::text::Span;
-use ratatui::widgets::canvas::{Canvas, Line, Points};
 use ratatui::widgets::Block;
+use ratatui::widgets::canvas::{Canvas, Line, Points};
 use rsadsb_common::{AirplaneDetails, Airplanes};
 
 use crate::range_circles::draw_range_circles;
-use crate::{draw_lines, draw_locations, Settings, DEFAULT_PRECISION, MAX_PLOT_HIGH, MAX_PLOT_LOW};
+use crate::{DEFAULT_PRECISION, MAX_PLOT_HIGH, MAX_PLOT_LOW, Settings, draw_lines, draw_locations};
 
 /// Render Map tab for tui display
 pub fn build_tab_map(

@@ -4,7 +4,7 @@ use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Paragraph, Row, Table, TableState};
 use rsadsb_common::{AirplaneDetails, Airplanes};
 
-use crate::{Settings, DEFAULT_PRECISION};
+use crate::{DEFAULT_PRECISION, Settings};
 
 /// Render Airplanes tab for tui display
 pub fn build_tab_airplanes(

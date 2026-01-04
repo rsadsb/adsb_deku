@@ -15,7 +15,7 @@ mod map;
 use crate::map::build_tab_map;
 
 mod stats;
-use crate::stats::{build_tab_stats, Stats};
+use crate::stats::{Stats, build_tab_stats};
 
 mod help;
 use crate::help::build_tab_help;
@@ -34,13 +34,14 @@ use std::time::Duration;
 use adsb_deku::{Frame, ICAO};
 use anyhow::{Context, Result};
 use clap::Parser;
+use crossterm::ExecutableCommand;
 use crossterm::event::{
-    poll, read, EnableMouseCapture, Event, KeyCode, KeyEvent, MouseButton, MouseEvent,
-    MouseEventKind,
+    EnableMouseCapture, Event, KeyCode, KeyEvent, MouseButton, MouseEvent, MouseEventKind, poll,
+    read,
 };
 use crossterm::terminal::enable_raw_mode;
-use crossterm::ExecutableCommand;
-use gpsd_proto::{get_data, handshake, ResponseData};
+use gpsd_proto::{ResponseData, get_data, handshake};
+use ratatui::Terminal;
 use ratatui::backend::{Backend, CrosstermBackend};
 use ratatui::layout::{Alignment, Constraint, Direction, Layout, Rect};
 use ratatui::style::Style;
@@ -48,7 +49,6 @@ use ratatui::symbols::DOT;
 use ratatui::text::Span;
 use ratatui::widgets::canvas::{Line, Points};
 use ratatui::widgets::{Block, Paragraph, TableState, Tabs};
-use ratatui::Terminal;
 use rsadsb_common::{AirplaneDetails, Airplanes};
 use time::UtcOffset;
 use tracing::{debug, error, info, trace};

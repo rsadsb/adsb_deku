@@ -8,7 +8,7 @@ use ratatui::widgets::{Block, Row, Table};
 use rsadsb_common::{Added, AirplaneCoor, Airplanes};
 use tracing::info;
 
-use crate::{Settings, DEFAULT_PRECISION};
+use crate::{DEFAULT_PRECISION, Settings};
 
 #[derive(Debug, Default)]
 pub struct Stats {
