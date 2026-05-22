@@ -464,6 +464,22 @@ fn testing_aircraftidentificationandcategory() {
 }
 
 #[test]
+fn testing_aircraftidentification_8char_callsign() {
+    let bytes = hex!("8daabbcc20485043230c31bbf834");
+    let frame = Frame::from_bytes(&bytes).unwrap();
+    let resulting_string = format!("{frame}");
+    assert_eq!(
+        r#" Extended Squitter Aircraft identification and category
+  Address:       aabbcc (Mode S / ADS-B)
+  Air/Ground:    airborne
+  Ident:         REACH001
+  Category:      A0
+"#,
+        resulting_string
+    );
+}
+
+#[test]
 fn testing_issue_01() {
     let bytes = hex!("8dad50a9ea466867811c08abbaa2");
     let frame = Frame::from_bytes(&bytes).unwrap();

@@ -895,7 +895,7 @@ pub(crate) fn aircraft_identification_read<R: Read + Seek>(
     reader: &mut Reader<R>,
 ) -> Result<String, DekuError> {
     let mut chars = vec![];
-    for _ in 0..=6 {
+    for _ in 0..=7 {
         let c = <u8>::from_reader_with_ctx(reader, BitSize(6))?;
         if c != 32 {
             chars.push(c);
