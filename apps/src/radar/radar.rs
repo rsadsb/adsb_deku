@@ -509,11 +509,11 @@ fn init_tcp_reader(
                         settings.quit = Some(QuitReason::UserRequested);
                         return Ok(None);
                     }
-                    KeyCode::Char('c') => {
-                        if modifiers == crossterm::event::KeyModifiers::CONTROL {
-                            settings.quit = Some(QuitReason::UserRequested);
-                            return Ok(None);
-                        }
+                    KeyCode::Char('c')
+                        if modifiers == crossterm::event::KeyModifiers::CONTROL =>
+                    {
+                        settings.quit = Some(QuitReason::UserRequested);
+                        return Ok(None);
                     }
                     // unknown key
                     _ => (),
@@ -548,10 +548,8 @@ fn handle_keyevent(
         (KeyCode::F(5), _) => settings.tab_selection = Tab::Help,
         (KeyCode::Tab, _) => settings.tab_selection = settings.tab_selection.next_tab(),
         (KeyCode::Char('q'), _) => settings.quit = Some(QuitReason::UserRequested),
-        (KeyCode::Char('c'), _) => {
-            if modifiers == crossterm::event::KeyModifiers::CONTROL {
-                settings.quit = Some(QuitReason::UserRequested);
-            }
+        (KeyCode::Char('c'), _) if modifiers == crossterm::event::KeyModifiers::CONTROL => {
+            settings.quit = Some(QuitReason::UserRequested);
         }
         (KeyCode::Char('l'), _) => settings.opts.disable_lat_long ^= true,
         (KeyCode::Char('i'), _) => settings.opts.disable_icao ^= true,
